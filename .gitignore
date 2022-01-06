@@ -1,0 +1,21 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Developer note: near.gitignore will be renamed to .gitignore upon project creation
+# dependencies
+node_modules
+
+.cache
+.parcel-cache
+
+#contracts
+out
+neardev
+target
+
+# production
+dist
+
+# misc
+notes
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
