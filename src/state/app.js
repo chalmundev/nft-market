@@ -7,6 +7,9 @@ import { initNear } from './near';
 const initialState = {
 	app: {
 		mounted: false
+	},
+	data: {
+		tokens: []
 	}
 };
 
