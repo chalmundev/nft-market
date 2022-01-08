@@ -1,0 +1,17 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "chalmundev",
+  "license": "MIT",
+  "dependencies": {
+    "fastify": "^3.25.3",
+    "fastify-postgres": "^3.6.0",
+    "pg": "^8.7.1",
+    "pm2": "^5.1.2"
+  },
+  "scripts": {
+    "start": "yarn stop && pm2 start index.js -f --watch && pm2 logs",
+    "stop": "pm2 delete default"
+  }
+}
