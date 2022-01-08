@@ -15,6 +15,7 @@ use near_sdk::{
 };
 
 pub const DEFAULT_OFFER_TOKEN: &str = "near";
+pub const DELIMETER: char = '|';
 
 #[derive(BorshSerialize, BorshStorageKey)]
 enum StorageKey {
@@ -24,7 +25,7 @@ enum StorageKey {
 	OfferByTakerId,
     OfferByTakerIdInner { taker_id: AccountId },
 	OfferByContractId,
-    OfferByContractIdInner { contract_id: AccountId },
+    OfferByContractIdInner { contract_token_id: String },
 }
 
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -49,7 +50,7 @@ pub struct Contract {
 	offer_by_id: UnorderedMap<u64, Offer>,
 	offers_by_maker_id: LookupMap<AccountId, UnorderedSet<u64>>,
 	offers_by_taker_id: LookupMap<AccountId, UnorderedSet<u64>>,
-	offers_by_contract_id: LookupMap<AccountId, UnorderedSet<u64>>,
+	offers_by_contract_id: LookupMap<String, UnorderedSet<u64>>,
 }
 
 #[near_bindgen]
@@ -112,12 +113,13 @@ impl Contract {
 			)
 		);
 	
+		let contract_token_id = get_contract_token_id(&offer.contract_id, &offer.token_id);
 		self.offers_by_contract_id.insert(
-			&contract_id,
+			&contract_token_id.clone(),
 			&map_set_insert(
 				&self.offers_by_contract_id, 
-				&contract_id, 
-				StorageKey::OfferByContractIdInner { contract_id: contract_id.clone() },
+				&contract_token_id.clone(), 
+				StorageKey::OfferByContractIdInner { contract_token_id },
 				self.offer_id
 			)
 		);
@@ -159,11 +161,12 @@ impl Contract {
 			)
 		);
 
+		let contract_token_id = get_contract_token_id(&offer.contract_id, &offer.token_id);
 		self.offers_by_contract_id.insert(
-			&maker_id,
+			&contract_token_id,
 			&map_set_remove(
 				&self.offers_by_contract_id,
-				&offer.contract_id,
+				&contract_token_id,
 				offer_id,
 			)
 		);
