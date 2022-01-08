@@ -1,11 +1,12 @@
 mod utils;
+mod nft_callback;
 
 use crate::utils::*;
 
 use near_sdk::{
 	// log,
 	require,
-	env, near_bindgen, Balance, AccountId, BorshStorageKey, PanicOnDefault, Promise,
+	env, near_bindgen, Balance, AccountId, BorshStorageKey, PanicOnDefault, Promise, PromiseOrValue,
 	borsh::{self, BorshDeserialize, BorshSerialize},
 	serde::{Serialize, Deserialize},
 	collections::{Vector, LookupMap, UnorderedMap, UnorderedSet},
@@ -22,6 +23,8 @@ enum StorageKey {
     OfferByMakerIdInner { maker_id: AccountId },
 	OfferByTakerId,
     OfferByTakerIdInner { taker_id: AccountId },
+	OfferByContractId,
+    OfferByContractIdInner { contract_id: AccountId },
 }
 
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -46,6 +49,7 @@ pub struct Contract {
 	offer_by_id: UnorderedMap<u64, Offer>,
 	offers_by_maker_id: LookupMap<AccountId, UnorderedSet<u64>>,
 	offers_by_taker_id: LookupMap<AccountId, UnorderedSet<u64>>,
+	offers_by_contract_id: LookupMap<AccountId, UnorderedSet<u64>>,
 }
 
 #[near_bindgen]
@@ -58,6 +62,7 @@ impl Contract {
 			offer_by_id: UnorderedMap::new(StorageKey::OfferById),
 			offers_by_maker_id: LookupMap::new(StorageKey::OfferByMakerId),
 			offers_by_taker_id: LookupMap::new(StorageKey::OfferByTakerId),
+			offers_by_contract_id: LookupMap::new(StorageKey::OfferByContractId),
         }
     }
 	
@@ -76,7 +81,7 @@ impl Contract {
 		let offer = Offer{
 			maker_id: maker_id.clone(),
 			taker_id: taker_id.clone(),
-			contract_id,
+			contract_id: contract_id.clone(),
 			token_id,
 			offer_amount,
 			offer_token: offer_token.unwrap_or_else(|| DEFAULT_OFFER_TOKEN.into()),
@@ -87,17 +92,35 @@ impl Contract {
 		self.offer_id += 1;
 		self.offer_by_id.insert(&self.offer_id, &offer);
 
-		let mut offers_by_maker_id = self.offers_by_maker_id.get(&maker_id).unwrap_or_else(|| {
-			UnorderedSet::new(StorageKey::OfferByMakerIdInner { maker_id: maker_id.clone() })
-		});
-		offers_by_maker_id.insert(&self.offer_id);
-		self.offers_by_maker_id.insert(&maker_id, &offers_by_maker_id);
-
-		let mut offers_by_taker_id = self.offers_by_taker_id.get(&taker_id).unwrap_or_else(|| {
-			UnorderedSet::new(StorageKey::OfferByTakerIdInner { taker_id: taker_id.clone() })
-		});
-		offers_by_taker_id.insert(&self.offer_id);
-		self.offers_by_taker_id.insert(&taker_id, &offers_by_taker_id);
+		self.offers_by_maker_id.insert(
+			&maker_id, 
+			&map_set_insert(
+				&self.offers_by_maker_id, 
+				&maker_id, 
+				StorageKey::OfferByMakerIdInner { maker_id: maker_id.clone() },
+				self.offer_id
+			)
+		);
+	
+		self.offers_by_taker_id.insert(
+			&taker_id, 
+			&map_set_insert(
+				&self.offers_by_taker_id, 
+				&taker_id, 
+				StorageKey::OfferByTakerIdInner { taker_id: taker_id.clone() },
+				self.offer_id
+			)
+		);
+	
+		self.offers_by_contract_id.insert(
+			&contract_id,
+			&map_set_insert(
+				&self.offers_by_contract_id, 
+				&contract_id, 
+				StorageKey::OfferByContractIdInner { contract_id: contract_id.clone() },
+				self.offer_id
+			)
+		);
 
 		refund_deposit(env::storage_usage() - initial_storage_usage, Some(offer_amount.into()));
     }
@@ -118,13 +141,32 @@ impl Contract {
 
 		self.offer_by_id.remove(&offer_id);
 
-		let mut offers_by_maker_id = self.offers_by_maker_id.get(&maker_id).unwrap_or_else(|| env::panic_str("no offer"));
-		offers_by_maker_id.remove(&offer_id);
-		self.offers_by_maker_id.insert(&maker_id, &offers_by_maker_id);
+		self.offers_by_maker_id.insert(
+			&maker_id,
+			&map_set_remove(
+				&self.offers_by_maker_id,
+				&maker_id,
+				offer_id,
+			)
+		);
 
-		let mut offers_by_taker_id = self.offers_by_taker_id.get(&offer.taker_id).unwrap_or_else(|| env::panic_str("no offer"));
-		offers_by_taker_id.remove(&offer_id);
-		self.offers_by_taker_id.insert(&offer.taker_id, &offers_by_taker_id);
+		self.offers_by_taker_id.insert(
+			&maker_id,
+			&map_set_remove(
+				&self.offers_by_taker_id,
+				&offer.taker_id,
+				offer_id,
+			)
+		);
+
+		self.offers_by_contract_id.insert(
+			&maker_id,
+			&map_set_remove(
+				&self.offers_by_contract_id,
+				&offer.contract_id,
+				offer_id,
+			)
+		);
 
 		refund_storage(initial_storage_usage - env::storage_usage());
     }

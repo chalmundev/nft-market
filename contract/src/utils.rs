@@ -48,6 +48,33 @@ pub(crate) fn unordered_map_key_pagination<K, V>(
 // 	paginate(set.as_vector(), from_index, limit)
 // }
 
+/// set management
+
+pub(crate) fn map_set_insert<K, V> (
+    map: &LookupMap<K, UnorderedSet<V>>,
+	map_key: &K,
+	storage_key: StorageKey,
+	val: V,
+) -> UnorderedSet<V> where K: BorshSerialize + BorshDeserialize, V: BorshSerialize + BorshDeserialize {
+	let mut offers_by_maker_id = map.get(map_key).unwrap_or_else(|| {
+		UnorderedSet::new(storage_key)
+	});
+	offers_by_maker_id.insert(&val);
+	offers_by_maker_id
+}
+
+pub(crate) fn map_set_remove<K, V> (
+    map: &LookupMap<K, UnorderedSet<V>>,
+	map_key: &K,
+	val: V,
+) -> UnorderedSet<V> where K: BorshSerialize + BorshDeserialize, V: BorshSerialize + BorshDeserialize {
+	let mut offers_by_maker_id = map.get(map_key).unwrap_or_else(|| env::panic_str("no set in map"));
+	offers_by_maker_id.remove(&val);
+	offers_by_maker_id
+}
+
+/// refunds
+
 pub(crate) fn refund_deposit(storage_used: u64, keep_amount: Option<Balance>) {
     let required_cost = env::storage_byte_cost() * Balance::from(storage_used);
     let mut attached_deposit = env::attached_deposit();
