@@ -9,6 +9,7 @@ use near_sdk::{
 	env, near_bindgen, Balance, AccountId, BorshStorageKey, PanicOnDefault, Promise, PromiseOrValue,
 	borsh::{self, BorshDeserialize, BorshSerialize},
 	serde::{Serialize, Deserialize},
+	serde_json::from_str,
 	collections::{Vector, LookupMap, UnorderedMap, UnorderedSet},
 	json_types::{U128},
 	assert_one_yocto,
