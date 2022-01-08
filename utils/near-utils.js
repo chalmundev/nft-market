@@ -59,4 +59,5 @@ module.exports = {
 	connection,
 	contractId,
 	contractAccount,
+	parseNearAmount,
 };

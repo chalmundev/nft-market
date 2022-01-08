@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom'
-import { getTokens } from '../state/near'
+import { getSupply, getTokens } from '../state/near'
 
 const PAGE_LIMIT = 1
 
-export const RouteContract = ({ dispatch, tokens }) => {
+export const RouteContract = ({ dispatch, tokens, supply }) => {
+	supply = parseInt(supply, 10)
 	const params = useParams()
 	const { contractId } = params
 
@@ -14,6 +15,7 @@ export const RouteContract = ({ dispatch, tokens }) => {
 	const setState = (newState) => _setState((oldState) => ({ ...oldState, ...newState }))
 
 	const onMount = async () => {
+		dispatch(getSupply(contractId))
 		dispatch(getTokens(contractId, (state.index * PAGE_LIMIT).toString(), PAGE_LIMIT))
 	}
 	useEffect(onMount, [])
@@ -30,10 +32,14 @@ export const RouteContract = ({ dispatch, tokens }) => {
 
 			<p>Page {index + 1}</p>
 
-			<p>{ JSON.stringify(tokens) }</p>
+			{ tokens.length > 0 && <>
+				<img src={tokens[0].metadata.media} />
 
+			<p>Raw Data { JSON.stringify(tokens) }</p>
+
+			</>}
 			{ state.index !== 0 && <button onClick={() => handlePage(index - 1)}>Prev</button>}
-			<button onClick={() => handlePage(index + 1)}>Next</button>
+			{ (index + 1) * PAGE_LIMIT < supply && <button onClick={() => handlePage(index + 1)}>Next</button>}
 
 		</div>
 	);
