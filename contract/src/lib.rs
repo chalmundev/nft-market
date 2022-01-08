@@ -7,34 +7,45 @@ use near_sdk::{
 	require,
 	env, near_bindgen, Balance, AccountId, BorshStorageKey, PanicOnDefault, Promise,
 	borsh::{self, BorshDeserialize, BorshSerialize},
-	collections::{LookupMap, UnorderedMap, UnorderedSet},
+	serde::{Serialize, Deserialize},
+	collections::{Vector, LookupMap, UnorderedMap, UnorderedSet},
 	json_types::{U128},
+	assert_one_yocto,
 };
 
-pub const STORAGE_KEY_DELIMETER: char = '|';
+pub const DEFAULT_OFFER_TOKEN: &str = "near";
 
 #[derive(BorshSerialize, BorshStorageKey)]
 enum StorageKey {
-	EventsByName,
-    NetworksByOwner { event_name: String },
-    Connections { event_name_and_owner_id: String },
+	OfferById,
+	OfferByMakerId,
+    OfferByMakerIdInner { maker_id: AccountId },
+	OfferByTakerId,
+    OfferByTakerIdInner { taker_id: AccountId },
 }
 
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
-pub struct Network {
-	connections: UnorderedSet<AccountId>,
-}
-
-#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
-pub struct Event {
-	networks_by_owner: LookupMap<AccountId, Network>,
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct Offer {
+    maker_id: AccountId,
+    taker_id: AccountId,
+	contract_id: AccountId,
+    token_id: String,
+    offer_amount: U128,
+    offer_token: String,
+    created_at: u64,
+	approval_id: Option<u64>,
 }
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Contract {
 	owner_id: AccountId,
-	events_by_name: UnorderedMap<String, Event>,
+	offer_id: u64,
+	offer_by_id: UnorderedMap<u64, Offer>,
+	offers_by_maker_id: LookupMap<AccountId, UnorderedSet<u64>>,
+	offers_by_taker_id: LookupMap<AccountId, UnorderedSet<u64>>,
 }
 
 #[near_bindgen]
@@ -43,48 +54,87 @@ impl Contract {
     pub fn new(owner_id: AccountId) -> Self {
         Self {
 			owner_id,
-			events_by_name: UnorderedMap::new(StorageKey::EventsByName),
+			offer_id: 0,
+			offer_by_id: UnorderedMap::new(StorageKey::OfferById),
+			offers_by_maker_id: LookupMap::new(StorageKey::OfferByMakerId),
+			offers_by_taker_id: LookupMap::new(StorageKey::OfferByTakerId),
         }
     }
 	
     #[payable]
-    pub fn create_event(&mut self, event_name: String) {
+    pub fn make_offer(&mut self,
+		taker_id: AccountId,
+		contract_id: AccountId,
+		token_id: String,
+		offer_amount: U128,
+		offer_token: Option<String>
+	) {
 		let initial_storage_usage = env::storage_usage();
 
-		require!(env::predecessor_account_id() == self.owner_id, "owner only");
-		
-        require!(self.events_by_name.insert(&event_name.clone(), &Event{
-			networks_by_owner: LookupMap::new(StorageKey::NetworksByOwner { event_name }),
-		}).is_none(), "event exists");
+		let maker_id = env::predecessor_account_id();
 
-        refund_deposit(env::storage_usage() - initial_storage_usage);
-    }
-	
-    #[payable]
-    pub fn create_connection(&mut self, event_name: String, new_connection_id: AccountId) {
-		let initial_storage_usage = env::storage_usage();
+		let offer = Offer{
+			maker_id: maker_id.clone(),
+			taker_id: taker_id.clone(),
+			contract_id,
+			token_id,
+			offer_amount,
+			offer_token: offer_token.unwrap_or_else(|| DEFAULT_OFFER_TOKEN.into()),
+			created_at: env::block_timestamp(),
+			approval_id: None,
+		};
 
-		let network_owner_id = env::predecessor_account_id();
-		let mut event = self.events_by_name.get(&event_name).unwrap_or_else(|| env::panic_str("no event"));
-		let mut network = event.networks_by_owner.get(&network_owner_id).unwrap_or_else(|| Network{
-			connections: UnorderedSet::new(StorageKey::Connections { event_name_and_owner_id: format!("{}{}{}", event_name, STORAGE_KEY_DELIMETER, network_owner_id.clone()) })
+		self.offer_id += 1;
+		self.offer_by_id.insert(&self.offer_id, &offer);
+
+		let mut offers_by_maker_id = self.offers_by_maker_id.get(&maker_id).unwrap_or_else(|| {
+			UnorderedSet::new(StorageKey::OfferByMakerIdInner { maker_id: maker_id.clone() })
 		});
+		offers_by_maker_id.insert(&self.offer_id);
+		self.offers_by_maker_id.insert(&maker_id, &offers_by_maker_id);
 
-		network.connections.insert(&new_connection_id);
-		event.networks_by_owner.insert(&network_owner_id, &network);
+		let mut offers_by_taker_id = self.offers_by_taker_id.get(&taker_id).unwrap_or_else(|| {
+			UnorderedSet::new(StorageKey::OfferByTakerIdInner { taker_id: taker_id.clone() })
+		});
+		offers_by_taker_id.insert(&self.offer_id);
+		self.offers_by_taker_id.insert(&taker_id, &offers_by_taker_id);
 
-        refund_deposit(env::storage_usage() - initial_storage_usage);
+		refund_deposit(env::storage_usage() - initial_storage_usage, Some(offer_amount.into()));
     }
 
+	#[payable]
+    pub fn remove_offer(&mut self,
+		offer_id: u64
+	) {
+		assert_one_yocto();
+
+		let initial_storage_usage = env::storage_usage();
+
+		let maker_id = env::predecessor_account_id();
+
+		let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("no offer"));
+
+		require!(offer.maker_id == maker_id, "not maker");
+
+		self.offer_by_id.remove(&offer_id);
+
+		let mut offers_by_maker_id = self.offers_by_maker_id.get(&maker_id).unwrap_or_else(|| env::panic_str("no offer"));
+		offers_by_maker_id.remove(&offer_id);
+		self.offers_by_maker_id.insert(&maker_id, &offers_by_maker_id);
+
+		let mut offers_by_taker_id = self.offers_by_taker_id.get(&offer.taker_id).unwrap_or_else(|| env::panic_str("no offer"));
+		offers_by_taker_id.remove(&offer_id);
+		self.offers_by_taker_id.insert(&offer.taker_id, &offers_by_taker_id);
+
+		refund_storage(initial_storage_usage - env::storage_usage());
+    }
+    
 	/// views
-	
-    pub fn get_events(&self, from_index: Option<U128>, limit: Option<u64>) -> Vec<String> {
-		unordered_map_key_pagination(&self.events_by_name, from_index, limit)
-    }
-	
-    pub fn get_connections(&self, event_name: String, network_owner_id: AccountId, from_index: Option<U128>, limit: Option<u64>) -> Vec<AccountId> {
-		let event = self.events_by_name.get(&event_name).unwrap_or_else(|| env::panic_str("no event"));
-		let network = event.networks_by_owner.get(&network_owner_id).unwrap_or_else(|| env::panic_str("no network"));
-		unordered_set_pagination(&network.connections, from_index, limit)
+
+    pub fn get_offers(&self, from_index: Option<U128>, limit: Option<u64>) -> (Vec<u64>, Vec<Offer>) {
+		(
+			unordered_map_key_pagination(&self.offer_by_id, from_index, limit),
+			unordered_map_val_pagination(&self.offer_by_id, from_index, limit)
+		)
     }
 }

@@ -31,8 +31,10 @@ const App = () => {
 		update('clicked', !state.clicked);
 	};
 
+	const { tokens, supply } = state.data
+
 	return (
-		<div>
+		<main className="container">
 
 			<nav>
 				<ul>
@@ -47,7 +49,7 @@ const App = () => {
 
 			<Routes>
 				<Route path="/contract/:contractId" element={
-					<RouteContract { ...{ dispatch, tokens: state.data.tokens } } />
+					<RouteContract { ...{ dispatch, tokens, supply } } />
 				} />
 				
 				<Route path="/wallet" element={
@@ -62,15 +64,15 @@ const App = () => {
 				} />
 				
 				<Route path="/" element={
-					data.map(({ contractId, ts }) => {
+					data.map(({ contractId, ts, name }) => {
 						return <div key={contractId} onClick={() => navigate('/contract/' + contractId)}>
-							{ contractId }
+							{ name } - { contractId } - { ts }
 						</div>
 					})
 				} />
 			</Routes>
 
-		</div>
+		</main>
 	);
 };
 

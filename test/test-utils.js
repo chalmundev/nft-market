@@ -4,7 +4,7 @@ const nearAPI = require('near-api-js');
 const { 
 	KeyPair,
 	utils: { format: {
-		formatNearAmount
+		formatNearAmount, parseNearAmount
 	} }
 } = nearAPI;
 const { connection, keyStore, contractAccount } = require('../utils/near-utils');
@@ -98,4 +98,6 @@ module.exports = {
 	bytesUsed,
 	recordStart,
 	recordStop,
+	formatNearAmount,
+	parseNearAmount,
 };

@@ -2,6 +2,7 @@ const test = require('ava');
 const {
 	getAccount, init,
 	recordStart, recordStop,
+	parseNearAmount,
 } = require('./test-utils');
 const getConfig = require("../utils/config");
 const {
@@ -13,7 +14,20 @@ const {
 // test.beforeEach((t) => {
 // });
 
-let contractAccount, event_name, aliceId, bobId, alice, bob;
+const tokens = [
+	{
+		taker_id: 'dev-1641660698596-29666961213867',
+		token_id: '1:1',
+		contract_id: 'dev-1641660698596-29666961213867',
+	},
+	{
+		taker_id: 'alice-1641660715371.dev-1641660698596-29666961213867',
+		token_id: '1:1',
+		contract_id: 'dev-1641660698596-29666961213867',
+	},
+]
+
+let contractAccount, offerIds, offers, aliceId, bobId, alice, bob;
 
 test('contract is deployed', async (t) => {
 	contractAccount = await init();
@@ -30,87 +44,75 @@ test('users initialized', async (t) => {
 	t.true(true);
 });
 
-test('create an event', async (t) => {
-	event_name = 'event-' + Date.now();
+test('alice make_offer', async (t) => {
 
-	const res = await contractAccount.functionCall({
+	const res = await alice.functionCall({
 		contractId,
-		methodName: 'create_event',
+		methodName: 'make_offer',
 		args: {
-			event_name,
+			...tokens[0],
+			offer_amount: parseNearAmount('0.1')
 		},
 		gas,
-		attachedDeposit,
+		attachedDeposit: parseNearAmount('0.2'),
 	});
 
 	t.is(res?.status?.SuccessValue, '');
 });
 
-test('get events', async (t) => {
-	const res = await contractAccount.viewFunction(
+test('bob make_offer', async (t) => {
+
+	const res = await bob.functionCall({
 		contractId,
-		'get_events',
+		methodName: 'make_offer',
+		args: {
+			...tokens[1],
+			offer_amount: parseNearAmount('0.1')
+		},
+		gas,
+		attachedDeposit: parseNearAmount('0.2'),
+	});
+
+	t.is(res?.status?.SuccessValue, '');
+});
+
+test('get offers', async (t) => {
+	[offerIds, offers] = await contractAccount.viewFunction(
+		contractId,
+		'get_offers',
 		{}
 	);
 
-	// console.log(res)
+	console.log(offers)
 
-	t.true(res.length >= 1);
+	t.true(offers.length >= 1);
 });
 
-test('create a connection', async (t) => {
+test('bob remove_offer', async (t) => {
 
-	await recordStart(contractId);
-	
-	const res = await alice.functionCall({
+	const offer_id = offerIds[offers.findIndex(({ maker_id }) => maker_id === bobId)]
+
+	const res = await bob.functionCall({
 		contractId,
-		methodName: 'create_connection',
+		methodName: 'remove_offer',
 		args: {
-			event_name,
-			new_connection_id: bobId,
+			offer_id
 		},
 		gas,
-		attachedDeposit,
+		attachedDeposit: 1,
 	});
-
-	await recordStop(contractId);
 
 	t.is(res?.status?.SuccessValue, '');
 });
 
-test('create another connection', async (t) => {
-
-	const carolId = 'car.' + contractId;
-
-	await recordStart(contractId);
-
-	const res = await alice.functionCall({
+test('get offers 2', async (t) => {
+	offers = await contractAccount.viewFunction(
 		contractId,
-		methodName: 'create_connection',
-		args: {
-			event_name,
-			new_connection_id: carolId,
-		},
-		gas,
-		attachedDeposit,
-	});
-	
-	await recordStop(contractId);
-
-	t.is(res?.status?.SuccessValue, '');
-});
-
-test('get connections', async (t) => {
-	const res = await alice.viewFunction(
-		contractId,
-		'get_connections',
-		{
-			event_name,
-			network_owner_id: aliceId,
-		}
+		'get_offers',
+		{}
 	);
 
-	console.log(res);
+	console.log(offers)
 
-	t.true(res.length >= 1);
+	t.true(offers.length >= 1);
 });

@@ -26,10 +26,20 @@ export const initNear = () => async ({ update }) => {
 
 };
 
+export const getSupply = (contractId) => async ({ update }) => {
+	const supply = await contractAccount.viewFunction(contractId, 'nft_total_supply')
+	await update('data', { supply });
+}
+
 export const getTokens = (contractId, from_index, limit) => async ({ update }) => {
-	const tokens = await contractAccount.viewFunction(contractId, 'nft_tokens', {
-		from_index,
-		limit,
-	})
+	let tokens = []
+	try {
+		tokens = await contractAccount.viewFunction(contractId, 'nft_tokens', {
+			from_index,
+			limit,
+		})
+	} catch(e) {
+		console.warn(e)
+	}
 	await update('data', { tokens });
 }
