@@ -1,5 +1,9 @@
 use crate::*;
 
+pub(crate) fn get_contract_token_id(contract_id: &AccountId, token_id: &str) -> String{
+	format!("{}{}{}", contract_id, DELIMETER, token_id)
+}
+
 pub(crate) fn paginate<V>(
 	values: &Vector<V>,
 	from_index: Option<U128>,
