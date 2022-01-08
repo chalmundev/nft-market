@@ -1,0 +1,46 @@
+Contract
+   
+offer_by_id: Lookmap<u64, Offer>
+offers_by_maker_id: Lookmap<AccountId, UnorderedSet<u64>>
+offers_by_taker_id: Lookmap<AccountId, UnorderedSet<u64>>
+
+Offer {
+    contract_id
+    token_id
+    offer_amount
+    offer_token: "near"
+    created_at: u64
+    maker_id, // return storage if offer is removed
+	// 2 step scenario
+	approval_id
+}
+
+make_offer(
+    taker_id
+    contract_id
+    token_id
+    offer_token: "near"
+)
+
+// explicit remove offer
+remove_offer(
+	
+) {
+	// cannot be sooner than 24hrs from created_at
+}
+
+UX -> nft_payout -> len( <= 5 )
+UX -> nft_approve(msg: auto_transfer) -> nft_on_approve (auto_transfer???) -> nft_transfer_payout -> nft_resolve_transfer_payout
+remove Offer
+
+// 2 step scenario (many payouts)
+UX -> nft_payout -> len( > 5 )
+UX -> nft_approve -> nft_on_approve (auto_transfer: false)
+
+// scenario someone tries to make better offer but approval_id.is_some() 
+
+// someone calls remove_offer
+
+UX -> nft_transfer_payout -> nft_resolve_transfer_payout
+
+

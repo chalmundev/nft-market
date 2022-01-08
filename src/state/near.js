@@ -1,8 +1,6 @@
 import * as nearAPI from 'near-api-js';
 const { WalletAccount } = nearAPI
-import { near } from '../../utils/near-utils';
-import getConfig from '../../utils/config';
-const { contractId } = getConfig();
+import { near, contractAccount, contractId } from '../../utils/near-utils';
 
 export const initNear = () => async ({ update }) => {
 
@@ -27,3 +25,11 @@ export const initNear = () => async ({ update }) => {
 	await update('', { near, wallet, account });
 
 };
+
+export const getTokens = (contractId, from_index, limit) => async ({ update }) => {
+	const tokens = await contractAccount.viewFunction(contractId, 'nft_tokens', {
+		from_index,
+		limit,
+	})
+	await update('data', { tokens });
+}

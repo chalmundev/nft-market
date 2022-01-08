@@ -2,12 +2,14 @@ import React, { useContext, useEffect } from 'react';
 import {
 	Routes,
 	Route,
-	Link
+	Link,
+	useNavigate
 } from "react-router-dom";
 
+import data from '../static/data.json';
 import { appStore, onAppMount } from './state/app';
 
-import HelloMessage from './HelloMessage';
+import { RouteContract } from './components/RouteContract';
 
 import './App.scss';
 
@@ -15,6 +17,8 @@ const App = () => {
 	const { state, dispatch, update } = useContext(appStore);
 
 	console.log('state', state);
+
+	const navigate = useNavigate()
 
 	const { wallet, account } = state
 
@@ -36,15 +40,16 @@ const App = () => {
 						<Link to="/">Home</Link>
 					</li>
 					<li>
-						<Link to="/hello">Hello</Link>
-					</li>
-					<li>
 						<Link to="/wallet">Wallet</Link>
 					</li>
 				</ul>
 			</nav>
 
 			<Routes>
+				<Route path="/contract/:contractId" element={
+					<RouteContract { ...{ dispatch, tokens: state.data.tokens } } />
+				} />
+				
 				<Route path="/wallet" element={
 					account ? <>
 						<p>{ account.accountId }</p>
@@ -55,14 +60,13 @@ const App = () => {
 						<button onClick={() => wallet.signIn()}>Sign In</button>
 					</>
 				} />
-				<Route path="/hello" element={
-					<HelloMessage message={state.foo && state.foo.bar.hello} />
-				} />
+				
 				<Route path="/" element={
-					<>
-						<p>clicked: {JSON.stringify(state.clicked)}</p>
-						<button onClick={handleClick}>Click Me</button>
-					</>
+					data.map(({ contractId, ts }) => {
+						return <div key={contractId} onClick={() => navigate('/contract/' + contractId)}>
+							{ contractId }
+						</div>
+					})
 				} />
 			</Routes>
 
