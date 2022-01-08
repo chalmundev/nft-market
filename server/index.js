@@ -1,3 +1,4 @@
+const { writeFile } = require('fs/promises')
 const fastify = require('fastify')({ logger: true })
 
 fastify.register(require('fastify-postgres'), {
@@ -24,11 +25,14 @@ const queries = {
 						min(emitted_at_block_timestamp)
 					desc
 				`, [],
-				onResult = (err, result) => {
+				onResult = async (err, result) => {
 					release()
 					if (err) {
 						return rej(err)
 					}
+
+					await writeFile('../static/data.json', JSON.stringify(result.rows))
+
 					res(result.rows)
 				}
 			)
