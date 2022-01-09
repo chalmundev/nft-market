@@ -56,7 +56,7 @@ enum StorageKey {
 }
 
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Offer {
     maker_id: AccountId,

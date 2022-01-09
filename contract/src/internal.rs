@@ -98,30 +98,24 @@ pub(crate) fn is_promise_success() -> bool {
 }
 
 impl Contract {
-    // Removes the offer for the given offer ID and returns the old Offer object.
-    pub(crate) fn internal_remove_offer(&mut self, offer_id: u64) -> Offer {
-        //get the supposed maker and double check that they are the actual offer's maker
-        let maker_id = env::predecessor_account_id();
-		let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("no offer"));
-
-		require!(offer.maker_id == maker_id, "not maker");
-
+    // Removes the offer from the contract state
+    pub(crate) fn internal_remove_offer(&mut self, offer_id: u64, offer: Offer) {
         //remove the offer from its ID
         self.offer_by_id.remove(&offer_id);
     
         //remove the offer ID from the maker
         self.offers_by_maker_id.insert(
-            &maker_id,
+            &offer.maker_id,
             &map_set_remove(
                 &self.offers_by_maker_id,
-                &maker_id,
+                &offer.maker_id,
                 offer_id,
             )
         );
     
         //remove the offer ID from the taker
         self.offers_by_taker_id.insert(
-            &maker_id,
+            &offer.taker_id,
             &map_set_remove(
                 &self.offers_by_taker_id,
                 &offer.taker_id,
@@ -132,9 +126,6 @@ impl Contract {
         //remove the offer from the contract and token ID
         let contract_token_id = get_contract_token_id(&offer.contract_id, &offer.token_id);
         self.offer_by_contract_token_id.remove(&contract_token_id);
-
-        //return the offer object
-        offer
     }
 }
 

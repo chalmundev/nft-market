@@ -37,15 +37,41 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 		require!(offer.taker_id == owner_id, "not nft owner");
 
 		let OfferArgs { auto_transfer } = from_str(&msg).unwrap_or_else(|_| env::panic_str("invalid offer args"));
-        
-        env::log_str(&format!("Auto Transfer: {:?}", auto_transfer)); 
 		
+        //need to reset the approval ID in both the auto transfer case and the not auto transfer case. This is because process offer
+        //takes the approval ID from the offer to use in nft_transfer_payout.
+        offer.approval_id = Some(approval_id);
+		self.offer_by_id.insert(&offer_id, &offer);
+
         if auto_transfer.unwrap() == true {
-			env::log_str("I am in the if statement"); 
-		} else {
-            env::log_str("I am resetting the approval ID"); 
-			offer.approval_id = Some(approval_id);
-			self.offer_by_id.insert(&offer_id, &offer);
+            //initiate a cross contract call to the nft contract. This will transfer the token to the buyer and return
+            //a payout object used for the market to distribute funds to the appropriate accounts.
+            ext_contract::nft_transfer_payout(
+                offer.maker_id.clone(), //maker of the offer (person to transfer the NFT to)
+                offer.token_id, //token ID to transfer
+                approval_id, //market contract's approval ID in order to transfer the token on behalf of the owner
+                "payout from market".to_string(), //memo (to include some context)
+                /*
+                    the price that the token was offered for. This will be used in conjunction with the royalty percentages
+                    for the token in order to determine how much money should go to which account. 
+                */
+                offer.amount,
+                10, //the maximum amount of accounts the market can payout at once (this is limited by GAS)
+                offer.contract_id, //contract to initiate the cross contract call to
+                1, //yoctoNEAR to attach to the call
+                GAS_FOR_NFT_TRANSFER, //GAS to attach to the call
+            )
+            //after the transfer payout has been initiated, we resolve the promise by calling our own resolve_offer function. 
+            //resolve offer will take the payout object returned from the nft_transfer_payout and actually pay the accounts
+            .then(ext_self::resolve_offer(
+                offer_id,
+                offer.maker_id,
+                offer.taker_id, //pass the offer_id
+                offer.amount,
+                env::current_account_id(), //we are invoking this function on the current contract
+                NO_DEPOSIT, //don't attach any deposit
+                GAS_FOR_ROYALTIES, //GAS attached to the call to payout royalties
+            ));
 		}
 
 		PromiseOrValue::Value("return".to_string())

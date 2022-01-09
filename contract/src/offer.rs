@@ -70,53 +70,16 @@ impl Contract {
         //get the initial storage
 		let initial_storage_usage = env::storage_usage();
 
-        //remove the offer based on its ID
-		self.internal_remove_offer(offer_id);
+        //get the supposed maker and double check that they are the actual offer's maker
+        let maker_id = env::predecessor_account_id();
+		let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("no offer"));
+
+		require!(offer.maker_id == maker_id, "not maker");
+
+        //remove the offer based on its ID and offer object.
+        self.internal_remove_offer(offer_id, offer);
 
         //refund the user if they attached more storage than necesary. This will panic if they didn't attach enough.
         refund_storage(initial_storage_usage - env::storage_usage());
-    }
-
-    //private function used when an offer is purchased. 
-    //this will remove the offer, transfer and get the payout from the nft contract, and then distribute royalties
-    #[private]
-    pub fn process_purchase(
-        &mut self,
-        nft_contract_id: AccountId,
-        token_id: String,
-        price: U128,
-        maker_id: AccountId,
-    ) -> Promise {
-        let contract_and_token_id = get_contract_token_id(&nft_contract_id, &token_id);
-        let offer_id = self.offer_by_contract_token_id.get(&contract_and_token_id).expect("no offer for the given contract and token ID");
-        //get the offer object by removing the offer based on its ID
-        let offer = self.internal_remove_offer(offer_id);
-
-        //initiate a cross contract call to the nft contract. This will transfer the token to the buyer and return
-        //a payout object used for the market to distribute funds to the appropriate accounts.
-        ext_contract::nft_transfer_payout(
-            maker_id.clone(), //purchaser (person to transfer the NFT to)
-            token_id, //token ID to transfer
-            offer.approval_id.expect("offer doesn't have an approval ID"), //market contract's approval ID in order to transfer the token on behalf of the owner
-            "payout from market".to_string(), //memo (to include some context)
-            /*
-                the price that the token was purchased for. This will be used in conjunction with the royalty percentages
-                for the token in order to determine how much money should go to which account. 
-            */
-            price,
-			10, //the maximum amount of accounts the market can payout at once (this is limited by GAS)
-            nft_contract_id, //contract to initiate the cross contract call to
-            1, //yoctoNEAR to attach to the call
-            GAS_FOR_NFT_TRANSFER, //GAS to attach to the call
-        )
-        //after the transfer payout has been initiated, we resolve the promise by calling our own resolve_purchase function. 
-        //resolve purchase will take the payout object returned from the nft_transfer_payout and actually pay the accounts
-        .then(ext_self::resolve_purchase(
-            maker_id, //the buyer and price are passed in incase something goes wrong and we need to refund the buyer
-            price,
-            env::current_account_id(), //we are invoking this function on the current contract
-            NO_DEPOSIT, //don't attach any deposit
-            GAS_FOR_ROYALTIES, //GAS attached to the call to payout royalties
-        ))
     }
 }

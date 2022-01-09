@@ -118,7 +118,7 @@ test('bob make_offer on token 2', async (t) => {
 
 test('bob outbid alice on token 1 (CHECK alice + 0.2 N)', async (t) => {
 
-	await recordStart(aliceId)
+	await recordStart(aliceId);
 
 	const res = await bob.functionCall({
 		contractId,
@@ -131,7 +131,7 @@ test('bob outbid alice on token 1 (CHECK alice + 0.2 N)', async (t) => {
 		attachedDeposit: parseNearAmount('0.31'),
 	});
 
-	await recordStop(aliceId)
+	await recordStop(aliceId);
 
 	t.is(res?.status?.SuccessValue, '');
 });
@@ -166,6 +166,34 @@ test('bob remove_offer from token 2', async (t) => {
 });
 
 test('get offers after bob removed', async (t) => {
+	offers = await contractAccount.viewFunction(
+		contractId,
+		'get_offers',
+		{}
+	);
+
+	console.log(offers);
+
+	t.true(offers.length >= 1);
+});
+
+test('token owner approves the marketplace with auto transfer true', async (t) => {
+	const msg = JSON.stringify({
+		auto_transfer: true
+	});
+
+	const res = await tokenOwner.functionCall({
+		contractId: nftContractId,
+		methodName: 'nft_approve',
+		args: {
+			token_id: tokens[1].token_id,
+			account_id: contractId,
+			msg,
+		},
+		gas,
+		attachedDeposit: parseNearAmount("0.1"),
+	});
+
 	offers = await contractAccount.viewFunction(
 		contractId,
 		'get_offers',
