@@ -26,7 +26,7 @@ const init = async (owner_id = contractId) => {
 			gas
 		});
 	} catch (e) {
-		console.log('contract already initialized');
+		console.log('contract already initialized', e);
 		if (!/initialized/.test(e.toString())) {
 			throw e;
 		}

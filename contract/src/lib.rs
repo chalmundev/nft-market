@@ -1,5 +1,6 @@
 mod utils;
 mod nft_callback;
+mod enumeration;
 
 use crate::utils::*;
 
@@ -78,6 +79,19 @@ impl Contract {
 		let initial_storage_usage = env::storage_usage();
 
 		let maker_id = env::predecessor_account_id();
+
+		// Get the offer ID.
+		let contract_token_id = get_contract_token_id(&contract_id, &token_id);
+
+		let existing_offer_id = self.offer_by_contract_token_id.get(&contract_token_id);
+
+		// If taker approved the token already, panic.
+		if existing_offer_id.is_some() {
+			let existing_approval_id = self.offer_by_id.get(&existing_offer_id.unwrap()).unwrap().approval_id;
+			if existing_approval_id.is_some() {
+				env::panic_str("Token owner has accepted an existing offer. Try again later.")
+			}
+		}
 
 		let offer = Offer{
 			maker_id: maker_id.clone(),
@@ -160,14 +174,5 @@ impl Contract {
 		self.offer_by_contract_token_id.remove(&contract_token_id);
 
 		refund_storage(initial_storage_usage - env::storage_usage());
-    }
-    
-	/// views
-
-    pub fn get_offers(&self, from_index: Option<U128>, limit: Option<u64>) -> (Vec<u64>, Vec<Offer>) {
-		(
-			unordered_map_key_pagination(&self.offer_by_id, from_index, limit),
-			unordered_map_val_pagination(&self.offer_by_id, from_index, limit)
-		)
     }
 }
