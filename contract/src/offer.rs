@@ -92,7 +92,7 @@ impl Contract {
 		require!(offer.maker_id == maker_id, "not maker");
 
         //remove the offer based on its ID and offer object.
-        self.internal_remove_offer(offer_id, offer);
+        self.internal_remove_offer(offer_id, &offer);
 
         //refund the user if they attached more storage than necesary. This will panic if they didn't attach enough.
         refund_storage(initial_storage_usage - env::storage_usage());

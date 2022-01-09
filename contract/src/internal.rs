@@ -95,7 +95,7 @@ pub(crate) fn is_promise_success() -> bool {
 
 impl Contract {
     // Removes the offer from the contract state
-    pub(crate) fn internal_remove_offer(&mut self, offer_id: u64, offer: Offer) {
+    pub(crate) fn internal_remove_offer(&mut self, offer_id: u64, offer: &Offer) {
         //remove the offer from its ID
         self.offer_by_id.remove(&offer_id);
     

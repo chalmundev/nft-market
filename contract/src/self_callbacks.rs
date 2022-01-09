@@ -121,7 +121,7 @@ impl Contract {
     ) -> U128 {
         let mut valid_payout_object = true; 
         let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("No offer associated with the offer ID"));
-        self.internal_remove_offer(offer_id, offer.clone());
+        self.internal_remove_offer(offer_id, &offer);
 
         // check promise result
 		let result = promise_result_as_success().unwrap_or_else(|| {
