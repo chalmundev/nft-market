@@ -77,33 +77,23 @@ pub(crate) fn map_set_remove<K, V> (
 	offers_by_maker_id
 }
 
-/// refunds
-
-pub(crate) fn refund_deposit(storage_used: u64, keep_amount: Option<Balance>) {
-    let required_cost = env::storage_byte_cost() * Balance::from(storage_used);
-    let mut attached_deposit = env::attached_deposit();
-
-	if let Some(keep_amount) = keep_amount {
-		attached_deposit = attached_deposit.checked_sub(keep_amount).unwrap_or_else(|| env::panic_str("keep amount too large"));
-	}
-
-    require!(
-        required_cost <= attached_deposit,
-        "not enough N to cover storage",
-    );
-
-    let refund = attached_deposit - required_cost;
-	// log!("refund_deposit amount {}", refund);
-    if refund > 1 {
-        Promise::new(env::predecessor_account_id()).transfer(refund);
-    }
-}
-
 pub(crate) fn refund_storage(storage_freed: u64) {
     let refund = env::storage_byte_cost() * storage_freed as u128 - 1;
    
     if refund > 1 {
         Promise::new(env::predecessor_account_id()).transfer(refund);
+    }
+}
+
+pub(crate) fn is_promise_success() -> bool {
+    assert_eq!(
+        env::promise_results_count(),
+        1,
+        "Contract expected a result on the callback"
+    );
+    match env::promise_result(0) {
+        PromiseResult::Successful(_) => true,
+        _ => false,
     }
 }
 
@@ -147,3 +137,25 @@ impl Contract {
         offer
     }
 }
+
+// deprecated???
+
+// pub(crate) fn refund_deposit(storage_used: u64, keep_amount: Option<Balance>) {
+// 	let required_cost = env::storage_byte_cost() * Balance::from(storage_used);
+// 	let mut attached_deposit = env::attached_deposit();
+
+// 	if let Some(keep_amount) = keep_amount {
+// 		attached_deposit = attached_deposit.checked_sub(keep_amount).unwrap_or_else(|| env::panic_str("keep amount too large"));
+// 	}
+
+// 	require!(
+// 		required_cost <= attached_deposit,
+// 		"not enough N to cover storage",
+// 	);
+
+// 	let refund = attached_deposit - required_cost;
+// 	// log!("refund_deposit amount {}", refund);
+// 	if refund > 1 {
+// 		Promise::new(env::predecessor_account_id()).transfer(refund);
+// 	}
+// }

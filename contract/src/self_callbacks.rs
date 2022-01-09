@@ -9,6 +9,8 @@ pub trait SelfContract {
     fn outbid_callback(&mut self,
 		offer_id: u64,
 		maker_id: AccountId,
+		prev_maker_id:AccountId,
+		prev_offer_amount:U128,
 	);
     fn resolve_purchase(
         &mut self,
@@ -28,6 +30,7 @@ pub struct Token {
 impl Contract {
 
     #[payable]
+    #[private]
 	pub fn offer_callback(&mut self,
 		maker_id: AccountId,
 		contract_id: AccountId,
@@ -79,15 +82,23 @@ impl Contract {
 	}
 
     #[payable]
+    #[private]
 	pub fn outbid_callback(&mut self,
 		offer_id: u64,
 		maker_id:AccountId,
+		prev_maker_id:AccountId,
+		prev_offer_amount:U128,
 	) {
+		if is_promise_success() {
+			return
+		}
+		// pay back promise failed, pay back the new offer maker
+		Promise::new(maker_id).transfer(env::attached_deposit() + DEFAULT_OFFER_STORAGE_AMOUNT);
+
+		// revert state
 		let mut offer = self.offer_by_id.get(&offer_id).unwrap();
-
-		offer.maker_id = maker_id;
-		offer.amount = U128(env::attached_deposit());
-
+		offer.maker_id = prev_maker_id;
+		offer.amount = prev_offer_amount;
 		self.offer_by_id.insert(&offer_id, &offer);
 	}
 

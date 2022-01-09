@@ -116,7 +116,7 @@ test('bob make_offer on token 2', async (t) => {
 	t.is(res?.status?.SuccessValue, '');
 });
 
-test('bob outbid alice on token 1 (check alice balance increased)', async (t) => {
+test('bob outbid alice on token 1 (CHECK alice + 0.2 N)', async (t) => {
 
 	await recordStart(aliceId)
 
@@ -127,6 +127,7 @@ test('bob outbid alice on token 1 (check alice balance increased)', async (t) =>
 			...tokens[0],
 		},
 		gas,
+		// outbid alice original 0.2 - 0.05 = 0.15 N bid by 0.26 N (0.05 for storage)
 		attachedDeposit: parseNearAmount('0.31'),
 	});
 

@@ -16,15 +16,26 @@ impl Contract {
 
 		if let Some(offer_id) = offer_id {
 			// existing offer
-			let offer = self.offer_by_id.get(&offer_id).unwrap();
+			let mut offer = self.offer_by_id.get(&offer_id).unwrap();
 			require!(offer.maker_id != maker_id, "can't outbid self");
 			require!(offer_amount.0 > offer.amount.0 + MIN_OUTBID_AMOUNT, "must bid higher by 0.1 N");
 
+			// save values in case we need to revert state in callback
+			let prev_maker_id = offer.maker_id.clone();
+			let prev_offer_amount = offer.amount.clone();
+			// valid offer, money in contract, update state
+			offer.maker_id = maker_id.clone();
+			offer.amount = U128(env::attached_deposit());
+			self.offer_by_id.insert(&offer_id, &offer);
+
+			// pay back prev offer maker + storage
 			Promise::new(offer.maker_id)
-				.transfer(offer.amount.0)
+				.transfer(offer.amount.0 + DEFAULT_OFFER_STORAGE_AMOUNT)
 				.then(ext_self::outbid_callback(
 					offer_id,
 					maker_id,
+					prev_maker_id,
+					prev_offer_amount,
 					env::current_account_id(),
 					offer_amount.0,
 					CALLBACK_GAS,

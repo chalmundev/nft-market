@@ -1,28 +1,28 @@
+use std::collections::HashMap;
+
 use near_sdk::{
 	// log,
 	require,
-	env, ext_contract, near_bindgen, Gas, Balance, AccountId, BorshStorageKey, PanicOnDefault, Promise, PromiseOrValue,
+	env, ext_contract, near_bindgen, assert_one_yocto,
+	Gas, Balance, AccountId, BorshStorageKey, PanicOnDefault,
+	Promise, PromiseResult, PromiseOrValue, promise_result_as_success, 
 	borsh::{self, BorshDeserialize, BorshSerialize},
 	serde::{Serialize, Deserialize},
 	serde_json::from_str,
 	collections::{Vector, LookupMap, UnorderedMap, UnorderedSet},
 	json_types::{U128},
-	assert_one_yocto,
-	promise_result_as_success,
 };
 
-use std::collections::HashMap;
-
-use crate::external::*;
+use crate::nft_traits::*;
 use crate::internal::*;
-use crate::self_callback::*;
+use crate::self_callbacks::*;
 
 mod enumeration;
-mod external;
+mod nft_traits;
 mod internal;
-mod nft_callback;
+mod nft_callbacks;
 mod offer;
-mod self_callback;
+mod self_callbacks;
 
 //GAS constants to attach to calls
 const GAS_FOR_ROYALTIES: Gas = Gas(115_000_000_000_000);
