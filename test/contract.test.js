@@ -116,7 +116,9 @@ test('bob make_offer on token 2', async (t) => {
 	t.is(res?.status?.SuccessValue, '');
 });
 
-test('bob outbid alice on token 1', async (t) => {
+test('bob outbid alice on token 1 (check alice balance increased)', async (t) => {
+
+	await recordStart(aliceId)
 
 	const res = await bob.functionCall({
 		contractId,
@@ -127,6 +129,8 @@ test('bob outbid alice on token 1', async (t) => {
 		gas,
 		attachedDeposit: parseNearAmount('0.31'),
 	});
+
+	await recordStop(aliceId)
 
 	t.is(res?.status?.SuccessValue, '');
 });

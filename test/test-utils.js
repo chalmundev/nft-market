@@ -62,6 +62,7 @@ const createAccount = async (accountId, fundingAmount = NEW_ACCOUNT_AMOUNT, secr
 
 const getAccountBalance = (accountId) => (new nearAPI.Account(connection, accountId)).getAccountBalance();
 const getAccountState = (accountId) => (new nearAPI.Account(connection, accountId)).state();
+const totalDiff = (balanceBefore, balanceAfter) => formatNearAmount(new BN(balanceAfter.total).sub(new BN(balanceBefore.total)).toString(), 8);
 const stateCost = (balanceBefore, balanceAfter) => formatNearAmount(new BN(balanceAfter.stateStaked).sub(new BN(balanceBefore.stateStaked)).toString(), 8);
 const bytesUsed = (stateBefore, stateAfter) => parseInt(stateAfter.storage_usage, 10) - parseInt(stateBefore.storage_usage);
 
@@ -82,10 +83,12 @@ const recordStop = async (accountId) => {
 		state: await getAccountState(accountId),
 	};
 
-	console.log('\nAnalysis:\n');
-	console.log('State stake:', stateCost(before.balance, after.balance));
-	console.log('Bytes used:', bytesUsed(before.state, after.state));
-	console.log('\n');
+	console.log(
+		'\n', 'Analysis:', '\n',
+		'Total diff:', totalDiff(before.balance, after.balance), '\n',
+		'State used:', stateCost(before.balance, after.balance), '\n',
+		'Bytes used:', bytesUsed(before.state, after.state), '\n',
+	);
 };
 
 module.exports = {
