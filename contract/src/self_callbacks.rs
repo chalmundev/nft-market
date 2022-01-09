@@ -50,6 +50,7 @@ impl Contract {
 			amount,
 			created_at: env::block_timestamp(),
 			approval_id: None,
+			has_failed_promise: false,
 		});
 
 		self.offers_by_maker_id.insert(
@@ -99,6 +100,7 @@ impl Contract {
 		let mut offer = self.offer_by_id.get(&offer_id).unwrap();
 		offer.maker_id = prev_maker_id;
 		offer.amount = prev_offer_amount;
+		offer.has_failed_promise = true;
 		self.offer_by_id.insert(&offer_id, &offer);
 	}
 

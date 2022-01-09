@@ -13,6 +13,7 @@ use near_sdk::{
 	json_types::{U128},
 };
 
+use crate::offer::*;
 use crate::nft_traits::*;
 use crate::internal::*;
 use crate::self_callbacks::*;
@@ -53,19 +54,6 @@ enum StorageKey {
 	OfferByTakerId,
     OfferByTakerIdInner { taker_id: AccountId },
 	OfferByContractTokenId,
-}
-
-#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
-#[derive(Serialize, Deserialize)]
-#[serde(crate = "near_sdk::serde")]
-pub struct Offer {
-    maker_id: AccountId,
-    taker_id: AccountId,
-	contract_id: AccountId,
-    token_id: String,
-    amount: U128,
-    created_at: u64,
-	approval_id: Option<u64>,
 }
 
 #[near_bindgen]

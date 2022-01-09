@@ -86,11 +86,7 @@ pub(crate) fn refund_storage(storage_freed: u64) {
 }
 
 pub(crate) fn is_promise_success() -> bool {
-    assert_eq!(
-        env::promise_results_count(),
-        1,
-        "Contract expected a result on the callback"
-    );
+    require!(env::promise_results_count() == 1, "promise failed");
     match env::promise_result(0) {
         PromiseResult::Successful(_) => true,
         _ => false,
