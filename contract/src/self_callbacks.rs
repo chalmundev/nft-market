@@ -12,10 +12,12 @@ pub trait SelfContract {
 		prev_maker_id:AccountId,
 		prev_offer_amount:U128,
 	);
-    fn resolve_purchase(
+    fn resolve_offer(
         &mut self,
-        buyer_id: AccountId,
-        price: U128,
+        offer_id: u64,
+        maker_id: AccountId,
+        taker_id: AccountId,
+        amount: U128,
     ) -> Promise;
 }
 
@@ -110,64 +112,63 @@ impl Contract {
         it will refund the buyer for the price. 
     */
     #[private]
-    pub fn resolve_purchase(
+    pub fn resolve_offer(
         &mut self,
+        offer_id: u64,
         maker_id: AccountId,
-        price: U128,
+        taker_id: AccountId,
+        amount: U128,
     ) -> U128 {
-        // checking for payout information returned from the nft_transfer_payout method
-        let payout_option = promise_result_as_success().and_then(|value| {
-            //if we set the payout_option to None, that means something went wrong and we should refund the buyer
-            near_sdk::serde_json::from_slice::<Payout>(&value)
-                //converts the result to an optional value
-                .ok()
-                //returns None if the none. Otherwise executes the following logic
-                .and_then(|payout_object| {
-                    //we'll check if length of the payout object is > 10 or it's empty. In either case, we return None
-                    if payout_object.payout.len() > 10 || payout_object.payout.is_empty() {
-                        env::log_str("Cannot have more than 10 royalties");
-                        None
-                    
-                    //if the payout object is the correct length, we move forward
-                    } else {
-                        //we'll keep track of how much the nft contract wants us to payout. Starting at the full price payed by the buyer
-                        let mut remainder = price.0;
-                        
-                        //loop through the payout and subtract the values from the remainder. 
-                        for &value in payout_object.payout.values() {
-                            //checked sub checks for overflow or any errors and returns None if there are problems
-                            remainder = remainder.checked_sub(value.0)?;
-                        }
-                        //Check to see if the NFT contract sent back a faulty payout that requires us to pay more or too little. 
-                        //The remainder will be 0 if the payout summed to the total price. The remainder will be 1 if the royalties
-                        //we something like 3333 + 3333 + 3333. 
-                        if remainder == 0 || remainder == 1 {
-                            //set the payout_option to be the payout because nothing went wrong
-                            Some(payout_object.payout)
-                        } else {
-                            //if the remainder was anything but 1 or 0, we return None
-                            None
-                        }
-                    }
-                })
+        let mut valid_payout_object = true; 
+        let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("No offer associated with the offer ID"));
+        self.internal_remove_offer(offer_id, offer.clone());
+
+        // check promise result
+		let result = promise_result_as_success().unwrap_or_else(|| {
+            //TODO: decrement market holdings
+            Promise::new(maker_id).transfer(offer.amount.0);
+            env::panic_str("NFT not successfully transferred. Refunding maker.")
         });
 
-        // if the payout option was some payout, we set this payout variable equal to that some payout
-        let payout = if let Some(payout_option) = payout_option {
-            payout_option
-        //if the payout option was None, we refund the buyer for the price they payed and return
-        } else {
-            Promise::new(maker_id).transfer(u128::from(price));
-            // leave function and return the price that was refunded
-            return price;
-        };
+		let Payout{ mut payout } = near_sdk::serde_json::from_slice::<Payout>(&result).unwrap_or_else(|_| {
+            valid_payout_object = false;
+            env::log_str("not a valid payout object. Sending taker full offer amount.");
+            Payout{payout: HashMap::new()}
+        });
+		
 
-        // NEAR payouts
-        for (receiver_id, amount) in payout {
-            Promise::new(receiver_id).transfer(amount.0);
+        //we'll check if length of the payout object is > 10 or it's empty. In either case, we return None
+        if payout.len() > 10 || payout.is_empty() {
+            valid_payout_object = false;
+            env::log_str(  "Cannot have more than 10 royalties. Sending taker full offer amount.");
+        }
+        
+        //start with the remainder equal to the offer amount.
+        let mut remainder = amount.0;
+        
+        //loop through the payout and subtract the values from the remainder. 
+        for &value in payout.values() { //TODO: log and boolean
+            //checked sub checks for overflow or any errors and returns None if there are problems
+            remainder = remainder.checked_sub(value.0).unwrap_or_else(|| {
+                valid_payout_object = false;
+                if valid_payout_object != false {
+                    env::log_str("Payout object resulted in a payout larger than offer amount. Sending taker full offer amount.");
+                }
+                0
+            });
         }
 
-        //return the price payout out
-        price
+        //if invalid payout object, send the maker
+        if valid_payout_object == false {
+            payout = HashMap::from([(taker_id, amount)]);
+        }
+        
+        // NEAR payouts
+        for (receiver_id, payout_amount) in payout {
+            Promise::new(receiver_id).transfer(payout_amount.0);
+        }
+
+        //return the amount payed out
+        amount
     }
 }
