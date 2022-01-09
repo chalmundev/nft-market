@@ -1,22 +1,30 @@
 mod utils;
 mod nft_callback;
+mod external;
+mod self_callback;
 mod enumeration;
 
+use crate::self_callback::*;
+use crate::external::*;
 use crate::utils::*;
 
 use near_sdk::{
 	// log,
 	require,
-	env, near_bindgen, Balance, AccountId, BorshStorageKey, PanicOnDefault, Promise, PromiseOrValue,
+	env, ext_contract, near_bindgen, Gas, Balance, AccountId, BorshStorageKey, PanicOnDefault, Promise, PromiseOrValue,
 	borsh::{self, BorshDeserialize, BorshSerialize},
 	serde::{Serialize, Deserialize},
 	serde_json::from_str,
 	collections::{Vector, LookupMap, UnorderedMap, UnorderedSet},
 	json_types::{U128},
 	assert_one_yocto,
+	promise_result_as_success,
 };
 
 pub const DEFAULT_OFFER_TOKEN: &str = "near";
+pub const MIN_OUTBID_AMOUNT: Balance = 99_000_000_000_000_000_000_000; // 5kb (bid > 0.1N)
+pub const DEFAULT_OFFER_STORAGE_AMOUNT: Balance = 50_000_000_000_000_000_000_000; // 5kb (0.05N)
+pub const CALLBACK_GAS: Gas = Gas(30_000_000_000_000); // 30 Tgas
 pub const DELIMETER: char = '|';
 
 #[derive(BorshSerialize, BorshStorageKey)]
@@ -37,8 +45,7 @@ pub struct Offer {
     taker_id: AccountId,
 	contract_id: AccountId,
     token_id: String,
-    offer_amount: U128,
-    offer_token: String,
+    amount: U128,
     created_at: u64,
 	approval_id: Option<u64>,
 }
@@ -69,75 +76,54 @@ impl Contract {
     }
 	
     #[payable]
-    pub fn make_offer(&mut self,
-		taker_id: AccountId,
+    pub fn make_offer(
+		&mut self,
 		contract_id: AccountId,
 		token_id: String,
-		offer_amount: U128,
-		offer_token: Option<String>
 	) {
-		let initial_storage_usage = env::storage_usage();
-
 		let maker_id = env::predecessor_account_id();
-
-		// Get the offer ID.
 		let contract_token_id = get_contract_token_id(&contract_id, &token_id);
+		let offer_amount = U128(env::attached_deposit() - DEFAULT_OFFER_STORAGE_AMOUNT);
 
-		let existing_offer_id = self.offer_by_contract_token_id.get(&contract_token_id);
+		let offer_id = self.offer_by_contract_token_id.get(&contract_token_id);
 
-		// If taker approved the token already, panic.
-		if existing_offer_id.is_some() {
-			let existing_approval_id = self.offer_by_id.get(&existing_offer_id.unwrap()).unwrap().approval_id;
-			if existing_approval_id.is_some() {
-				env::panic_str("Token owner has accepted an existing offer. Try again later.")
-			}
+		if let Some(offer_id) = offer_id {
+			// existing offer
+			let offer = self.offer_by_id.get(&offer_id).unwrap();
+			require!(offer.maker_id != maker_id, "can't outbid self");
+			require!(offer_amount.0 > offer.amount.0 + MIN_OUTBID_AMOUNT, "must bid higher by 0.1 N");
+
+			Promise::new(offer.maker_id)
+				.transfer(offer.amount.0)
+				.then(ext_self::outbid_callback(
+					offer_id,
+					maker_id,
+					env::current_account_id(),
+					offer_amount.0,
+					CALLBACK_GAS,
+				));
+		} else {
+			// new offer
+			ext_contract::nft_token(
+				token_id,
+				contract_id.clone(),
+				0,
+				env::prepaid_gas() - CALLBACK_GAS - CALLBACK_GAS,
+			).then(ext_self::offer_callback(
+				maker_id,
+				contract_id,
+				env::current_account_id(),
+				offer_amount.0,
+				CALLBACK_GAS,
+			));
+
 		}
 
-		let offer = Offer{
-			maker_id: maker_id.clone(),
-			taker_id: taker_id.clone(),
-			contract_id: contract_id.clone(),
-			token_id,
-			offer_amount,
-			offer_token: offer_token.unwrap_or_else(|| DEFAULT_OFFER_TOKEN.into()),
-			created_at: env::block_timestamp(),
-			approval_id: None,
-		};
-
-		self.offer_id += 1;
-		self.offer_by_id.insert(&self.offer_id, &offer);
-
-		self.offers_by_maker_id.insert(
-			&maker_id, 
-			&map_set_insert(
-				&self.offers_by_maker_id, 
-				&maker_id, 
-				StorageKey::OfferByMakerIdInner { maker_id: maker_id.clone() },
-				self.offer_id
-			)
-		);
-	
-		self.offers_by_taker_id.insert(
-			&taker_id, 
-			&map_set_insert(
-				&self.offers_by_taker_id, 
-				&taker_id, 
-				StorageKey::OfferByTakerIdInner { taker_id: taker_id.clone() },
-				self.offer_id
-			)
-		);
-	
-		let contract_token_id = get_contract_token_id(&offer.contract_id, &offer.token_id);
-		self.offer_by_contract_token_id.insert(
-			&contract_token_id.clone(),
-			&self.offer_id
-		);
-
-		refund_deposit(env::storage_usage() - initial_storage_usage, Some(offer_amount.into()));
     }
 
 	#[payable]
-    pub fn remove_offer(&mut self,
+    pub fn remove_offer(
+		&mut self,
 		offer_id: u64
 	) {
 		assert_one_yocto();

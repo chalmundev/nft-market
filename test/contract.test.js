@@ -21,14 +21,12 @@ const nftContractId = "tests.nft-market.testnet";
 let runningTokenId = new Date().getTime() / 1000;
 const tokens = [
 	{
-		taker_id: nftContractId,
-		token_id: runningTokenId + ":1",
 		contract_id: nftContractId,
+		token_id: runningTokenId + ":1",
 	},
 	{
-		taker_id: nftContractId,
-		token_id: runningTokenId + ":2",
 		contract_id: nftContractId,
+		token_id: runningTokenId + ":2",
 	},
 ];
 
@@ -95,7 +93,6 @@ test('alice make_offer on token 1', async (t) => {
 		methodName: 'make_offer',
 		args: {
 			...tokens[0],
-			offer_amount: parseNearAmount('0.1')
 		},
 		gas,
 		attachedDeposit: parseNearAmount('0.2'),
@@ -111,10 +108,24 @@ test('bob make_offer on token 2', async (t) => {
 		methodName: 'make_offer',
 		args: {
 			...tokens[1],
-			offer_amount: parseNearAmount('0.1')
 		},
 		gas,
 		attachedDeposit: parseNearAmount('0.2'),
+	});
+
+	t.is(res?.status?.SuccessValue, '');
+});
+
+test('bob outbid alice on token 1', async (t) => {
+
+	const res = await bob.functionCall({
+		contractId,
+		methodName: 'make_offer',
+		args: {
+			...tokens[0],
+		},
+		gas,
+		attachedDeposit: parseNearAmount('0.31'),
 	});
 
 	t.is(res?.status?.SuccessValue, '');
@@ -161,33 +172,33 @@ test('get offers after bob removed', async (t) => {
 	t.true(offers.length >= 1);
 });
 
-test('token Owner approves marketplace for alice offer. Auto transfer false', async (t) => {
-	const msg = JSON.stringify({
-		auto_transfer: false
-	});
+// test('token Owner approves marketplace for alice offer. Auto transfer false', async (t) => {
+// 	const msg = JSON.stringify({
+// 		auto_transfer: false
+// 	});
 
-	const res = await tokenOwner.functionCall({
-		contractId: nftContractId,
-		methodName: 'nft_approve',
-		args: {
-			token_id: tokens[0].token_id,
-			account_id: contractId,
-			msg,
-		},
-		gas,
-		attachedDeposit: parseNearAmount("0.1"),
-	});
+// 	const res = await tokenOwner.functionCall({
+// 		contractId: nftContractId,
+// 		methodName: 'nft_approve',
+// 		args: {
+// 			token_id: tokens[0].token_id,
+// 			account_id: contractId,
+// 			msg,
+// 		},
+// 		gas,
+// 		attachedDeposit: parseNearAmount("0.1"),
+// 	});
 
-	offer = await contractAccount.viewFunction(
-		contractId,
-		'get_offer',
-		{
-			contract_id: nftContractId,
-			token_id: tokens[0].token_id
-		}
-	);
+// 	offer = await contractAccount.viewFunction(
+// 		contractId,
+// 		'get_offer',
+// 		{
+// 			contract_id: nftContractId,
+// 			token_id: tokens[0].token_id
+// 		}
+// 	);
 
-	console.log("Offer - ", offer); 
+// 	console.log("Offer - ", offer); 
 
-	t.is(offer.approval_id, 0);
-});
+// 	t.is(offer.approval_id, 0);
+// });
