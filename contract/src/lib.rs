@@ -1,13 +1,3 @@
-mod utils;
-mod nft_callback;
-mod external;
-mod self_callback;
-mod enumeration;
-
-use crate::self_callback::*;
-use crate::external::*;
-use crate::utils::*;
-
 use near_sdk::{
 	// log,
 	require,
@@ -21,11 +11,39 @@ use near_sdk::{
 	promise_result_as_success,
 };
 
+use std::collections::HashMap;
+
+use crate::external::*;
+use crate::internal::*;
+use crate::self_callback::*;
+
+mod enumeration;
+mod external;
+mod internal;
+mod nft_callback;
+mod offer;
+mod self_callback;
+
+//GAS constants to attach to calls
+const GAS_FOR_ROYALTIES: Gas = Gas(115_000_000_000_000);
+const GAS_FOR_NFT_TRANSFER: Gas = Gas(15_000_000_000_000);
+
 pub const DEFAULT_OFFER_TOKEN: &str = "near";
 pub const MIN_OUTBID_AMOUNT: Balance = 99_000_000_000_000_000_000_000; // 5kb (bid > 0.1N)
 pub const DEFAULT_OFFER_STORAGE_AMOUNT: Balance = 50_000_000_000_000_000_000_000; // 5kb (0.05N)
 pub const CALLBACK_GAS: Gas = Gas(30_000_000_000_000); // 30 Tgas
 pub const DELIMETER: char = '|';
+//constant used to attach 0 NEAR to a call
+const NO_DEPOSIT: Balance = 0;
+
+//Creating custom types to use within the contract. This makes things more readable. 
+pub type TokenId = String;
+//defines the payout type we'll be parsing from the NFT contract as a part of the royalty standard.
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct Payout {
+    pub payout: HashMap<AccountId, U128>,
+} 
 
 #[derive(BorshSerialize, BorshStorageKey)]
 enum StorageKey {
@@ -73,92 +91,5 @@ impl Contract {
 			offers_by_taker_id: LookupMap::new(StorageKey::OfferByTakerId),
 			offer_by_contract_token_id: LookupMap::new(StorageKey::OfferByContractTokenId),
         }
-    }
-	
-    #[payable]
-    pub fn make_offer(
-		&mut self,
-		contract_id: AccountId,
-		token_id: String,
-	) {
-		let maker_id = env::predecessor_account_id();
-		let contract_token_id = get_contract_token_id(&contract_id, &token_id);
-		let offer_amount = U128(env::attached_deposit() - DEFAULT_OFFER_STORAGE_AMOUNT);
-
-		let offer_id = self.offer_by_contract_token_id.get(&contract_token_id);
-
-		if let Some(offer_id) = offer_id {
-			// existing offer
-			let offer = self.offer_by_id.get(&offer_id).unwrap();
-			require!(offer.maker_id != maker_id, "can't outbid self");
-			require!(offer_amount.0 > offer.amount.0 + MIN_OUTBID_AMOUNT, "must bid higher by 0.1 N");
-
-			Promise::new(offer.maker_id)
-				.transfer(offer.amount.0)
-				.then(ext_self::outbid_callback(
-					offer_id,
-					maker_id,
-					env::current_account_id(),
-					offer_amount.0,
-					CALLBACK_GAS,
-				));
-		} else {
-			// new offer
-			ext_contract::nft_token(
-				token_id,
-				contract_id.clone(),
-				0,
-				env::prepaid_gas() - CALLBACK_GAS - CALLBACK_GAS,
-			).then(ext_self::offer_callback(
-				maker_id,
-				contract_id,
-				env::current_account_id(),
-				offer_amount.0,
-				CALLBACK_GAS,
-			));
-
-		}
-
-    }
-
-	#[payable]
-    pub fn remove_offer(
-		&mut self,
-		offer_id: u64
-	) {
-		assert_one_yocto();
-
-		let initial_storage_usage = env::storage_usage();
-
-		let maker_id = env::predecessor_account_id();
-
-		let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("no offer"));
-
-		require!(offer.maker_id == maker_id, "not maker");
-
-		self.offer_by_id.remove(&offer_id);
-
-		self.offers_by_maker_id.insert(
-			&maker_id,
-			&map_set_remove(
-				&self.offers_by_maker_id,
-				&maker_id,
-				offer_id,
-			)
-		);
-
-		self.offers_by_taker_id.insert(
-			&maker_id,
-			&map_set_remove(
-				&self.offers_by_taker_id,
-				&offer.taker_id,
-				offer_id,
-			)
-		);
-
-		let contract_token_id = get_contract_token_id(&offer.contract_id, &offer.token_id);
-		self.offer_by_contract_token_id.remove(&contract_token_id);
-
-		refund_storage(initial_storage_usage - env::storage_usage());
     }
 }
