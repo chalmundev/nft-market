@@ -18,7 +18,9 @@ pub trait SelfContract {
         maker_id: AccountId,
         taker_id: AccountId,
         amount: U128,
+		market_holding_amount: u128
     ) -> Promise;
+	fn on_withdraw_holdings(&mut self);
 }
 
 #[derive(Serialize, Deserialize)]
@@ -80,8 +82,6 @@ impl Contract {
 			&contract_token_id.clone(),
 			&self.offer_id
 		);
-
-
 	}
 
     #[payable]
@@ -106,6 +106,18 @@ impl Contract {
 		self.offer_by_id.insert(&offer_id, &offer);
 	}
 
+	//withdraw callback to ensure that the promise was successful when withdrawing the market holdings
+	#[payable]
+    #[private]
+	pub fn on_withdraw_holdings(&mut self) {
+		if is_promise_success() {
+			//reset the market holdings only if the promise was successful
+			self.market_holdings = 0;
+			return
+		}
+		env::log_str("Unexpected error when withdrawing market holdings.");
+	}
+
 	/*
         private method used to resolve the promise when calling nft_transfer_payout. This will take the payout object and 
         check to see if it's authentic and there's no problems. If everything is fine, it will pay the accounts. If there's a problem,
@@ -118,6 +130,7 @@ impl Contract {
         maker_id: AccountId,
         taker_id: AccountId,
         amount: U128,
+		market_holding_amount: u128
     ) -> U128 {
         let mut valid_payout_object = true; 
         let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("No offer associated with the offer ID"));
@@ -125,7 +138,7 @@ impl Contract {
 
         // check promise result
 		let result = promise_result_as_success().unwrap_or_else(|| {
-            //TODO: decrement market holdings
+            self.market_holdings.checked_sub(market_holding_amount).unwrap_or_else(|| env::panic_str("Unable to decrement market holdings since NFT transfer failed"));
             Promise::new(maker_id).transfer(offer.amount.0);
             env::panic_str("NFT not successfully transferred. Refunding maker.")
         });
@@ -147,7 +160,7 @@ impl Contract {
         let mut remainder = amount.0;
         
         //loop through the payout and subtract the values from the remainder. 
-        for &value in payout.values() { //TODO: log and boolean
+        for &value in payout.values() {
             //checked sub checks for overflow or any errors and returns None if there are problems
             remainder = remainder.checked_sub(value.0).unwrap_or_else(|| {
                 valid_payout_object = false;

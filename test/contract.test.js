@@ -30,7 +30,11 @@ const tokens = [
 	},
 ];
 
-let contractAccount, offerIds, offers, aliceId, bobId, tokenOwnerId, tokenOwner, alice, bob;
+const royaltyAccounts = [
+	
+];
+
+let contractAccount, offerIds, offers, aliceId, bobId, tokenOwnerId, tokenOwner, alice, bob, royaltyIdOne, royaltyIdTwo;
 
 test('contract is deployed', async (t) => {
 	contractAccount = await init();
@@ -46,10 +50,21 @@ test('users initialized', async (t) => {
 	alice = await getAccount(aliceId);
 	bob = await getAccount(bobId);
 
+	//royalty accounts for NFT payouts
+	royaltyIdOne = '10-percent.' + contractId;
+	royaltyIdTwo= '5-percent.' + contractId;
+	royaltyAccountOne = await getAccount(royaltyIdOne);
+	royaltyAccountTwo = await getAccount(royaltyIdTwo);
+
 	t.true(true);
 });
 
 test('tokens minted', async (t) => {
+	//royalty object to pass into mint f	unction
+	let tokenRoyalty = new Object();
+	tokenRoyalty[royaltyIdOne] = 1000; 
+	tokenRoyalty[royaltyIdTwo] = 500;
+	
 	const res1 = await tokenOwner.functionCall({
 		contractId: nftContractId, 
 		methodName: 'nft_mint', 
@@ -59,6 +74,7 @@ test('tokens minted', async (t) => {
 				title: "Testing Token ID",
 				media: "https://bafybeiftczwrtyr3k7a2k4vutd3amkwsmaqyhrdzlhvpt33dyjivufqusq.ipfs.dweb.link/goteam-gif.gif",
 			},
+			perpetual_royalties: tokenRoyalty,
 			receiver_id: tokenOwnerId,
 		},
 		gas, 
@@ -74,6 +90,7 @@ test('tokens minted', async (t) => {
 				title: "Testing Token ID",
 				media: "https://bafybeiftczwrtyr3k7a2k4vutd3amkwsmaqyhrdzlhvpt33dyjivufqusq.ipfs.dweb.link/goteam-gif.gif",
 			},
+			perpetual_royalties: tokenRoyalty,
 			receiver_id: tokenOwnerId,
 		},
 		gas, 
@@ -203,6 +220,40 @@ test('token owner approves the marketplace with auto transfer true', async (t) =
 	console.log(offers);
 
 	t.true(offers.length >= 1);
+});
+
+test('check if marketplace holdings increased', async (t) => {
+	holdings = await contractAccount.viewFunction(
+		contractId,
+		'view_market_holdings',
+		{}
+	);
+
+	console.log(holdings);
+
+	t.true(holdings > 1);
+});
+
+test('withdrawing market holdings', async (t) => {
+	const res = await contractAccount.functionCall({
+		contractId,
+		methodName: 'withdraw_market_holdings',
+		args: {
+			receiving_account: royaltyIdOne
+		},
+		gas,
+		attachedDeposit: 0,
+	});
+
+	holdings = await contractAccount.viewFunction(
+		contractId,
+		'view_market_holdings',
+		{}
+	);
+
+	console.log(holdings);
+
+	t.true(holdings == 0);
 });
 
 // test('token Owner approves marketplace for alice offer. Auto transfer false', async (t) => {

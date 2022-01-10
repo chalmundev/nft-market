@@ -21,7 +21,8 @@ const init = async (owner_id = contractId) => {
 			contractId,
 			methodName: 'new',
 			args: {
-				owner_id
+				owner_id,
+				market_royalty: 500,
 			},
 			gas
 		});

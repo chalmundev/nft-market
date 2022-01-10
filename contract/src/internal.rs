@@ -123,6 +123,14 @@ impl Contract {
         let contract_token_id = get_contract_token_id(&offer.contract_id, &offer.token_id);
         self.offer_by_contract_token_id.remove(&contract_token_id);
     }
+
+    pub(crate) fn assert_owner(&self) {
+        assert_eq!(
+            &env::predecessor_account_id(),
+            &self.owner_id,
+            "Owner's method"
+        );
+    }
 }
 
 // deprecated???

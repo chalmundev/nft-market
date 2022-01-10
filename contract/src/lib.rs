@@ -65,12 +65,14 @@ pub struct Contract {
 	offers_by_maker_id: LookupMap<AccountId, UnorderedSet<u64>>,
 	offers_by_taker_id: LookupMap<AccountId, UnorderedSet<u64>>,
 	offer_by_contract_token_id: LookupMap<String, u64>,
+	market_royalty: u64,
+	market_holdings: u128,
 }
 
 #[near_bindgen]
 impl Contract {
     #[init]
-    pub fn new(owner_id: AccountId) -> Self {
+    pub fn new(owner_id: AccountId, market_royalty: u64) -> Self {
         Self {
 			owner_id,
 			offer_id: 0,
@@ -78,6 +80,34 @@ impl Contract {
 			offers_by_maker_id: LookupMap::new(StorageKey::OfferByMakerId),
 			offers_by_taker_id: LookupMap::new(StorageKey::OfferByTakerId),
 			offer_by_contract_token_id: LookupMap::new(StorageKey::OfferByContractTokenId),
+			market_holdings: 0,
+			market_royalty
         }
+    }
+
+	//change the royalty percentage that the market receives.
+	pub fn change_market_royalty(&mut self, market_royalty: u64) {
+        self.assert_owner();
+        self.market_royalty = market_royalty;
+    }
+
+	//withdraw any excess market holdings to an external account.
+	pub fn withdraw_market_holdings(&mut self, receiving_account: AccountId) {
+        self.assert_owner();
+		if self.market_holdings > 0 {
+			Promise::new(receiving_account)
+			.transfer(self.market_holdings)
+			.then(ext_self::on_withdraw_holdings(
+				env::current_account_id(),
+				NO_DEPOSIT,
+				CALLBACK_GAS,
+			));
+		}
+    }
+
+	//views
+	//check the market holdings
+	pub fn view_market_holdings(&self) -> u128 {
+        self.market_holdings
     }
 }
