@@ -21,6 +21,7 @@ impl Contract {
 		&mut self,
 		contract_id: AccountId,
 		token_id: String,
+		amount: Option<U128>,
 	) {
 		let maker_id = env::predecessor_account_id();
 		let contract_token_id = get_contract_token_id(&contract_id, &token_id);
@@ -30,10 +31,27 @@ impl Contract {
 		let offer_id = self.offer_by_contract_token_id.get(&contract_token_id);
 
 		if let Some(offer_id) = offer_id {
-			// existing offer
+			// offer exists
 			let mut offer = self.offer_by_id.get(&offer_id).unwrap();
-			require!(offer.maker_id != maker_id, "can't outbid self");
-			require!(offer_amount.0 > offer.amount.0 + MIN_OUTBID_AMOUNT, "must bid higher by ???");
+
+			// existing offer is not by the token owner
+			if offer.maker_id != offer.taker_id {
+				require!(offer.maker_id != maker_id, "can't outbid self");
+				require!(offer_amount.0 > offer.amount.0 + MIN_OUTBID_AMOUNT, "must bid higher by ???");
+			} else {
+				// offer is by the token owner
+				if maker_id == offer.maker_id {
+					// make_offer caller is offer maker
+					offer.amount = amount.unwrap_or_else(|| env::panic_str("must specify offer amount"));
+					self.offer_by_id.insert(&offer_id, &offer);
+					return;
+				} else {
+					// make_offer caller is NOT offer maker
+					if offer.approval_id.is_some() && offer_amount.0 == offer.amount.0 {
+						// auto sell???
+					}
+				}
+			}
 
 			// save values in case we need to revert state in callback
 			let prev_maker_id = offer.maker_id.clone();
@@ -62,7 +80,7 @@ impl Contract {
 				contract_id.clone(),
 				0,
 				env::prepaid_gas() - CALLBACK_GAS - CALLBACK_GAS,
-			).then(ext_self::offer_callback(
+			).then(ext_self::new_offer_callback(
 				maker_id,
 				contract_id,
 				env::current_account_id(),

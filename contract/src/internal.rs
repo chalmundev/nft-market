@@ -95,6 +95,44 @@ pub(crate) fn is_promise_success() -> bool {
 
 impl Contract {
     // Removes the offer from the contract state
+    pub(crate) fn internal_add_offer(&mut self, offer: &Offer) {
+        self.offer_id += 1;
+
+		let maker_id = offer.maker_id.clone();
+		let taker_id = offer.taker_id.clone();
+		let contract_id = offer.contract_id.clone();
+		let token_id = offer.token_id.clone();
+
+		self.offer_by_id.insert(&self.offer_id, offer);
+
+		self.offers_by_maker_id.insert(
+			&maker_id, 
+			&map_set_insert(
+				&self.offers_by_maker_id, 
+				&maker_id, 
+				StorageKey::OfferByMakerIdInner { maker_id: maker_id.clone() },
+				self.offer_id
+			)
+		);
+	
+		self.offers_by_taker_id.insert(
+			&taker_id, 
+			&map_set_insert(
+				&self.offers_by_taker_id, 
+				&taker_id, 
+				StorageKey::OfferByTakerIdInner { taker_id: taker_id.clone() },
+				self.offer_id
+			)
+		);
+	
+		let contract_token_id = get_contract_token_id(&contract_id, &token_id);
+		self.offer_by_contract_token_id.insert(
+			&contract_token_id.clone(),
+			&self.offer_id
+		);
+    }
+
+    // Removes the offer from the contract state
     pub(crate) fn internal_remove_offer(&mut self, offer_id: u64, offer: &Offer) {
         //remove the offer from its ID
         self.offer_by_id.remove(&offer_id);

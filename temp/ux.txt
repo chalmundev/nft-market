@@ -1,0 +1,43 @@
+Cases:
+
+Alice is the maker (buyer)
+Bob is taker (seller/owner)
+
+DONE
+
+Alice makes offer
+Bob accepts offer by nft_approve with auto transfer
+
+Alice makes offer
+Bob accepts by nft_approve, then manually calling accept offer
+
+TODO
+
+Similar cases
+
+Alice makes an offer
+Bob approves his nft and makes an offer with an amount that is <= Alice's offer
+- with auto_transfer: -> nft_transfer_payout -> resolve_offer
+- without auto_transfer: -> accept_offer -> nft_transfer_payout -> resolve_offer
+
+Bob approves his nft and makes an offer with an amount
+Alice makes an offer that is >= amount of Bob's offer
+-> nft_transfer_payout -> resolve_offer
+
+Similar cases
+
+Alice makes an offer
+Bob approves his nft and makes an offer with an amount that is > Alice's offer
+-> Bob replaces alice as offer.maker_id and replaces offer.amount
+
+Bob approves his nft and makes an offer with an amount
+Alice makes a "matching" offer that is < amount of Bob's offer if Bob's offer is not u128::MAX
+-> panic
+
+Open for bids (no introductory price)
+
+Bob approves his nft and opens it for bidding??? amount = u128::MAX
+Alice makes an offer (any amount)
+-> Alice replaces bob as offer.maker_id and replaces offer.amount
+-> Bob replaces bob as offer.maker_id and replaces offer.amount
+-> Carol replaces bob as offer.maker_id and replaces offer.amount
