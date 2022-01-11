@@ -6,10 +6,10 @@ use near_sdk::{
 	env, ext_contract, near_bindgen, assert_one_yocto,
 	Gas, Balance, AccountId, BorshStorageKey, PanicOnDefault,
 	Promise, PromiseResult, PromiseOrValue, promise_result_as_success, 
+	collections::{Vector, LookupMap, UnorderedMap, UnorderedSet},
 	borsh::{self, BorshDeserialize, BorshSerialize},
 	serde::{Serialize, Deserialize},
 	serde_json::from_str,
-	collections::{Vector, LookupMap, UnorderedMap, UnorderedSet},
 	json_types::{U128},
 };
 
@@ -18,6 +18,8 @@ use crate::nft_traits::*;
 use crate::internal::*;
 use crate::self_callbacks::*;
 
+mod owner;
+mod views;
 mod enumeration;
 mod nft_traits;
 mod internal;
@@ -60,54 +62,28 @@ enum StorageKey {
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Contract {
 	owner_id: AccountId,
+	market_holdings: u128,
+	market_royalty: u32,
 	offer_id: u64,
 	offer_by_id: UnorderedMap<u64, Offer>,
 	offers_by_maker_id: LookupMap<AccountId, UnorderedSet<u64>>,
 	offers_by_taker_id: LookupMap<AccountId, UnorderedSet<u64>>,
 	offer_by_contract_token_id: LookupMap<String, u64>,
-	market_royalty: u64,
-	market_holdings: u128,
 }
 
 #[near_bindgen]
 impl Contract {
     #[init]
-    pub fn new(owner_id: AccountId, market_royalty: u64) -> Self {
+    pub fn new(owner_id: AccountId, market_royalty: u32) -> Self {
         Self {
 			owner_id,
+			market_holdings: 0,
+			market_royalty,
 			offer_id: 0,
 			offer_by_id: UnorderedMap::new(StorageKey::OfferById),
 			offers_by_maker_id: LookupMap::new(StorageKey::OfferByMakerId),
 			offers_by_taker_id: LookupMap::new(StorageKey::OfferByTakerId),
 			offer_by_contract_token_id: LookupMap::new(StorageKey::OfferByContractTokenId),
-			market_holdings: 0,
-			market_royalty
         }
-    }
-
-	//change the royalty percentage that the market receives.
-	pub fn change_market_royalty(&mut self, market_royalty: u64) {
-        self.assert_owner();
-        self.market_royalty = market_royalty;
-    }
-
-	//withdraw any excess market holdings to an external account.
-	pub fn withdraw_market_holdings(&mut self, receiving_account: AccountId) {
-        self.assert_owner();
-		if self.market_holdings > 0 {
-			Promise::new(receiving_account)
-			.transfer(self.market_holdings)
-			.then(ext_self::on_withdraw_holdings(
-				env::current_account_id(),
-				NO_DEPOSIT,
-				CALLBACK_GAS,
-			));
-		}
-    }
-
-	//views
-	//check the market holdings
-	pub fn view_market_holdings(&self) -> u128 {
-        self.market_holdings
     }
 }

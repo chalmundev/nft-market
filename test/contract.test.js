@@ -225,17 +225,15 @@ test('token owner approves the marketplace with auto transfer true', async (t) =
 test('check if marketplace holdings increased', async (t) => {
 	holdings = await contractAccount.viewFunction(
 		contractId,
-		'view_market_holdings',
+		'get_market_holdings',
 		{}
 	);
 
-	console.log(holdings);
-
-	t.true(holdings > 1);
+	t.true(parseFloat(holdings) > 1);
 });
 
 test('withdrawing market holdings', async (t) => {
-	const res = await contractAccount.functionCall({
+	await contractAccount.functionCall({
 		contractId,
 		methodName: 'withdraw_market_holdings',
 		args: {
@@ -247,13 +245,11 @@ test('withdrawing market holdings', async (t) => {
 
 	holdings = await contractAccount.viewFunction(
 		contractId,
-		'view_market_holdings',
+		'get_market_holdings',
 		{}
 	);
 
-	console.log(holdings);
-
-	t.true(holdings == 0);
+	t.true(holdings == '0');
 });
 
 // test('token Owner approves marketplace for alice offer. Auto transfer false', async (t) => {
