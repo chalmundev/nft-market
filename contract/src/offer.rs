@@ -111,16 +111,16 @@ impl Contract {
 		//get offer object
 		let contract_token_id = get_contract_token_id(&contract_id, &token_id);
 		let offer_id = self.offer_by_contract_token_id.get(&contract_token_id).unwrap_or_else(|| env::panic_str("no offer ID for contract and token ID"));
-		let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("no offer on contract and token ID"));
-
-		//increment market holding amount
-        let market_holding_amount = self.market_royalty as u128 * offer.amount.0 / 10_000u128;
-		self.market_holdings += market_holding_amount; 
+		let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("no offer for offer ID"));
 
 		//make sure there's an approval ID.
 		let approval_id = offer.approval_id.unwrap_or_else(|| env::panic_str("Cannot accept an offer that has no approval ID"));
+
+		//increment market holding amount
+        let market_amount = self.market_royalty as u128 * offer.amount.0 / 10_000u128;
+		self.market_balance += market_amount;
+		let payout_amount = U128(offer.amount.0.checked_sub(market_amount).unwrap_or_else(|| env::panic_str("Market holding amount too high."))); 
 		
-		let amount_to_payout = U128(offer.amount.0.checked_sub(market_holding_amount).unwrap_or_else(|| env::panic_str("Market holding amount too high."))); 
 		//initiate a cross contract call to the nft contract. This will transfer the token to the buyer and return
 		//a payout object used for the market to distribute funds to the appropriate accounts.
 		ext_contract::nft_transfer_payout(
@@ -132,7 +132,7 @@ impl Contract {
 				the price that the token was offered for. This will be used in conjunction with the royalty percentages
 				for the token in order to determine how much money should go to which account. 
 			*/
-			amount_to_payout,
+			payout_amount,
 			10, //the maximum amount of accounts the market can payout at once (this is limited by GAS)
 			offer.contract_id, //contract to initiate the cross contract call to
 			1, //yoctoNEAR to attach to the call
@@ -144,8 +144,8 @@ impl Contract {
 			offer_id,
 			offer.maker_id,
 			offer.taker_id, //pass the offer_id
-			amount_to_payout,
-			market_holding_amount,
+			payout_amount,
+			market_amount,
 			env::current_account_id(), //we are invoking this function on the current contract
 			NO_DEPOSIT, //don't attach any deposit
 			GAS_FOR_ROYALTIES, //GAS attached to the call to payout royalties

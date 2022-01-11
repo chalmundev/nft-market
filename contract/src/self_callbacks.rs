@@ -17,10 +17,10 @@ pub trait SelfContract {
         offer_id: u64,
         maker_id: AccountId,
         taker_id: AccountId,
-        amount: U128,
-		market_holding_amount: u128
+        payout_amount: U128,
+		market_amount: u128
     ) -> Promise;
-	fn on_withdraw_holdings(&mut self);
+	fn on_withdraw_balance(&mut self);
 }
 
 #[derive(Serialize, Deserialize)]
@@ -106,16 +106,16 @@ impl Contract {
 		self.offer_by_id.insert(&offer_id, &offer);
 	}
 
-	//withdraw callback to ensure that the promise was successful when withdrawing the market holdings
+	//withdraw callback to ensure that the promise was successful when withdrawing the market balance
 	#[payable]
     #[private]
-	pub fn on_withdraw_holdings(&mut self) {
+	pub fn on_withdraw_balance(&mut self) {
 		if is_promise_success() {
-			//reset the market holdings only if the promise was successful
-			self.market_holdings = 0;
+			//reset the market balance only if the promise was successful
+			self.market_balance = 0;
 			return
 		}
-		env::log_str("Unexpected error when withdrawing market holdings.");
+		env::log_str("Unexpected error when withdrawing market balance.");
 	}
 
 	/*
@@ -129,8 +129,8 @@ impl Contract {
         offer_id: u64,
         maker_id: AccountId,
         taker_id: AccountId,
-        amount: U128,
-		market_holding_amount: u128
+        payout_amount: U128,
+		market_amount: u128
     ) -> U128 {
         let mut valid_payout_object = true; 
         let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("No offer associated with the offer ID"));
@@ -138,7 +138,7 @@ impl Contract {
 
         // check promise result
 		let result = promise_result_as_success().unwrap_or_else(|| {
-            self.market_holdings.checked_sub(market_holding_amount).unwrap_or_else(|| env::panic_str("Unable to decrement market holdings since NFT transfer failed"));
+            self.market_balance.checked_sub(market_amount).unwrap_or_else(|| env::panic_str("Unable to decrement market balance since NFT transfer failed"));
             Promise::new(maker_id).transfer(offer.amount.0);
             env::panic_str("NFT not successfully transferred. Refunding maker.")
         });
@@ -157,7 +157,7 @@ impl Contract {
         }
         
         //start with the remainder equal to the offer amount.
-        let mut remainder = amount.0;
+        let mut remainder = payout_amount.0;
         
         //loop through the payout and subtract the values from the remainder. 
         for &value in payout.values() {
@@ -173,15 +173,15 @@ impl Contract {
 
         //if invalid payout object, send the maker
         if valid_payout_object == false {
-            payout = HashMap::from([(taker_id, amount)]);
+            payout = HashMap::from([(taker_id, payout_amount)]);
         }
         
         // NEAR payouts
-        for (receiver_id, payout_amount) in payout {
-            Promise::new(receiver_id).transfer(payout_amount.0);
+        for (receiver_id, amount) in payout {
+            Promise::new(receiver_id).transfer(amount.0);
         }
 
         //return the amount payed out
-        amount
+        payout_amount
     }
 }

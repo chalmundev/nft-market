@@ -8,13 +8,13 @@ impl Contract {
         self.market_royalty = market_royalty;
     }
 
-	//withdraw any excess market holdings to an external account.
-	pub fn withdraw_market_holdings(&mut self, receiving_account: AccountId) {
+	//withdraw any excess market balance to an external account.
+	pub fn withdraw_market_balance(&mut self, receiving_account: AccountId) {
         self.assert_owner();
-		if self.market_holdings > 0 {
+		if self.market_balance > 0 {
 			Promise::new(receiving_account)
-			.transfer(self.market_holdings)
-			.then(ext_self::on_withdraw_holdings(
+			.transfer(self.market_balance)
+			.then(ext_self::on_withdraw_balance(
 				env::current_account_id(),
 				NO_DEPOSIT,
 				CALLBACK_GAS,

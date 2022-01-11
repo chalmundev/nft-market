@@ -222,20 +222,20 @@ test('token owner approves the marketplace with auto transfer true', async (t) =
 	t.true(offers.length == 0);
 });
 
-test('check if marketplace holdings increased', async (t) => {
-	holdings = await contractAccount.viewFunction(
+test('check if marketplace balance increased', async (t) => {
+	const balance = await contractAccount.viewFunction(
 		contractId,
-		'get_market_holdings',
+		'get_market_balance',
 		{}
 	);
 
-	t.true(parseFloat(holdings) > 1);
+	t.true(parseFloat(balance) > 1);
 });
 
-test('withdrawing market holdings', async (t) => {
+test('withdrawing market balance', async (t) => {
 	await contractAccount.functionCall({
 		contractId,
-		methodName: 'withdraw_market_holdings',
+		methodName: 'withdraw_market_balance',
 		args: {
 			receiving_account: royaltyIdOne
 		},
@@ -243,13 +243,13 @@ test('withdrawing market holdings', async (t) => {
 		attachedDeposit: 0,
 	});
 
-	holdings = await contractAccount.viewFunction(
+	const balance = await contractAccount.viewFunction(
 		contractId,
-		'get_market_holdings',
+		'get_market_balance',
 		{}
 	);
 
-	t.true(holdings == '0');
+	t.true(balance == '0');
 });
 
 test('Alice offers on the token Bob just bought', async (t) => {
@@ -340,22 +340,22 @@ test('Bob accepts Alices offer', async (t) => {
 	t.true(offers.length == 0);
 });
 
-test('check if marketplace holdings increased 2', async (t) => {
-	holdings = await contractAccount.viewFunction(
+test('check if marketplace balance increased 2', async (t) => {
+	balance = await contractAccount.viewFunction(
 		contractId,
-		'view_market_holdings',
+		'get_market_balance',
 		{}
 	);
 
-	console.log(holdings);
+	console.log(balance);
 
-	t.true(holdings > 1);
+	t.true(balance > 1);
 });
 
-test('withdrawing market holdings 2', async (t) => {
+test('withdrawing market balance 2', async (t) => {
 	const res = await contractAccount.functionCall({
 		contractId,
-		methodName: 'withdraw_market_holdings',
+		methodName: 'withdraw_market_balance',
 		args: {
 			receiving_account: royaltyIdOne
 		},
@@ -363,13 +363,13 @@ test('withdrawing market holdings 2', async (t) => {
 		attachedDeposit: 0,
 	});
 
-	holdings = await contractAccount.viewFunction(
+	balance = await contractAccount.viewFunction(
 		contractId,
-		'view_market_holdings',
+		'get_market_balance',
 		{}
 	);
 
-	console.log(holdings);
+	console.log(balance);
 
-	t.true(holdings == 0);
+	t.true(balance == 0);
 });
