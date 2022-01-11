@@ -12,7 +12,7 @@ pub trait NonFungibleTokenApprovalReceiver {
         owner_id: AccountId, 
         approval_id: u64, 
         msg: String
-    ) -> PromiseOrValue<String>;
+    );
 }
 
 #[near_bindgen]
@@ -24,7 +24,7 @@ impl NonFungibleTokenApprovalReceiver for Contract {
         owner_id: AccountId,
         approval_id: u64,
         msg: String,
-    ) -> PromiseOrValue<String> {
+    ) {
         let contract_id = env::predecessor_account_id();
         let signer_id = env::signer_account_id();
 
@@ -78,7 +78,5 @@ impl NonFungibleTokenApprovalReceiver for Contract {
                 GAS_FOR_ROYALTIES, //GAS attached to the call to payout royalties
             ));
 		}
-
-		PromiseOrValue::Value("return".to_string())
     }
 }
