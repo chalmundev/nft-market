@@ -77,14 +77,6 @@ pub(crate) fn map_set_remove<K, V> (
 	offers_by_maker_id
 }
 
-pub(crate) fn refund_storage(storage_freed: u64) {
-    let refund = env::storage_byte_cost() * storage_freed as u128 - 1;
-   
-    if refund > 1 {
-        Promise::new(env::predecessor_account_id()).transfer(refund);
-    }
-}
-
 pub(crate) fn is_promise_success() -> bool {
     require!(env::promise_results_count() == 1, "promise failed");
     match env::promise_result(0) {
@@ -95,7 +87,7 @@ pub(crate) fn is_promise_success() -> bool {
 
 impl Contract {
     // Removes the offer from the contract state
-    pub fn internal_add_offer(&mut self, offer: &Offer) {
+    pub(crate) fn internal_add_offer(&mut self, offer: &Offer) {
         self.offer_id += 1;
 
 		let maker_id = offer.maker_id.clone();
@@ -133,7 +125,7 @@ impl Contract {
     }
 
     // Removes the offer from the contract state
-    pub fn internal_remove_offer(&mut self, offer_id: u64, offer: &Offer) {
+    pub(crate) fn internal_remove_offer(&mut self, offer_id: u64, offer: &Offer) {
         //remove the offer from its ID
         self.offer_by_id.remove(&offer_id);
     
@@ -162,7 +154,7 @@ impl Contract {
         self.offer_by_contract_token_id.remove(&contract_token_id);
     }
 
-	pub fn internal_accept_offer(
+	pub(crate) fn internal_accept_offer(
 		&mut self,
 		offer_id: u64,
 		offer: &Offer
@@ -210,17 +202,19 @@ impl Contract {
 			GAS_FOR_ROYALTIES, //GAS attached to the call to payout royalties
 		));
     }
-
-    pub fn assert_owner(&self) {
-        assert_eq!(
-            &env::predecessor_account_id(),
-            &self.owner_id,
-            "Owner's method"
-        );
-    }
 }
 
 // deprecated???
+
+
+
+// pub(crate) fn refund_storage(storage_freed: u64) {
+//     let refund = env::storage_byte_cost() * storage_freed as u128 - 1;
+   
+//     if refund > 1 {
+//         Promise::new(env::predecessor_account_id()).transfer(refund);
+//     }
+// }
 
 // pub(crate) fn refund_deposit(storage_used: u64, keep_amount: Option<Balance>) {
 // 	let required_cost = env::storage_byte_cost() * Balance::from(storage_used);

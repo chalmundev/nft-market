@@ -43,6 +43,8 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 			// add a new offer where maker_id == taker_id (special case)
 			// TODO can malicious NFT contract spoof owner_id and mess things up?
 			if let Some(amount) = amount {
+				require!(self.offer_storage_available(&owner_id) > 0, "must add offer storage");
+
 				self.internal_add_offer(&Offer{
 					maker_id: owner_id.clone(),
 					taker_id: owner_id,
@@ -61,18 +63,20 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 		let mut offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("no offer"));
 		require!(offer.taker_id == owner_id, "not nft owner");
         
+		//need to reset the approval ID in both the auto transfer case and the not auto transfer case. This is because process offer
+        //takes the approval ID from the offer to use in nft_transfer_payout.
+		offer.approval_id = Some(approval_id);
+
 		// owner made offer of higher amount - replace offer
 		if let Some(amount) = amount {
 			if offer.amount.0 < amount.0 {
 				offer.maker_id = owner_id;
 				offer.amount = amount;
+				self.offer_by_id.insert(&offer_id, &offer);
 				return;
 			}
 		}
 
-		//need to reset the approval ID in both the auto transfer case and the not auto transfer case. This is because process offer
-        //takes the approval ID from the offer to use in nft_transfer_payout.
-        offer.approval_id = Some(approval_id);
 		self.offer_by_id.insert(&offer_id, &offer);
 
         if auto_transfer.unwrap_or(false) == true {

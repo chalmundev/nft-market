@@ -2,6 +2,16 @@ use crate::*;
 
 #[near_bindgen]
 impl Contract {
+	
+	// for debugging
+	pub fn remove_offers(&mut self) {
+        self.assert_owner();
+        let offer_vec = self.offer_by_id.to_vec();
+		for (offer_id, offer) in offer_vec {
+			self.internal_remove_offer(offer_id, &offer);
+		}
+    }
+
 	//change the royalty percentage that the market receives.
 	pub fn change_market_royalty(&mut self, market_royalty: u32) {
         self.assert_owner();
@@ -20,5 +30,13 @@ impl Contract {
 				CALLBACK_GAS,
 			));
 		}
+    }
+
+    pub(crate) fn assert_owner(&self) {
+        assert_eq!(
+            &env::predecessor_account_id(),
+            &self.owner_id,
+            "Owner's method"
+        );
     }
 }

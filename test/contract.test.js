@@ -4,12 +4,12 @@ const {
 	getAccount, init,
 	recordStart, recordStop,
 	parseNearAmount,
+	U128_MAX,
 } = require('./test-utils');
 const getConfig = require("../utils/config");
 const {
 	contractId,
 	gas,
-	attachedDeposit,
 } = getConfig();
 
 // test.beforeEach((t) => {
@@ -40,6 +40,15 @@ test('contract is deployed', async (t) => {
 	contractAccount = await init();
 
 	t.is(contractId, contractAccount.accountId);
+});
+
+test('owner remove offers', async (t) => {
+	const res = await contractAccount.functionCall({
+		contractId,
+		methodName: 'remove_offers',
+		gas
+	});
+	t.is(res?.status?.SuccessValue, '');
 });
 
 test('users initialized', async (t) => {
@@ -162,7 +171,7 @@ test('get offers', async (t) => {
 
 	console.log(offers);
 
-	t.true(offers.length >= 1);
+	t.is(offers.length, 2);
 });
 
 test('bob remove_offer from token 2', async (t) => {
@@ -180,10 +189,8 @@ test('bob remove_offer from token 2', async (t) => {
 	});
 
 	t.is(res?.status?.SuccessValue, '');
-});
 
-test('get offers after bob removed', async (t) => {
-	offers = await contractAccount.viewFunction(
+	[offerIds, offers] = await contractAccount.viewFunction(
 		contractId,
 		'get_offers',
 		{}
@@ -191,12 +198,14 @@ test('get offers after bob removed', async (t) => {
 
 	console.log(offers);
 
-	t.true(offers.length >= 1);
+	t.is(offers.length, 1);
 });
 
 test('token owner approves the marketplace with auto transfer true', async (t) => {
 	const msg = JSON.stringify({
-		auto_transfer: true
+		// original offer was 0.2 so this should just get accepted and auto transferred
+		amount: parseNearAmount('0.1'),
+		auto_transfer: true,
 	});
 
 	const res = await tokenOwner.functionCall({
@@ -217,12 +226,10 @@ test('token owner approves the marketplace with auto transfer true', async (t) =
 		{}
 	);
 
-	console.log(offers);
-
-	t.true(offers.length == 0);
+	t.is(offers.length, 0);
 });
 
-test('check if marketplace balance increased', async (t) => {
+test('check if market balance increased', async (t) => {
 	const balance = await contractAccount.viewFunction(
 		contractId,
 		'get_market_balance',
@@ -264,18 +271,14 @@ test('Alice offers on the token Bob just bought', async (t) => {
 	});
 
 	t.is(res?.status?.SuccessValue, '');
-});
 
-test('Check offers 3', async (t) => {
 	[offerIds, offers] = await contractAccount.viewFunction(
 		contractId,
 		'get_offers',
 		{}
 	);
 
-	console.log(offers);
-
-	t.true(offers.length >= 1);
+	t.is(offers.length, 1);
 });
 
 test('Bob approves marketplace for the token Alice offered on auto transfer false', async (t) => {
@@ -301,12 +304,10 @@ test('Bob approves marketplace for the token Alice offered on auto transfer fals
 		{}
 	);
 
-	console.log(offers);
-
-	t.true(offers.length >= 1);
+	t.is(offers.length, 1);
 });
 
-test('Check if offers approval ID changed.', async (t) => {
+test('Check if offers approval ID changed was updated', async (t) => {
 	[offerIds, offers] = await contractAccount.viewFunction(
 		contractId,
 		'get_offers',
@@ -315,7 +316,7 @@ test('Check if offers approval ID changed.', async (t) => {
 
 	console.log(offers);
 
-	t.true(offers.length >= 1);
+	t.is(offers.length, 1);
 });
 
 test('Bob accepts Alices offer', async (t) => {
@@ -335,9 +336,7 @@ test('Bob accepts Alices offer', async (t) => {
 		{}
 	);
 
-	console.log(offers);
-
-	t.true(offers.length == 0);
+	t.is(offers.length, 0);
 });
 
 test('check if marketplace balance increased 2', async (t) => {
@@ -369,7 +368,249 @@ test('withdrawing market balance 2', async (t) => {
 		{}
 	);
 
-	console.log(balance);
-
 	t.true(balance == 0);
+});
+
+
+/// alice owner
+
+
+test('Alice opens token for bidding by calling nft_approve with U128_MAX', async (t) => {
+	
+	const res = await alice.functionCall({
+		contractId,
+		methodName: 'pay_offer_storage',
+		args: {},
+		gas,
+		attachedDeposit: parseNearAmount('0.05'),
+	});
+
+	t.is(res?.status?.SuccessValue, '');
+
+	const res2 = await alice.viewFunction(
+		contractId,
+		'offer_storage_available',
+		{
+			owner_id: aliceId,
+		},
+	);
+
+	console.log('offer_storage_available', res2);
+
+	const msg = JSON.stringify({
+		amount: U128_MAX
+	});
+
+	const res3 = await alice.functionCall({
+		contractId: nftContractId,
+		methodName: 'nft_approve',
+		args: {
+			token_id: tokens[1].token_id,
+			account_id: contractId,
+			msg,
+		},
+		gas,
+		attachedDeposit: parseNearAmount('0.01'),
+	});
+
+	[offerIds, offers] = await contractAccount.viewFunction(
+		contractId,
+		'get_offers',
+		{}
+	);
+
+	console.log(offers);
+
+	t.is(offers.length, 1);
+});
+
+test('Bob can make offer on token open for bidding', async (t) => {
+	const res = await bob.functionCall({
+		contractId,
+		methodName: 'make_offer',
+		args: {
+			...tokens[1],
+		},
+		gas,
+		attachedDeposit: parseNearAmount('0.2'),
+	});
+
+	t.is(res?.status?.SuccessValue, '');
+
+	[offerIds, offers] = await contractAccount.viewFunction(
+		contractId,
+		'get_offers',
+		{}
+	);
+
+	/// TODO - check actual offer data in more tests
+	t.is(offers[0].maker_id, bobId);
+});
+
+test('Alice accepts Bob offer', async (t) => {
+	const res = await alice.functionCall({
+		contractId,
+		methodName: 'accept_offer',
+		args: {
+			...tokens[1],
+		},
+		gas,
+		attachedDeposit: 1,
+	});
+
+	[offerIds, offers] = await contractAccount.viewFunction(
+		contractId,
+		'get_offers',
+		{}
+	);
+
+	t.is(offers.length, 0);
+});
+
+
+
+/// bob owner
+
+
+test('Bob opens token for bidding by calling nft_approve with fixed price', async (t) => {
+	
+	const res = await bob.functionCall({
+		contractId,
+		methodName: 'pay_offer_storage',
+		args: {},
+		gas,
+		attachedDeposit: parseNearAmount('0.05'),
+	});
+
+	const msg = JSON.stringify({
+		amount: parseNearAmount('0.2')
+	});
+
+	const res2 = await bob.functionCall({
+		contractId: nftContractId,
+		methodName: 'nft_approve',
+		args: {
+			token_id: tokens[1].token_id,
+			account_id: contractId,
+			msg,
+		},
+		gas,
+		attachedDeposit: parseNearAmount('0.01'),
+	});
+
+	[offerIds, offers] = await contractAccount.viewFunction(
+		contractId,
+		'get_offers',
+		{}
+	);
+
+	console.log(offers);
+
+	t.is(offers.length, 1);
+});
+
+test('Alice makes lower offer and panics', async (t) => {
+	try {
+		const res = await alice.functionCall({
+			contractId,
+			methodName: 'make_offer',
+			args: {
+				...tokens[1],
+			},
+			gas,
+			attachedDeposit: parseNearAmount('0.15'),
+		});
+		t.true(false);
+	} catch (e) {
+		t.true(true);
+	}
+});
+
+test('Alice can make offer of exact amount and purchase', async (t) => {
+	const res = await alice.functionCall({
+		contractId,
+		methodName: 'make_offer',
+		args: {
+			...tokens[1],
+		},
+		gas,
+		attachedDeposit: parseNearAmount('0.25'), // parseNearAmount('0.2') + 0.05 N for storage
+	});
+
+	t.is(res?.status?.SuccessValue, '');
+
+	[offerIds, offers] = await contractAccount.viewFunction(
+		contractId,
+		'get_offers',
+		{}
+	);
+
+	t.is(offers.length, 0);
+});
+
+
+/// Bob offer, alice owner counters
+
+
+test('Bob makes an offer', async (t) => {
+	const res = await bob.functionCall({
+		contractId,
+		methodName: 'make_offer',
+		args: {
+			...tokens[1],
+		},
+		gas,
+		attachedDeposit: parseNearAmount('0.2'),
+	});
+
+	t.is(res?.status?.SuccessValue, '');
+
+	[offerIds, offers] = await contractAccount.viewFunction(
+		contractId,
+		'get_offers',
+		{}
+	);
+
+	t.is(offers.length, 1);
+});
+
+
+test('Alice approves token with larger offer and replaces Bob (check bob has been refunded 1.5 N)', async (t) => {
+	const res = await alice.functionCall({
+		contractId,
+		methodName: 'pay_offer_storage',
+		args: {},
+		gas,
+		attachedDeposit: parseNearAmount('0.05'),
+	});
+
+	const msg = JSON.stringify({
+		amount: parseNearAmount('0.2')
+	});
+
+	await recordStart(bobId);
+
+	const res2 = await alice.functionCall({
+		contractId: nftContractId,
+		methodName: 'nft_approve',
+		args: {
+			token_id: tokens[1].token_id,
+			account_id: contractId,
+			msg,
+		},
+		gas,
+		attachedDeposit: parseNearAmount('0.01'),
+	});
+
+	await recordStop(bobId);
+
+	[offerIds, offers] = await contractAccount.viewFunction(
+		contractId,
+		'get_offers',
+		{}
+	);
+
+	console.log(offers);
+
+	t.is(offers[0].maker_id, aliceId);
 });

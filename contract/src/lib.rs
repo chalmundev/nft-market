@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::convert::TryFrom;
 
 use near_sdk::{
 	// log,
@@ -19,6 +20,7 @@ use crate::internal::*;
 use crate::self_callbacks::*;
 
 mod owner;
+mod storage;
 mod views;
 mod enumeration;
 mod nft_traits;
@@ -57,6 +59,7 @@ enum StorageKey {
 	OfferByTakerId,
     OfferByTakerIdInner { taker_id: AccountId },
 	OfferByContractTokenId,
+	OfferStorageByOwnerId,
 }
 
 #[near_bindgen]
@@ -70,6 +73,7 @@ pub struct Contract {
 	offers_by_maker_id: LookupMap<AccountId, UnorderedSet<u64>>,
 	offers_by_taker_id: LookupMap<AccountId, UnorderedSet<u64>>,
 	offer_by_contract_token_id: LookupMap<String, u64>,
+	offer_storage_by_owner_id: LookupMap<AccountId, u64>,
 }
 
 #[near_bindgen]
@@ -85,6 +89,7 @@ impl Contract {
 			offers_by_maker_id: LookupMap::new(StorageKey::OfferByMakerId),
 			offers_by_taker_id: LookupMap::new(StorageKey::OfferByTakerId),
 			offer_by_contract_token_id: LookupMap::new(StorageKey::OfferByContractTokenId),
+			offer_storage_by_owner_id: LookupMap::new(StorageKey::OfferStorageByOwnerId),
         }
     }
 }

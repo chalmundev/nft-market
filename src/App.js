@@ -18,9 +18,9 @@ const App = () => {
 
 	console.log('state', state);
 
-	const navigate = useNavigate()
+	const navigate = useNavigate();
 
-	const { wallet, account } = state
+	const { wallet, account } = state;
 
 	const onMount = () => {
 		dispatch(onAppMount('world'));
@@ -31,7 +31,7 @@ const App = () => {
 		update('clicked', !state.clicked);
 	};
 
-	const { tokens, supply } = state.data
+	const { tokens, supply } = state.data;
 
 	return (
 		<main className="container">
@@ -57,17 +57,17 @@ const App = () => {
 						<p>{ account.accountId }</p>
 						<button onClick={() => wallet.signOut()}>Sign Out</button>
 					</> :
-					<>
-						<p>Not Signed In</p>
-						<button onClick={() => wallet.signIn()}>Sign In</button>
-					</>
+						<>
+							<p>Not Signed In</p>
+							<button onClick={() => wallet.signIn()}>Sign In</button>
+						</>
 				} />
 				
 				<Route path="/" element={
 					data.map(({ contractId, ts, name }) => {
 						return <div key={contractId} onClick={() => navigate('/contract/' + contractId)}>
 							{ name } - { contractId } - { ts }
-						</div>
+						</div>;
 					})
 				} />
 			</Routes>

@@ -26,6 +26,7 @@ impl Contract {
 		let maker_id = env::predecessor_account_id();
 		let contract_token_id = get_contract_token_id(&contract_id, &token_id);
 		let offer_amount = U128(env::attached_deposit() - DEFAULT_OFFER_STORAGE_AMOUNT);
+		self.internal_increase_offer_storage(&maker_id, None);
 		require!(offer_amount.0 > MIN_OUTBID_AMOUNT, "must be higher than min bid ???");
 
 		let offer_id = self.offer_by_contract_token_id.get(&contract_token_id);
@@ -37,6 +38,7 @@ impl Contract {
 			// existing offer is not by the token owner - check offer reqs
 			if offer.maker_id != offer.taker_id {
 				require!(offer.maker_id != maker_id, "can't outbid self");
+				require!(offer.taker_id != maker_id, "owner can't outbid");
 				require!(offer_amount.0 > offer.amount.0 + MIN_OUTBID_AMOUNT, "must bid higher by ???");
 				// continue execution below - alice outbids bob
 			} else {
@@ -51,6 +53,8 @@ impl Contract {
 					if offer.approval_id.is_some() {
 						if offer.amount.0 != OPEN_OFFER_AMOUNT {
 							if offer_amount.0 >= offer.amount.0 {
+								offer.amount = offer_amount;
+								offer.maker_id = maker_id;
 								self.internal_accept_offer(offer_id, &offer);
 								return;
 							}
@@ -66,7 +70,7 @@ impl Contract {
 			let prev_offer_amount = offer.amount.clone();
 			// valid offer, money in contract, update state
 			offer.maker_id = maker_id.clone();
-			offer.amount = U128(offer_amount.0);
+			offer.amount = offer_amount;
 			self.offer_by_id.insert(&offer_id, &offer);
 
 			// pay back prev offer maker + storage
@@ -107,9 +111,6 @@ impl Contract {
         //assert one yocto for security reasons
 		assert_one_yocto();
 
-        //get the initial storage
-		let initial_storage_usage = env::storage_usage();
-
         //get the supposed maker and double check that they are the actual offer's maker
         let maker_id = env::predecessor_account_id();
 		let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("no offer"));
@@ -119,8 +120,8 @@ impl Contract {
         //remove the offer based on its ID and offer object.
         self.internal_remove_offer(offer_id, &offer);
 
-        //refund the user if they attached more storage than necesary. This will panic if they didn't attach enough.
-        refund_storage(initial_storage_usage - env::storage_usage());
+		// pay back storage to current offer maker
+		Promise::new(offer.maker_id).transfer(DEFAULT_OFFER_STORAGE_AMOUNT);
     }
 
 	//accepts an offer. Only the taker ID can call this. Offer must have approval ID.

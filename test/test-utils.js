@@ -14,6 +14,8 @@ const {
 	NEW_ACCOUNT_AMOUNT,
 } = getConfig();
 
+const U128_MAX = '340282366920938463463374607431768211455';
+
 const init = async (owner_id = contractId) => {
 	/// try to call new on contract, swallow e if already initialized
 	try {
@@ -104,4 +106,5 @@ module.exports = {
 	recordStop,
 	formatNearAmount,
 	parseNearAmount,
+	U128_MAX,
 };
