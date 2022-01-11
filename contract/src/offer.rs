@@ -34,21 +34,29 @@ impl Contract {
 			// offer exists
 			let mut offer = self.offer_by_id.get(&offer_id).unwrap();
 
-			// existing offer is not by the token owner
+			// existing offer is not by the token owner - check offer reqs
 			if offer.maker_id != offer.taker_id {
 				require!(offer.maker_id != maker_id, "can't outbid self");
 				require!(offer_amount.0 > offer.amount.0 + MIN_OUTBID_AMOUNT, "must bid higher by ???");
+				// continue execution below - alice outbids bob
 			} else {
-				// offer is by the token owner
+				// offer made by token owner on offer created by token owner (price adjustment)
 				if maker_id == offer.maker_id {
 					// make_offer caller is offer maker
 					offer.amount = amount.unwrap_or_else(|| env::panic_str("must specify offer amount"));
 					self.offer_by_id.insert(&offer_id, &offer);
 					return;
 				} else {
-					// make_offer caller is NOT offer maker
-					if offer.approval_id.is_some() && offer_amount.0 == offer.amount.0 {
-						// auto sell???
+					// current offer created by token owner, new offer is not token owner
+					if offer.approval_id.is_some() {
+						if offer.amount.0 != OPEN_OFFER_AMOUNT {
+							if offer_amount.0 >= offer.amount.0 {
+								self.internal_accept_offer(offer_id, &offer);
+								return;
+							}
+							env::panic_str("bid not greater than offer amount");
+						}
+						// continue execution below - alice outbids token owner because offer.amount == OPEN_OFFER_AMOUNT (open for bids)
 					}
 				}
 			}
@@ -73,23 +81,22 @@ impl Contract {
 					offer_amount.0,
 					CALLBACK_GAS,
 				));
-		} else {
-			// new offer
-			ext_contract::nft_token(
-				token_id,
-				contract_id.clone(),
-				0,
-				env::prepaid_gas() - CALLBACK_GAS - CALLBACK_GAS,
-			).then(ext_self::new_offer_callback(
-				maker_id,
-				contract_id,
-				env::current_account_id(),
-				offer_amount.0,
-				CALLBACK_GAS,
-			));
-
+			return;
 		}
 
+		// new offer
+		ext_contract::nft_token(
+			token_id,
+			contract_id.clone(),
+			0,
+			env::prepaid_gas() - CALLBACK_GAS - CALLBACK_GAS,
+		).then(ext_self::new_offer_callback(
+			maker_id,
+			contract_id,
+			env::current_account_id(),
+			offer_amount.0,
+			CALLBACK_GAS,
+		));
     }
 
 	#[payable]
@@ -131,42 +138,6 @@ impl Contract {
 		let offer_id = self.offer_by_contract_token_id.get(&contract_token_id).unwrap_or_else(|| env::panic_str("no offer ID for contract and token ID"));
 		let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("no offer for offer ID"));
 
-		//make sure there's an approval ID.
-		let approval_id = offer.approval_id.unwrap_or_else(|| env::panic_str("Cannot accept an offer that has no approval ID"));
-
-		//increment market holding amount
-        let market_amount = self.market_royalty as u128 * offer.amount.0 / 10_000u128;
-		self.market_balance += market_amount;
-		let payout_amount = U128(offer.amount.0.checked_sub(market_amount).unwrap_or_else(|| env::panic_str("Market holding amount too high."))); 
-		
-		//initiate a cross contract call to the nft contract. This will transfer the token to the buyer and return
-		//a payout object used for the market to distribute funds to the appropriate accounts.
-		ext_contract::nft_transfer_payout(
-			offer.maker_id.clone(), //maker of the offer (person to transfer the NFT to)
-			offer.token_id, //token ID to transfer
-			approval_id, //market contract's approval ID in order to transfer the token on behalf of the owner
-			"payout from market".to_string(), //memo (to include some context)
-			/*
-				the price that the token was offered for. This will be used in conjunction with the royalty percentages
-				for the token in order to determine how much money should go to which account. 
-			*/
-			payout_amount,
-			10, //the maximum amount of accounts the market can payout at once (this is limited by GAS)
-			offer.contract_id, //contract to initiate the cross contract call to
-			1, //yoctoNEAR to attach to the call
-			GAS_FOR_NFT_TRANSFER, //GAS to attach to the call
-		)
-		//after the transfer payout has been initiated, we resolve the promise by calling our own resolve_offer function. 
-		//resolve offer will take the payout object returned from the nft_transfer_payout and actually pay the accounts
-		.then(ext_self::resolve_offer(
-			offer_id,
-			offer.maker_id,
-			offer.taker_id, //pass the offer_id
-			payout_amount,
-			market_amount,
-			env::current_account_id(), //we are invoking this function on the current contract
-			NO_DEPOSIT, //don't attach any deposit
-			GAS_FOR_ROYALTIES, //GAS attached to the call to payout royalties
-		));
+		self.internal_accept_offer(offer_id, &offer);
     }
 }

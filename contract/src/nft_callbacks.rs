@@ -59,10 +59,18 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 		}
 		let offer_id = offer_id_option.unwrap();
 		let mut offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("no offer"));
-
 		require!(offer.taker_id == owner_id, "not nft owner");
+        
+		// owner made offer of higher amount - replace offer
+		if let Some(amount) = amount {
+			if offer.amount.0 < amount.0 {
+				offer.maker_id = owner_id;
+				offer.amount = amount;
+				return;
+			}
+		}
 
-        //need to reset the approval ID in both the auto transfer case and the not auto transfer case. This is because process offer
+		//need to reset the approval ID in both the auto transfer case and the not auto transfer case. This is because process offer
         //takes the approval ID from the offer to use in nft_transfer_payout.
         offer.approval_id = Some(approval_id);
 		self.offer_by_id.insert(&offer_id, &offer);

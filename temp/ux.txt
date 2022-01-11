@@ -15,26 +15,32 @@ TODO
 
 Similar cases
 
+DONE (automatically handled with existing logic)
 Alice makes an offer
 Bob approves his nft and makes an offer with an amount that is <= Alice's offer
 - with auto_transfer: -> nft_transfer_payout -> resolve_offer
 - without auto_transfer: -> accept_offer -> nft_transfer_payout -> resolve_offer
 
+DONE
 Bob approves his nft and makes an offer with an amount
 Alice makes an offer that is >= amount of Bob's offer
 -> nft_transfer_payout -> resolve_offer
 
 Similar cases
 
+DONE
 Alice makes an offer
 Bob approves his nft and makes an offer with an amount that is > Alice's offer
 -> Bob replaces alice as offer.maker_id and replaces offer.amount
 
+DONE
 Bob approves his nft and makes an offer with an amount
 Alice makes a "matching" offer that is < amount of Bob's offer if Bob's offer is not u128::MAX
 -> panic
 
+DONE
 Open for bids (no introductory price)
+amount = u128::MAX is considered (open bidding in UI, nothing to do in contract)
 
 Bob approves his nft and opens it for bidding??? amount = u128::MAX
 Alice makes an offer (any amount)

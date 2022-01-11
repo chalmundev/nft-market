@@ -32,6 +32,7 @@ const GAS_FOR_ROYALTIES: Gas = Gas(115_000_000_000_000);
 const GAS_FOR_NFT_TRANSFER: Gas = Gas(15_000_000_000_000);
 
 pub const DEFAULT_OFFER_TOKEN: &str = "near";
+pub const OPEN_OFFER_AMOUNT: u128 = u128::MAX;
 pub const MIN_OUTBID_AMOUNT: Balance = 99_000_000_000_000_000_000_000; // 5kb (bid > 0.1N)
 pub const DEFAULT_OFFER_STORAGE_AMOUNT: Balance = 50_000_000_000_000_000_000_000; // 5kb (0.05N)
 pub const CALLBACK_GAS: Gas = Gas(30_000_000_000_000); // 30 Tgas
