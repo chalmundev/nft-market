@@ -68,10 +68,10 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 		self.offer_by_id.insert(&offer_id, &offer);
 
         if auto_transfer.unwrap_or(false) == true {
-            let market_holding_amount = self.market_royalty as u128 * offer.amount.0 / 10_000u128;
-            self.market_holdings += market_holding_amount; 
+            let market_amount = self.market_royalty as u128 * offer.amount.0 / 10_000u128;
+            self.market_balance += market_amount; 
 
-            let amount_to_payout = U128(offer.amount.0.checked_sub(market_holding_amount).unwrap_or_else(|| env::panic_str("Market holding amount too high."))); 
+            let amount_to_payout = U128(offer.amount.0.checked_sub(market_amount).unwrap_or_else(|| env::panic_str("Market holding amount too high."))); 
             //initiate a cross contract call to the nft contract. This will transfer the token to the buyer and return
             //a payout object used for the market to distribute funds to the appropriate accounts.
             ext_contract::nft_transfer_payout(
@@ -96,7 +96,7 @@ impl NonFungibleTokenApprovalReceiver for Contract {
                 offer.maker_id,
                 offer.taker_id, //pass the offer_id
                 amount_to_payout,
-                market_holding_amount,
+                market_amount,
                 env::current_account_id(), //we are invoking this function on the current contract
                 NO_DEPOSIT, //don't attach any deposit
                 GAS_FOR_ROYALTIES, //GAS attached to the call to payout royalties

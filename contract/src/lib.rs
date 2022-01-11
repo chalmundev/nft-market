@@ -5,7 +5,7 @@ use near_sdk::{
 	require,
 	env, ext_contract, near_bindgen, assert_one_yocto,
 	Gas, Balance, AccountId, BorshStorageKey, PanicOnDefault,
-	Promise, PromiseResult, PromiseOrValue, promise_result_as_success, 
+	Promise, PromiseResult, promise_result_as_success, 
 	collections::{Vector, LookupMap, UnorderedMap, UnorderedSet},
 	borsh::{self, BorshDeserialize, BorshSerialize},
 	serde::{Serialize, Deserialize},
@@ -62,7 +62,7 @@ enum StorageKey {
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Contract {
 	owner_id: AccountId,
-	market_holdings: u128,
+	market_balance: u128,
 	market_royalty: u32,
 	offer_id: u64,
 	offer_by_id: UnorderedMap<u64, Offer>,
@@ -77,7 +77,7 @@ impl Contract {
     pub fn new(owner_id: AccountId, market_royalty: u32) -> Self {
         Self {
 			owner_id,
-			market_holdings: 0,
+			market_balance: 0,
 			market_royalty,
 			offer_id: 0,
 			offer_by_id: UnorderedMap::new(StorageKey::OfferById),

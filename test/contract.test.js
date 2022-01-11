@@ -31,7 +31,7 @@ const tokens = [
 ];
 
 const royaltyAccounts = [
-	
+
 ];
 
 let contractAccount, offerIds, offers, aliceId, bobId, tokenOwnerId, tokenOwner, alice, bob, royaltyIdOne, royaltyIdTwo;
@@ -52,7 +52,7 @@ test('users initialized', async (t) => {
 
 	//royalty accounts for NFT payouts
 	royaltyIdOne = '10-percent.' + contractId;
-	royaltyIdTwo= '5-percent.' + contractId;
+	royaltyIdTwo = '5-percent.' + contractId;
 	royaltyAccountOne = await getAccount(royaltyIdOne);
 	royaltyAccountTwo = await getAccount(royaltyIdTwo);
 
@@ -62,12 +62,12 @@ test('users initialized', async (t) => {
 test('tokens minted', async (t) => {
 	//royalty object to pass into mint f	unction
 	let tokenRoyalty = new Object();
-	tokenRoyalty[royaltyIdOne] = 1000; 
+	tokenRoyalty[royaltyIdOne] = 1000;
 	tokenRoyalty[royaltyIdTwo] = 500;
-	
+
 	const res1 = await tokenOwner.functionCall({
-		contractId: nftContractId, 
-		methodName: 'nft_mint', 
+		contractId: nftContractId,
+		methodName: 'nft_mint',
 		args: {
 			token_id: tokens[0].token_id,
 			metadata: {
@@ -77,13 +77,13 @@ test('tokens minted', async (t) => {
 			perpetual_royalties: tokenRoyalty,
 			receiver_id: tokenOwnerId,
 		},
-		gas, 
+		gas,
 		attachedDeposit: parseNearAmount('0.2'),
 	});
 
 	const res2 = await tokenOwner.functionCall({
-		contractId: nftContractId, 
-		methodName: 'nft_mint', 
+		contractId: nftContractId,
+		methodName: 'nft_mint',
 		args: {
 			token_id: tokens[1].token_id,
 			metadata: {
@@ -93,12 +93,12 @@ test('tokens minted', async (t) => {
 			perpetual_royalties: tokenRoyalty,
 			receiver_id: tokenOwnerId,
 		},
-		gas, 
+		gas,
 		attachedDeposit: parseNearAmount('0.2'),
 	});
 
-	tokens[0].taker_id = tokenOwnerId; 
-	tokens[1].taker_id = tokenOwnerId; 
+	tokens[0].taker_id = tokenOwnerId;
+	tokens[1].taker_id = tokenOwnerId;
 
 	t.is(res2?.status?.SuccessValue, '');
 });
@@ -211,7 +211,63 @@ test('token owner approves the marketplace with auto transfer true', async (t) =
 		attachedDeposit: parseNearAmount("0.1"),
 	});
 
-	offers = await contractAccount.viewFunction(
+	[offerIds, offers] = await contractAccount.viewFunction(
+		contractId,
+		'get_offers',
+		{}
+	);
+
+	console.log(offers);
+
+	t.true(offers.length == 0);
+});
+
+test('check if marketplace balance increased', async (t) => {
+	const balance = await contractAccount.viewFunction(
+		contractId,
+		'get_market_balance',
+		{}
+	);
+
+	t.true(parseFloat(balance) > 1);
+});
+
+test('withdrawing market balance', async (t) => {
+	await contractAccount.functionCall({
+		contractId,
+		methodName: 'withdraw_market_balance',
+		args: {
+			receiving_account: royaltyIdOne
+		},
+		gas,
+		attachedDeposit: 0,
+	});
+
+	const balance = await contractAccount.viewFunction(
+		contractId,
+		'get_market_balance',
+		{}
+	);
+
+	t.true(balance == '0');
+});
+
+test('Alice offers on the token Bob just bought', async (t) => {
+	const res = await alice.functionCall({
+		contractId,
+		methodName: 'make_offer',
+		args: {
+			...tokens[1],
+		},
+		gas,
+		attachedDeposit: parseNearAmount('0.2'),
+	});
+
+	t.is(res?.status?.SuccessValue, '');
+});
+
+test('Check offers 3', async (t) => {
+	[offerIds, offers] = await contractAccount.viewFunction(
 		contractId,
 		'get_offers',
 		{}
@@ -222,20 +278,84 @@ test('token owner approves the marketplace with auto transfer true', async (t) =
 	t.true(offers.length >= 1);
 });
 
-test('check if marketplace holdings increased', async (t) => {
-	holdings = await contractAccount.viewFunction(
+test('Bob approves marketplace for the token Alice offered on auto transfer false', async (t) => {
+	const msg = JSON.stringify({
+		auto_transfer: false
+	});
+
+	const res = await bob.functionCall({
+		contractId: nftContractId,
+		methodName: 'nft_approve',
+		args: {
+			token_id: tokens[1].token_id,
+			account_id: contractId,
+			msg,
+		},
+		gas,
+		attachedDeposit: parseNearAmount("0.1"),
+	});
+
+	[offerIds, offers] = await contractAccount.viewFunction(
 		contractId,
-		'get_market_holdings',
+		'get_offers',
 		{}
 	);
 
-	t.true(parseFloat(holdings) > 1);
+	console.log(offers);
+
+	t.true(offers.length >= 1);
 });
 
-test('withdrawing market holdings', async (t) => {
-	await contractAccount.functionCall({
+test('Check if offers approval ID changed.', async (t) => {
+	[offerIds, offers] = await contractAccount.viewFunction(
 		contractId,
-		methodName: 'withdraw_market_holdings',
+		'get_offers',
+		{}
+	);
+
+	console.log(offers);
+
+	t.true(offers.length >= 1);
+});
+
+test('Bob accepts Alices offer', async (t) => {
+	const res = await bob.functionCall({
+		contractId,
+		methodName: 'accept_offer',
+		args: {
+			...tokens[1],
+		},
+		gas,
+		attachedDeposit: 1,
+	});
+
+	[offerIds, offers] = await contractAccount.viewFunction(
+		contractId,
+		'get_offers',
+		{}
+	);
+
+	console.log(offers);
+
+	t.true(offers.length == 0);
+});
+
+test('check if marketplace balance increased 2', async (t) => {
+	balance = await contractAccount.viewFunction(
+		contractId,
+		'get_market_balance',
+		{}
+	);
+
+	console.log(balance);
+
+	t.true(balance > 1);
+});
+
+test('withdrawing market balance 2', async (t) => {
+	const res = await contractAccount.functionCall({
+		contractId,
+		methodName: 'withdraw_market_balance',
 		args: {
 			receiving_account: royaltyIdOne
 		},
@@ -243,42 +363,13 @@ test('withdrawing market holdings', async (t) => {
 		attachedDeposit: 0,
 	});
 
-	holdings = await contractAccount.viewFunction(
+	balance = await contractAccount.viewFunction(
 		contractId,
-		'get_market_holdings',
+		'get_market_balance',
 		{}
 	);
 
-	t.true(holdings == '0');
+	console.log(balance);
+
+	t.true(balance == 0);
 });
-
-// test('token Owner approves marketplace for alice offer. Auto transfer false', async (t) => {
-// 	const msg = JSON.stringify({
-// 		auto_transfer: false
-// 	});
-
-// 	const res = await tokenOwner.functionCall({
-// 		contractId: nftContractId,
-// 		methodName: 'nft_approve',
-// 		args: {
-// 			token_id: tokens[0].token_id,
-// 			account_id: contractId,
-// 			msg,
-// 		},
-// 		gas,
-// 		attachedDeposit: parseNearAmount("0.1"),
-// 	});
-
-// 	offer = await contractAccount.viewFunction(
-// 		contractId,
-// 		'get_offer',
-// 		{
-// 			contract_id: nftContractId,
-// 			token_id: tokens[0].token_id
-// 		}
-// 	);
-
-// 	console.log("Offer - ", offer); 
-
-// 	t.is(offer.approval_id, 0);
-// });
