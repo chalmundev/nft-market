@@ -196,4 +196,20 @@ impl Contract {
 			GAS_FOR_ROYALTIES, //GAS attached to the call to payout royalties
 		));
     }
+
+	// event logging
+
+	pub(crate) fn offer_updated_event(
+		&self,
+		offer: &Offer
+	) {
+		
+	}
+
+	pub(crate) fn offer_resolved_event(
+		&self,
+		offer: &Offer
+	) {
+
+	}
 }
