@@ -80,13 +80,15 @@ pub(crate) fn map_set_remove<K, V> (
 	map_key: &K,
 	val: V,
 ) where K: BorshSerialize + BorshDeserialize, V: BorshSerialize + BorshDeserialize {
-	let mut set = map.get(map_key).unwrap_or_else(|| env::panic_str("no set in map"));
-	set.remove(&val);
-	if set.len() == 0 {
-		map.remove(&map_key);
-		return;
+	let set = map.get(map_key);
+	if let Some(mut set) = set {
+		set.remove(&val);
+		if set.len() == 0 {
+			map.remove(&map_key);
+			return;
+		}
+		map.insert(&map_key, &set);
 	}
-	map.insert(&map_key, &set);
 }
 
 impl Contract {
@@ -133,7 +135,7 @@ impl Contract {
 			&offer.maker_id,
 			offer_id,
 		);
-    
+		
         //remove the offer ID from the taker
         map_set_remove(
 			&mut self.offers_by_taker_id,
