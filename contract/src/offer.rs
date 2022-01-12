@@ -9,7 +9,7 @@ pub struct Offer {
 	pub contract_id: AccountId,
     pub token_id: String,
     pub amount: U128,
-    pub created_at: u64,
+    pub updated_at: u64,
 	pub approval_id: Option<u64>,
 	pub has_failed_promise: bool,
 }
@@ -46,6 +46,7 @@ impl Contract {
 				if maker_id == offer.maker_id {
 					// make_offer caller is offer maker
 					offer.amount = amount.unwrap_or_else(|| env::panic_str("must specify offer amount"));
+					offer.updated_at = env::block_timestamp();
 					self.offer_by_id.insert(&offer_id, &offer);
 					return;
 				} else {
@@ -68,9 +69,11 @@ impl Contract {
 			// save values in case we need to revert state in callback
 			let prev_maker_id = offer.maker_id.clone();
 			let prev_offer_amount = offer.amount.clone();
+			let prev_updated_at = offer.updated_at.clone();
 			// valid offer, money in contract, update state
 			offer.maker_id = maker_id.clone();
 			offer.amount = offer_amount;
+			offer.updated_at = env::block_timestamp();
 			self.offer_by_id.insert(&offer_id, &offer);
 
 			// pay back prev offer maker + storage
@@ -81,6 +84,7 @@ impl Contract {
 					maker_id,
 					prev_maker_id,
 					prev_offer_amount,
+					prev_updated_at,
 					env::current_account_id(),
 					offer_amount.0,
 					CALLBACK_GAS,

@@ -51,7 +51,7 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 					contract_id: contract_id,
 					token_id: token_id,
 					amount,
-					created_at: env::block_timestamp(),
+					updated_at: env::block_timestamp(),
 					approval_id: Some(approval_id),
 					has_failed_promise: false,
 				});
@@ -72,6 +72,7 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 			if offer.amount.0 < amount.0 {
 				offer.maker_id = owner_id;
 				offer.amount = amount;
+				offer.updated_at = env::block_timestamp();
 				self.offer_by_id.insert(&offer_id, &offer);
 				return;
 			}

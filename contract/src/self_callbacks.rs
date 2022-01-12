@@ -11,6 +11,7 @@ pub trait SelfContract {
 		maker_id: AccountId,
 		prev_maker_id:AccountId,
 		prev_offer_amount:U128,
+		prev_updated_at: u64,
 	);
     fn resolve_offer(
         &mut self,
@@ -55,7 +56,7 @@ impl Contract {
 			contract_id: contract_id.clone(),
 			token_id: token_id.clone(),
 			amount,
-			created_at: env::block_timestamp(),
+			updated_at: env::block_timestamp(),
 			approval_id: None,
 			has_failed_promise: false,
 		});
@@ -68,6 +69,7 @@ impl Contract {
 		maker_id:AccountId,
 		prev_maker_id:AccountId,
 		prev_offer_amount:U128,
+		prev_updated_at: u64,
 	) {
 		if is_promise_success() {
 			return
@@ -79,6 +81,7 @@ impl Contract {
 		let mut offer = self.offer_by_id.get(&offer_id).unwrap();
 		offer.maker_id = prev_maker_id;
 		offer.amount = prev_offer_amount;
+		offer.updated_at = prev_updated_at;
 		offer.has_failed_promise = true;
 		self.offer_by_id.insert(&offer_id, &offer);
 	}
