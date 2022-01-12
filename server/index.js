@@ -3,14 +3,41 @@ const { providers } = require('near-api-js');
 const fastify = require('fastify')({ logger: true });
 
 fastify.register(require('fastify-postgres'), {
+	name: 'indexer',
 	connectionString: 'postgres://public_readonly:nearprotocol@testnet.db.explorer.indexer.near.dev/testnet_explorer'
 });
 
+fastify.register(require('fastify-postgres'), {
+	name: 'market',
+	connectionString: 'postgres://nftmarket:nftmarket@127.0.0.1:5432/nftmarket'
+});
+
 const queries = {
+	market: () => new Promise((res, rej) => {
+
+		fastify.pg.market.connect(onConnect = (err, client, release) => {
+			if (err) {
+				return rej(err);
+			}
+	
+			client.query(
+				`
+				select * from market_data
+				`, [],
+				onResult = async (err, result) => {
+					release();
+					if (err) {
+						return rej(err);
+					}
+					res(result.rows);
+				}
+			);
+		});
+	}),
 	contracts: () => new Promise((res, rej) => {
 		const provider = new providers.JsonRpcProvider("https://rpc.testnet.near.org");
 
-		fastify.pg.connect(onConnect = (err, client, release) => {
+		fastify.pg.indexer.connect(onConnect = (err, client, release) => {
 			if (err) {
 				return rej(err);
 			}
@@ -80,6 +107,10 @@ fastify.get('/', async (request, reply) => {
 
 fastify.get('/contracts', (req, reply) => {
 	return queries.contracts();
+});
+
+fastify.get('/market', (req, reply) => {
+	return queries.market();
 });
 
 const start = async () => {

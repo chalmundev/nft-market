@@ -1,0 +1,15 @@
+1. one uber query for all receipts 
+
+matching method_names we care about
+- where value IN (value1,value2,...)
+
+2. process each receipt and grab logs
+
+3. split out log args
+
+4. insert into our DB
+
+You11:45 AM
+EVENT - updated_offer(contract_id, token_id, maker_id, taker_id, amount, updated_at)
+
+EVENT - resolve_offer(contract_id, token_id, maker_id, taker_id, amount, updated_at)

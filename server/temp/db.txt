@@ -1,0 +1,22 @@
+/// create database and user
+
+sudo -u postgres psql
+
+postgres=#
+
+create database nftmarket;
+create user nftmarket with encrypted password 'nftmarket';
+grant all privileges on database nftmarket to nftmarket;
+
+\c nftmarket
+
+grant all privileges on all tables in schema public to nftmarket;
+
+CREATE TABLE market_data (
+   contract_id text,
+   token_id text,
+   maker_id text,
+   taker_id text,
+   amount text,
+   updated_at text
+);
