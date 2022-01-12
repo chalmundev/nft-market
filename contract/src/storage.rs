@@ -28,10 +28,20 @@ impl Contract {
 		let offer_storage_count = self.offer_storage_by_owner_id.get(&owner_id).unwrap_or_else(|| 0);
 		let diff = offer_storage_count.checked_sub(offer_count).unwrap_or_else(|| 0);
 		if diff > 0 {
-			self.offer_storage_by_owner_id.insert(&owner_id, &offer_count);
-		
+			if offer_count == 0 && offer_storage_count == 0 {
+				self.offer_storage_by_owner_id.remove(&owner_id);
+			} else {
+				self.offer_storage_by_owner_id.insert(&owner_id, &offer_count);
+			}
 			// TODO add callback to revert self.offer_storage_by_owner_id if refund fails
-			Promise::new(owner_id).transfer(diff as u128 * DEFAULT_OFFER_STORAGE_AMOUNT);
+			Promise::new(owner_id.clone()).transfer(diff as u128 * DEFAULT_OFFER_STORAGE_AMOUNT)
+			.then(ext_self::on_withdraw_offer_storage(
+				owner_id,
+				offer_storage_count,
+				env::current_account_id(),
+				NO_DEPOSIT,
+				CALLBACK_GAS,
+			));
 		}
     }
 

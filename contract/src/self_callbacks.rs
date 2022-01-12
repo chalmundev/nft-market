@@ -21,6 +21,7 @@ pub trait SelfContract {
 		market_amount: u128
     ) -> Promise;
 	fn on_withdraw_balance(&mut self);
+	fn on_withdraw_offer_storage(&mut self, owner_id: AccountId, prev_storage_count: u64);
 }
 
 #[derive(Serialize, Deserialize)]
@@ -80,18 +81,6 @@ impl Contract {
 		offer.amount = prev_offer_amount;
 		offer.has_failed_promise = true;
 		self.offer_by_id.insert(&offer_id, &offer);
-	}
-
-	//withdraw callback to ensure that the promise was successful when withdrawing the market balance
-	#[payable]
-    #[private]
-	pub fn on_withdraw_balance(&mut self) {
-		if is_promise_success() {
-			//reset the market balance only if the promise was successful
-			self.market_balance = 0;
-			return
-		}
-		env::log_str("Unexpected error when withdrawing market balance.");
 	}
 
 	/*
@@ -160,4 +149,24 @@ impl Contract {
         //return the amount payed out
         payout_amount
     }
+
+	//withdraw callback to ensure that the promise was successful when withdrawing the market balance
+    #[private]
+	pub fn on_withdraw_balance(&mut self) {
+		if is_promise_success() {
+			//reset the market balance only if the promise was successful
+			self.market_balance = 0;
+			return
+		}
+		env::log_str("Unexpected error when withdrawing market balance.");
+	}
+
+	//withdraw storage callback to ensure that the promise was successful when withdrawing storage amounts for users
+    #[private]
+	pub fn on_withdraw_offer_storage(&mut self, owner_id: AccountId, prev_storage_count: u64) {
+		if is_promise_success() {
+			return
+		}
+		self.offer_storage_by_owner_id.insert(&owner_id, &prev_storage_count);
+	}
 }

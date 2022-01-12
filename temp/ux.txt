@@ -3,17 +3,17 @@ Cases:
 Alice is the maker (buyer)
 Bob is taker (seller/owner)
 
-DONE + TEST
+DONE
+TEST CASE - YES
 Alice makes offer
 Bob accepts offer by nft_approve with auto transfer
 
-DONE + TEST
+DONE
+TEST CASE - YES
 Alice makes offer
 Bob accepts by nft_approve, then manually calling accept offer
 
-TODO
-
-Similar cases
+Similar outcomes
 
 DONE (automatically handled with existing logic)
 TEST CASE - manually tested
@@ -28,12 +28,10 @@ Bob approves his nft and makes an offer with an amount
 Alice makes an offer that is >= amount of Bob's offer
 -> nft_transfer_payout -> resolve_offer
 
-Similar cases
+Similar outcomes
 
 DONE
-
-TEST CASE?
-
+TEST CASE - YES
 Alice makes an offer
 Bob approves his nft and makes an offer with an amount that is > Alice's offer
 -> Bob replaces alice as offer.maker_id and replaces offer.amount

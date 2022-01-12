@@ -4,6 +4,14 @@ pub(crate) fn get_contract_token_id(contract_id: &AccountId, token_id: &str) -> 
 	format!("{}{}{}", contract_id, DELIMETER, token_id)
 }
 
+pub(crate) fn is_promise_success() -> bool {
+    require!(env::promise_results_count() == 1, "promise failed");
+    match env::promise_result(0) {
+        PromiseResult::Successful(_) => true,
+        _ => false,
+    }
+}
+
 pub(crate) fn paginate<V>(
 	values: &Vector<V>,
 	from_index: Option<U128>,
@@ -55,34 +63,30 @@ pub(crate) fn unordered_map_key_pagination<K, V>(
 /// set management
 
 pub(crate) fn map_set_insert<K, V> (
-    map: &LookupMap<K, UnorderedSet<V>>,
+    map: &mut LookupMap<K, UnorderedSet<V>>,
 	map_key: &K,
 	storage_key: StorageKey,
 	val: V,
-) -> UnorderedSet<V> where K: BorshSerialize + BorshDeserialize, V: BorshSerialize + BorshDeserialize {
-	let mut offers_by_maker_id = map.get(map_key).unwrap_or_else(|| {
+) where K: BorshSerialize + BorshDeserialize, V: BorshSerialize + BorshDeserialize {
+	let mut set = map.get(map_key).unwrap_or_else(|| {
 		UnorderedSet::new(storage_key)
 	});
-	offers_by_maker_id.insert(&val);
-	offers_by_maker_id
+	set.insert(&val);
+	map.insert(&map_key, &set);
 }
 
 pub(crate) fn map_set_remove<K, V> (
-    map: &LookupMap<K, UnorderedSet<V>>,
+    map: &mut LookupMap<K, UnorderedSet<V>>,
 	map_key: &K,
 	val: V,
-) -> UnorderedSet<V> where K: BorshSerialize + BorshDeserialize, V: BorshSerialize + BorshDeserialize {
-	let mut offers_by_maker_id = map.get(map_key).unwrap_or_else(|| env::panic_str("no set in map"));
-	offers_by_maker_id.remove(&val);
-	offers_by_maker_id
-}
-
-pub(crate) fn is_promise_success() -> bool {
-    require!(env::promise_results_count() == 1, "promise failed");
-    match env::promise_result(0) {
-        PromiseResult::Successful(_) => true,
-        _ => false,
-    }
+) where K: BorshSerialize + BorshDeserialize, V: BorshSerialize + BorshDeserialize {
+	let mut set = map.get(map_key).unwrap_or_else(|| env::panic_str("no set in map"));
+	set.remove(&val);
+	if set.len() == 0 {
+		map.remove(&map_key);
+		return;
+	}
+	map.insert(&map_key, &set);
 }
 
 impl Contract {
@@ -97,24 +101,18 @@ impl Contract {
 
 		self.offer_by_id.insert(&self.offer_id, offer);
 
-		self.offers_by_maker_id.insert(
+		map_set_insert(
+			&mut self.offers_by_maker_id, 
 			&maker_id, 
-			&map_set_insert(
-				&self.offers_by_maker_id, 
-				&maker_id, 
-				StorageKey::OfferByMakerIdInner { maker_id: maker_id.clone() },
-				self.offer_id
-			)
+			StorageKey::OfferByMakerIdInner { maker_id: maker_id.clone() },
+			self.offer_id
 		);
 	
-		self.offers_by_taker_id.insert(
+		map_set_insert(
+			&mut self.offers_by_taker_id, 
 			&taker_id, 
-			&map_set_insert(
-				&self.offers_by_taker_id, 
-				&taker_id, 
-				StorageKey::OfferByTakerIdInner { taker_id: taker_id.clone() },
-				self.offer_id
-			)
+			StorageKey::OfferByTakerIdInner { taker_id: taker_id.clone() },
+			self.offer_id
 		);
 	
 		let contract_token_id = get_contract_token_id(&contract_id, &token_id);
@@ -130,24 +128,18 @@ impl Contract {
         self.offer_by_id.remove(&offer_id);
     
         //remove the offer ID from the maker
-        self.offers_by_maker_id.insert(
-            &offer.maker_id,
-            &map_set_remove(
-                &self.offers_by_maker_id,
-                &offer.maker_id,
-                offer_id,
-            )
-        );
+        map_set_remove(
+			&mut self.offers_by_maker_id,
+			&offer.maker_id,
+			offer_id,
+		);
     
         //remove the offer ID from the taker
-        self.offers_by_taker_id.insert(
-            &offer.taker_id,
-            &map_set_remove(
-                &self.offers_by_taker_id,
-                &offer.taker_id,
-                offer_id,
-            )
-        );
+        map_set_remove(
+			&mut self.offers_by_taker_id,
+			&offer.taker_id,
+			offer_id,
+		);
     
         //remove the offer from the contract and token ID
         let contract_token_id = get_contract_token_id(&offer.contract_id, &offer.token_id);
@@ -203,35 +195,3 @@ impl Contract {
 		));
     }
 }
-
-// deprecated???
-
-
-
-// pub(crate) fn refund_storage(storage_freed: u64) {
-//     let refund = env::storage_byte_cost() * storage_freed as u128 - 1;
-   
-//     if refund > 1 {
-//         Promise::new(env::predecessor_account_id()).transfer(refund);
-//     }
-// }
-
-// pub(crate) fn refund_deposit(storage_used: u64, keep_amount: Option<Balance>) {
-// 	let required_cost = env::storage_byte_cost() * Balance::from(storage_used);
-// 	let mut attached_deposit = env::attached_deposit();
-
-// 	if let Some(keep_amount) = keep_amount {
-// 		attached_deposit = attached_deposit.checked_sub(keep_amount).unwrap_or_else(|| env::panic_str("keep amount too large"));
-// 	}
-
-// 	require!(
-// 		required_cost <= attached_deposit,
-// 		"not enough N to cover storage",
-// 	);
-
-// 	let refund = attached_deposit - required_cost;
-// 	// log!("refund_deposit amount {}", refund);
-// 	if refund > 1 {
-// 		Promise::new(env::predecessor_account_id()).transfer(refund);
-// 	}
-// }

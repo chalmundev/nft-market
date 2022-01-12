@@ -3,12 +3,15 @@ use crate::*;
 #[near_bindgen]
 impl Contract {
 	
-	// for debugging
+	// TODO add from_index and limit, iter.skip.take.collect then loop
 	pub fn remove_offers(&mut self) {
         self.assert_owner();
         let offer_vec = self.offer_by_id.to_vec();
 		for (offer_id, offer) in offer_vec {
-			self.internal_remove_offer(offer_id, &offer);
+			// TODO remove for production
+			// if offer.has_failed_promise {
+				self.internal_remove_offer(offer_id, &offer);
+			// }
 		}
     }
 
