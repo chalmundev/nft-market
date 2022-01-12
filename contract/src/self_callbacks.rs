@@ -18,9 +18,9 @@ pub trait SelfContract {
         maker_id: AccountId,
         taker_id: AccountId,
         payout_amount: U128,
-		market_amount: u128
+		market_amount: Balance,
     ) -> Promise;
-	fn on_withdraw_balance(&mut self);
+	fn on_withdraw_balance(&mut self, prev_balance: Balance);
 	fn on_withdraw_offer_storage(&mut self, owner_id: AccountId, prev_storage_count: u64);
 }
 
@@ -95,7 +95,7 @@ impl Contract {
         maker_id: AccountId,
         taker_id: AccountId,
         payout_amount: U128,
-		market_amount: u128
+		market_amount: Balance,
     ) -> U128 {
         let mut valid_payout_object = true; 
         let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("No offer associated with the offer ID"));
@@ -152,12 +152,11 @@ impl Contract {
 
 	//withdraw callback to ensure that the promise was successful when withdrawing the market balance
     #[private]
-	pub fn on_withdraw_balance(&mut self) {
+	pub fn on_withdraw_balance(&mut self, prev_balance: Balance) {
 		if is_promise_success() {
-			//reset the market balance only if the promise was successful
-			self.market_balance = 0;
 			return
 		}
+		self.market_balance = prev_balance;
 		env::log_str("Unexpected error when withdrawing market balance.");
 	}
 
@@ -168,5 +167,6 @@ impl Contract {
 			return
 		}
 		self.offer_storage_by_owner_id.insert(&owner_id, &prev_storage_count);
+		env::log_str("Unexpected error when withdrawing offer storage.");
 	}
 }
