@@ -72,6 +72,19 @@ impl Contract {
 		prev_updated_at: u64,
 	) {
 		if is_promise_success() {
+			let offer = self.offer_by_id.get(&offer_id).unwrap();
+
+			env::log_str(&EventLog {
+				event: EventLogVariant::UpdateOffer(OfferLog {
+					contract_id: offer.contract_id,	
+					token_id: offer.token_id,
+					maker_id: offer.maker_id,
+					taker_id: offer.taker_id,
+					amount: offer.amount,
+					updated_at: offer.updated_at,
+				})
+			}.to_string());
+
 			return
 		}
 		// pay back promise failed, pay back the new offer maker
@@ -148,6 +161,19 @@ impl Contract {
         for (receiver_id, amount) in payout {
             Promise::new(receiver_id).transfer(amount.0);
         }
+		
+        // Log the serialized json.
+        env::log_str(&EventLog {
+            // The data related with the event stored in a vector.
+            event: EventLogVariant::ResolveOffer(OfferLog {
+                contract_id: offer.contract_id,	
+				token_id: offer.token_id,
+				maker_id: offer.maker_id,
+				taker_id: offer.taker_id,
+				amount: offer.amount,
+				updated_at: offer.updated_at,
+            }),
+        }.to_string());
 
         //return the amount payed out
         payout_amount

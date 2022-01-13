@@ -92,7 +92,7 @@ pub(crate) fn map_set_remove<K, V> (
 }
 
 impl Contract {
-    // Removes the offer from the contract state
+    // Add the offer to the contract state
     pub(crate) fn internal_add_offer(&mut self, offer: &Offer) {
         self.offer_id += 1;
 
@@ -122,6 +122,17 @@ impl Contract {
 			&contract_token_id.clone(),
 			&self.offer_id
 		);
+
+		env::log_str(&EventLog {
+			event: EventLogVariant::UpdateOffer(OfferLog {
+				contract_id,
+				token_id,
+				maker_id,
+				taker_id,
+				amount: offer.amount,
+				updated_at: offer.updated_at,
+			})
+		}.to_string());
     }
 
     // Removes the offer from the contract state
@@ -195,21 +206,5 @@ impl Contract {
 			NO_DEPOSIT, //don't attach any deposit
 			GAS_FOR_ROYALTIES, //GAS attached to the call to payout royalties
 		));
-    }
-
-	// event logging
-
-	pub(crate) fn offer_updated_event(
-		&self,
-		offer: &Offer
-	) {
-		
-	}
-
-	pub(crate) fn offer_resolved_event(
-		&self,
-		offer: &Offer
-	) {
-
 	}
 }

@@ -74,6 +74,18 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 				offer.amount = amount;
 				offer.updated_at = env::block_timestamp();
 				self.offer_by_id.insert(&offer_id, &offer);
+
+                env::log_str(&EventLog {
+                    event: EventLogVariant::UpdateOffer(OfferLog {
+                        contract_id: offer.contract_id,	
+                        token_id: offer.token_id,
+                        maker_id: offer.maker_id,
+                        taker_id: offer.taker_id,
+                        amount: offer.amount,
+                        updated_at: offer.updated_at,
+                    })
+                }.to_string());
+
 				return;
 			}
 		}

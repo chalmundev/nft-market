@@ -48,6 +48,18 @@ impl Contract {
 					offer.amount = amount.unwrap_or_else(|| env::panic_str("must specify offer amount"));
 					offer.updated_at = env::block_timestamp();
 					self.offer_by_id.insert(&offer_id, &offer);
+
+					env::log_str(&EventLog {
+						event: EventLogVariant::UpdateOffer(OfferLog {
+							contract_id: offer.contract_id,	
+							token_id: offer.token_id,
+							maker_id: offer.maker_id,
+							taker_id: offer.taker_id,
+							amount: offer.amount,
+							updated_at: offer.updated_at,
+						})
+					}.to_string());
+
 					return;
 				} else {
 					// current offer created by token owner, new offer is not token owner
@@ -77,7 +89,7 @@ impl Contract {
 			self.offer_by_id.insert(&offer_id, &offer);
 
 			// pay back prev offer maker + storage
-			Promise::new(offer.maker_id)
+			Promise::new(offer.maker_id.clone())
 				.transfer(offer.amount.0 + DEFAULT_OFFER_STORAGE_AMOUNT)
 				.then(ext_self::outbid_callback(
 					offer_id,
