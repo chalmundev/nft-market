@@ -1,0 +1,49 @@
+
+Email to designers:
+
+We are building an NFT Marketplace so we need a textual logo (font choice basically), colors and some UI Elements.
+
+Finally, we need some help on a few screens and minimal UX but not exhaustive to the whole site. We are experienced app builders with some UX background.
+
+Details:
+- style - fonts, colors, shadows/weight, borders, shapes of elements (corner radius etc...)
+- UI elements - we can send detailed list tomorrow with more examples and sketches
+- some screens & UX - not exhaustive but perhaps the home screen with featured NFTs and some of the listing/offer screens
+
+This is a short time. But it is a minimalist project with future potential post hackathon. We have been approached by investors who want to back the project as a DAO already.
+
+We want it to be fun and easy for you as well.
+
+Proposed phases and timeline:
+
+1. Jan 19th - 21st
+
+We suggest to start with 3 examples of style choices. Only a font + minimal colors and a UI sketch of and NFT listing for example under Trending Auctions here: https://foundation.app/
+
+Then we can do a check-in on the general direction and make sure things are on the right path?
+
+2. Jan 26th - 28th
+
+Finish style, UI elements. We provide some small feedback. We provide sketches of a few screens we need help with.
+
+3. Feb 2nd - 4th
+
+Final submission.
+
+Payment details:
+
+We will pay in NEAR tokens. Please create NEAR wallet here: wallet.near.org
+
+If we win something in hackathon we will pay a bonus as well.
+
+Examples we like:
+- https://foundation.app/
+- https://foundation.app/@itsdavehimself/~/79853
+- https://makersplace.com/
+- https://dribbble.com/shots/15826251-Yats-NFT-Marketplace-Website 
+
+The feeling we like:
+- clean and minimal, no overuse of cards, borders or shadows
+- large gradients, grainy filter
+- 80s / retrowave colors
+- sharp edges with minimal but smart use of rounded corners

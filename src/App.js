@@ -10,6 +10,7 @@ import data from '../static/data.json';
 import { appStore, onAppMount } from './state/app';
 
 import { RouteContract } from './components/RouteContract';
+import { RouteToken } from './components/RouteToken';
 
 import './App.scss';
 
@@ -34,27 +35,36 @@ const App = () => {
 	const { tokens, supply } = state.data;
 
 	return (
-		<main className="container">
+		<main className="container-fluid">
 
 			<nav>
 				<ul>
 					<li>
-						<Link to="/">Home</Link>
+						<strong>Brand</strong>
 					</li>
 					<li>
-						<Link to="/wallet">Wallet</Link>
+						<Link to="/">Home</Link>
+					</li>
+				</ul>
+				<ul>
+					<li>
+						<Link to="/account">Wallet</Link>
 					</li>
 				</ul>
 			</nav>
 
 			<Routes>
-				<Route path="/contract/:contractId" element={
-					<RouteContract { ...{ dispatch, tokens, supply } } />
+				<Route path="/contract/:contract_id" element={
+					<RouteContract {...{ dispatch, tokens, supply }} />
 				} />
-				
-				<Route path="/wallet" element={
+
+				<Route path="/token/:contract_id/:token_id" element={
+					<RouteToken {...{ tokens }} />
+				} />
+
+				<Route path="/account" element={
 					account ? <>
-						<p>{ account.accountId }</p>
+						<p>{account.accountId}</p>
 						<button onClick={() => wallet.signOut()}>Sign Out</button>
 					</> :
 						<>
@@ -62,11 +72,13 @@ const App = () => {
 							<button onClick={() => wallet.signIn()}>Sign In</button>
 						</>
 				} />
-				
+
 				<Route path="/" element={
-					data.map(({ contractId, ts, name }) => {
-						return <div key={contractId} onClick={() => navigate('/contract/' + contractId)}>
-							{ name } - { contractId } - { ts }
+					data
+						.filter(({ contract_id, name }) => /loot/gi.test(name) || contract_id === 'tests.nft-market.testnet')
+						.map(({ contract_id, ts, name }) => {
+						return <div key={contract_id} onClick={() => navigate('/contract/' + contract_id)}>
+							{name} - {contract_id} - {ts}
 						</div>;
 					})
 				} />

@@ -45,8 +45,8 @@ const queries = {
 			client.query(
 				`
 				select distinct
-						emitted_by_contract_account_id as "contractId",
-						min(emitted_at_block_timestamp) as "ts"
+						emitted_by_contract_account_id as contract_id,
+						min(emitted_at_block_timestamp) as ts
 					from
 						assets__non_fungible_token_events
 					group by
@@ -67,12 +67,12 @@ const queries = {
 					for(var i = 0; i < result.rows.length; i++) {
 						try {
 							//get the symbol and name for the contract. If the provider can't call the nft_metadata function, skips contract.
-							const data = await getContractMetadata(provider, result.rows[i].contractId);
-							data.contractId = result.rows[i].contractId; 
+							const data = await getContractMetadata(provider, result.rows[i].contract_id);
+							data.contract_id = result.rows[i].contract_id; 
 							data.ts = result.rows[i].ts;
 							formattedRows.push(data); 
 						} catch(e) {
-							console.log("Skipping. Error for contract: ", result.rows[i].contractId);
+							console.log("Skipping. Error for contract: ", result.rows[i].contract_id);
 						}
 						console.log("Finished ", i+1, " of ", result.rows.length);
 					}

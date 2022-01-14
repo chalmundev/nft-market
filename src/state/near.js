@@ -27,17 +27,41 @@ export const initNear = () => async ({ update }) => {
 };
 
 export const getSupply = (contractId) => async ({ update }) => {
-	const supply = await contractAccount.viewFunction(contractId, 'nft_total_supply');
+	let supply = 0;
+	try {
+		supply = parseInt(await contractAccount.viewFunction(contractId, 'nft_total_supply'), 10);
+	} catch(e) {
+		console.warn(e)
+	}
 	await update('data', { supply });
 };
 
 export const getTokens = (contractId, from_index, limit) => async ({ update }) => {
 	let tokens = [];
 	try {
-		tokens = await contractAccount.viewFunction(contractId, 'nft_tokens', {
+		tokens = (await contractAccount.viewFunction(contractId, 'nft_tokens', {
 			from_index,
 			limit,
-		});
+		})).map((token) => {
+
+			/// TODO move to utils/token.js
+
+			// find invalid tokens
+			if (!token?.metadata?.media) return
+			// swap ipfs links to cloudflare
+			const media = token.metadata.media  
+			console.log(media)
+
+			const file = '/' + token.metadata.media.match(/[^/\\&\?]+\.\w{3,4}(?=([\?&].*$|$))/i)?.[0]
+			const ipfsHash = token.metadata.media.match(/\bbafybei[a-zA-Z0-9]*\b/i)?.[0]
+			console.log(file)
+			console.log(ipfsHash)
+
+			if (ipfsHash) {
+				token.metadata.media = 'https://cloudflare-ipfs.com/ipfs/' + ipfsHash + file
+			}
+			return token
+		}).filter((token) => !!token)
 	} catch(e) {
 		console.warn(e);
 	}

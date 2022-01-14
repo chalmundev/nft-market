@@ -40,7 +40,15 @@ const init = async (owner_id = contractId) => {
 const getAccount = async (accountId, fundingAmount = NEW_ACCOUNT_AMOUNT, secret) => {
 	const account = new nearAPI.Account(connection, accountId);
 	try {
-		const secret = await fs.readFileSync(`./neardev/${accountId}`, 'utf-8');
+		let secret
+		try {
+			secret = JSON.parse(fs.readFileSync(process.env.HOME + `/.near-credentials/${networkId}/${accountId}.json`, 'utf-8')).private_key;
+		} catch(e) {
+			if (!/no such file|does not exist/.test(e.toString())) {
+				throw e;
+			}
+			secret = fs.readFileSync(`./neardev/${accountId}`, 'utf-8');
+		}
 		const newKeyPair = KeyPair.fromString(secret);
 		keyStore.setKey(networkId, accountId, newKeyPair);
 		await account.state();

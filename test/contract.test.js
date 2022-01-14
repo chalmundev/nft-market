@@ -52,8 +52,15 @@ test('owner remove offers', async (t) => {
 });
 
 test('users initialized', async (t) => {
-	aliceId = 'alice.' + contractId;
-	bobId = 'bob.' + contractId;
+
+	// consistent alice and bob
+	aliceId = 'alice.nft-market.testnet';
+	bobId = 'bob.nft-market.testnet';
+
+	// ephemeral alice and bob based on market contract
+	// aliceId = 'alice.' + contractId;
+	// bobId = 'bob.' + contractId;
+
 	tokenOwnerId = 'owner.' + contractId;
 	tokenOwner = await getAccount(tokenOwnerId);
 	alice = await getAccount(aliceId);
