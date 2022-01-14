@@ -2,6 +2,9 @@ const { writeFile } = require('fs/promises');
 const { providers } = require('near-api-js');
 const fastify = require('fastify')({ logger: true });
 
+const PORT = 3000
+const HOST = process.env.ENV === 'prod' ? '0.0.0.0' : '127.0.0.1'
+
 fastify.register(require('fastify-postgres'), {
 	name: 'indexer',
 	connectionString: 'postgres://public_readonly:nearprotocol@testnet.db.explorer.indexer.near.dev/testnet_explorer'
@@ -115,8 +118,8 @@ fastify.get('/market', (req, reply) => {
 
 const start = async () => {
 	try {
-		console.log("Hello World!");
-		await fastify.listen(3000);
+		console.log('Server bound to:', HOST);
+		await fastify.listen(PORT, HOST);
 	} catch (err) {
 		fastify.log.error(err);
 		process.exit(1);

@@ -3,4 +3,11 @@ sudo apt update
 sudo apt upgrade
 sudo apt install nodejs npm
 npm install -g n
+npm i -g yarn
+npm i -g pm2
 
+sudo ufw enable
+sudo ufw enable
+sudo ufw status verbose
+sudo ufw allow 22
+sudo ufw allow 3000

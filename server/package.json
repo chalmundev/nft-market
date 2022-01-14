@@ -13,6 +13,7 @@
   },
   "scripts": {
     "start": "yarn stop && pm2 start index.js -f --watch && pm2 logs",
+    "start-prod": "yarn stop && ENV=prod pm2 start index.js -f --watch",
     "stop": "(pm2 delete default) || true"
   }
 }
