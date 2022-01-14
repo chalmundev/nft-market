@@ -2,7 +2,7 @@
 	"name": "nft-market",
 	"version": "1.0.0",
 	"main": "index.js",
-	"author": "chalmundev",
+	"author": "chalmundev, flourishingsentries",
 	"license": "MIT",
 	"dependencies": {
 		"near-api-js": "^0.44.2",
