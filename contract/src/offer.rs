@@ -62,19 +62,16 @@ impl Contract {
 
 					return;
 				} else {
-					// current offer created by token owner, new offer is not token owner
-					if offer.approval_id.is_some() {
-						if offer.amount.0 != OPEN_OFFER_AMOUNT {
-							if offer_amount.0 >= offer.amount.0 {
-								offer.amount = offer_amount;
-								offer.maker_id = maker_id;
-								self.internal_accept_offer(offer_id, &offer);
-								return;
-							}
-							env::panic_str("bid not greater than offer amount");
+					if offer.amount.0 != OPEN_OFFER_AMOUNT {
+						if offer_amount.0 >= offer.amount.0 {
+							offer.amount = offer_amount;
+							offer.maker_id = maker_id;
+							self.internal_accept_offer(offer_id, &offer);
+							return;
 						}
-						// continue execution below - alice outbids token owner because offer.amount == OPEN_OFFER_AMOUNT (open for bids)
+						env::panic_str("bid not greater than offer amount");
 					}
+					// continue execution below - alice outbids token owner because offer.amount == OPEN_OFFER_AMOUNT (open for bids)
 				}
 			}
 
