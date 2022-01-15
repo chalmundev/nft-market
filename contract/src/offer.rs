@@ -88,6 +88,20 @@ impl Contract {
 			offer.updated_at = env::block_timestamp();
 			self.offer_by_id.insert(&offer_id, &offer);
 
+			// first non-owner bid
+			if prev_offer_amount.0 == OPEN_OFFER_AMOUNT {
+				env::log_str(&EventLog {
+					event: EventLogVariant::UpdateOffer(OfferLog {
+						contract_id: offer.contract_id,	
+						token_id: offer.token_id,
+						maker_id: offer.maker_id,
+						taker_id: offer.taker_id,
+						amount: offer.amount,
+						updated_at: offer.updated_at,
+					})
+				}.to_string());
+				return;
+			}
 			// pay back prev offer maker + storage
 			Promise::new(prev_maker_id.clone())
 				.transfer(prev_offer_amount.0 + DEFAULT_OFFER_STORAGE_AMOUNT)
