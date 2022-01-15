@@ -1,4 +1,56 @@
 
+
+List of UI Elements
+
+- colors: primary, secondary, info bubble, warning, disabled (alpha)
+- font(s): multiple optional but not required, please try to pick from free fonts e.g. google fonts
+- page header: brand, collapsed menu button, profile button (signed in/out)
+- menu open (mobile)
+- headers: h1, h2, h3
+- typography: normal, bold, fine print (italic)
+- buttons: primary, secondary, disabled, text link
+- chips: primary, secondary
+- breadcrumbs
+- form elements: input, button
+- offer form
+- nft listing in a gallery view (gallery is 1 col in mobile): image, token ID, latest offer (or no offer), make offer button
+
+Perhaps 1 view which we know right away:
+- nft page: image, token ID, description, all offers, offer form
+
+Style wise we strongly prefer white, art gallery, sharp edges aesthetic.
+
+Adjectives we like:
+- sleek
+- minimal
+- sharp
+- smart
+- playful
+
+Style Examples:
+- https://foundation.app/
+- https://foundation.app/@itsdavehimself/~/79853
+- https://makersplace.com/
+Gradients we like (but like it lighter)
+- https://dribbble.com/shots/15826251-Yats-NFT-Marketplace-Website
+- https://dribbble.com/shots/16410386-ArtDo-NFT-Marketplace-Website 
+- https://dribbble.com/shots/15769564-Rarible-NFT-Marketplace-APP
+
+Base CSS package we're using (for context): https://picocss.com/docs/forms.html
+
+Site Map (for context, do not need to design):
+
+Main page - hot tokens with offers broken up by 3-4 categories
+Favorites page - tokens user has starred or hearted
+Offers on my NFTs - offers for NFTs I own
+Offers made - offers I currently have active
+Contract page - all tokens for a contract
+Token page - individual NFT
+
+
+
+
+
 Email to designers:
 
 We are building an NFT Marketplace so we need a textual logo (font choice basically), colors and some UI Elements.

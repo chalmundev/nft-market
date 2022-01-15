@@ -1,0 +1,71 @@
+
+
+
+CRON JOB
+
+example file for given contract_id
+
+
+start with this:
+
+[
+	{
+		contract_id,
+		token_id,
+		maker_id,
+		taker_id,
+		amount,
+		updated_at
+	}
+]
+
+results = 385 rows
+
+load the old contract json
+
+check existing file and do nothing if total_offers is the same as old file
+
+if difference in offers then we regen file
+
+example: rows = 421
+
+for each token that has new offers push offer, update summary
+
+once all tokens are updated, update entire file summary
+
+need this:
+
+{
+	total_offers: 385,
+
+	name: 'cool-nft',
+	symbol: 'blah',
+	summary: {
+		'minAmount': '5000000000000000000000000',
+		'maxAmount': '25000000000000000000000000',
+		supply: '',
+	},
+	tokens: {
+		'cool-nft:345': {
+			summary: {
+
+			},
+			offers: [...]
+		},
+		'cool-nft:32125': {
+			summary: {
+				
+			},
+			offers: [...]
+		}
+	}
+}
+
+
+Nice to have
+
+HOT token
+
+special endpoint that's called directly by users and gets latest offers
+
+
