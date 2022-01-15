@@ -89,7 +89,7 @@ impl Contract {
 			self.offer_by_id.insert(&offer_id, &offer);
 
 			// pay back prev offer maker + storage
-			Promise::new(offer.maker_id.clone())
+			Promise::new(prev_maker_id.clone())
 				.transfer(offer.amount.0 + DEFAULT_OFFER_STORAGE_AMOUNT)
 				.then(ext_self::outbid_callback(
 					offer_id,
