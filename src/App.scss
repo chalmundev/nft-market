@@ -1,1 +1,58 @@
+body {
+	width: 100%;
+	align-items: center;
+}
 
+#root {
+	margin: auto;
+}
+
+.crumbs {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 16px;
+	> div:nth-child(2) {
+		background-color: rgba(255, 255, 255, 0.5);
+		border-radius: 4px;
+		padding: 4px;
+	}
+}
+
+.form {
+	margin-top: 16px;
+	
+}
+
+.image {
+	width: 100%;
+	margin-bottom: 16px;
+}
+
+.form-group {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	> label, > input[type="checkbox"] {
+		margin-bottom: 16px;
+	}
+	> input[required] {
+		border-bottom-color: var(--primary);
+	}
+}
+
+.button-row {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	> button {
+		margin-right: 8px;
+		margin-left: 8px;
+	}
+	> button:first-of-type {
+		margin-left: 0;
+	}
+	> button:last-of-type {
+		margin-right: 0;
+	}
+}

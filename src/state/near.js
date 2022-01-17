@@ -1,6 +1,9 @@
 import * as nearAPI from 'near-api-js';
 const { WalletAccount } = nearAPI;
 import { near, contractAccount, contractId } from '../../utils/near-utils';
+import { parseToken } from '../utils/token';
+import getConfig from '../../utils/config';
+const { contractId, contractId: _contractId, gas, attachedDeposit: defaultAttachedDeposit } = getConfig();
 
 export const initNear = () => async ({ update }) => {
 
@@ -26,44 +29,77 @@ export const initNear = () => async ({ update }) => {
 
 };
 
-export const getSupply = (contractId) => async ({ update }) => {
-	let supply = 0;
+
+/// actions
+
+export const action = ({
+	contractId = _contractId,
+	methodName,
+	args,
+	attachedDeposit = defaultAttachedDeposit
+}) => async ({ getState }) => {
 	try {
-		supply = parseInt(await contractAccount.viewFunction(contractId, 'nft_total_supply'), 10);
+		const { account } = getState()
+		account.functionCall({
+			contractId,
+			methodName,
+			args,
+			gas,
+			attachedDeposit,
+		})
 	} catch(e) {
 		console.warn(e)
 	}
-	await update('data', { supply });
-};
+}
 
-export const getTokens = (contractId, from_index, limit) => async ({ update }) => {
-	let tokens = [];
-	try {
-		tokens = (await contractAccount.viewFunction(contractId, 'nft_tokens', {
-			from_index,
-			limit,
-		})).map((token) => {
-
-			/// TODO move to utils/token.js
-
-			// find invalid tokens
-			if (!token?.metadata?.media) return
-			// swap ipfs links to cloudflare
-			const media = token.metadata.media  
-			console.log(media)
-
-			const file = '/' + token.metadata.media.match(/[^/\\&\?]+\.\w{3,4}(?=([\?&].*$|$))/i)?.[0]
-			const ipfsHash = token.metadata.media.match(/\bbafybei[a-zA-Z0-9]*\b/i)?.[0]
-			console.log(file)
-			console.log(ipfsHash)
-
-			if (ipfsHash) {
-				token.metadata.media = 'https://cloudflare-ipfs.com/ipfs/' + ipfsHash + file
-			}
-			return token
-		}).filter((token) => !!token)
-	} catch(e) {
-		console.warn(e);
+export const view = ({
+	contract_id = contractId,
+	methodName,
+	args,
+	key,
+	defaultVal
+}) => async ({ update }) => {
+	if (defaultVal) {
+		update(key, defaultVal)
 	}
-	await update('data', { tokens });
+	try {
+		let res = await contractAccount.viewFunction(
+			contract_id,
+			methodName,
+			args
+		)
+		/// TODO move to utils/token.js
+		if (/nft_total_supply/.test(methodName)) {
+			res = parseInt(res, 10)
+		}
+		if (/nft_tokens/.test(methodName)) {
+			res = res.map(parseToken)
+		}
+		if (key) {
+			await update(key, res);
+		}
+		return res
+	} catch(e) {
+		console.warn(e)
+	}
+}
+
+export const fetchContract = (contract_id, args) => async ({ getState, dispatch }) => {
+	const { contractId } = getState()?.data || {}
+	dispatch(view({
+		contract_id,
+		methodName: 'nft_tokens',
+		args,
+		key: 'data.tokens',
+		defaultVal: []
+	}))
+	if (contract_id === contractId) {
+		return
+	}
+	dispatch(view({
+		contract_id,
+		methodName: 'nft_total_supply',
+		key: 'data.supply',
+		defaultVal: 0,
+	}))
 };

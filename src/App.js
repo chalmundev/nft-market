@@ -3,7 +3,8 @@ import {
 	Routes,
 	Route,
 	Link,
-	useNavigate
+	useParams,
+	useNavigate,
 } from "react-router-dom";
 
 import data from '../static/data.json';
@@ -17,14 +18,14 @@ import './App.scss';
 const App = () => {
 	const { state, dispatch, update } = useContext(appStore);
 
-	console.log('state', state);
+	// console.log('state', state);
 
 	const navigate = useNavigate();
 
 	const { wallet, account } = state;
 
 	const onMount = () => {
-		dispatch(onAppMount('world'));
+		dispatch(onAppMount());
 	};
 	useEffect(onMount, []);
 
@@ -32,7 +33,10 @@ const App = () => {
 		update('clicked', !state.clicked);
 	};
 
-	const { tokens, supply } = state.data;
+	const { contractId, index, tokens, supply } = state.data;
+
+	const showBackToken = /\/(token)/gi.test(window.location.pathname)
+	const showBackContact = /\/(contract)/gi.test(window.location.pathname)
 
 	return (
 		<main className="container-fluid">
@@ -42,35 +46,44 @@ const App = () => {
 					<li>
 						<strong>Brand</strong>
 					</li>
-					<li>
-						<Link to="/">Home</Link>
-					</li>
 				</ul>
 				<ul>
 					<li>
-						<Link to="/account">Wallet</Link>
+						<Link to="/">Home</Link>
+					</li>
+					<li>
+						{
+							account
+							?
+							<Link to="/" onClick={() => wallet.signOut()}>Sign Out</Link>
+							:
+							<Link to="/" onClick={() => wallet.signIn()}>Sign In</Link>
+						}
 					</li>
 				</ul>
 			</nav>
 
+			<div className='crumbs'>
+				{ showBackToken || showBackContact ? <div><Link to="/" onClick={(e) => {
+					e.preventDefault()
+					if (showBackToken) {
+						return navigate(window.location.pathname.split('/').slice(0, -1).join('/').replace('/token', '/contract'))
+					}
+					if (showBackContact) {
+						update('data.index', 0)
+					}
+					navigate('/')
+				}}>Back</Link></div> : <div></div> }
+				{ account && <div>{account.accountId}</div> }
+			</div>
+
 			<Routes>
 				<Route path="/contract/:contract_id" element={
-					<RouteContract {...{ dispatch, tokens, supply }} />
+					<RouteContract {...{ dispatch, update, contractId, index, supply, tokens }} />
 				} />
 
 				<Route path="/token/:contract_id/:token_id" element={
-					<RouteToken {...{ tokens }} />
-				} />
-
-				<Route path="/account" element={
-					account ? <>
-						<p>{account.accountId}</p>
-						<button onClick={() => wallet.signOut()}>Sign Out</button>
-					</> :
-						<>
-							<p>Not Signed In</p>
-							<button onClick={() => wallet.signIn()}>Sign In</button>
-						</>
+					<RouteToken {...{ dispatch, tokens }} />
 				} />
 
 				<Route path="/" element={
