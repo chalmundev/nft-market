@@ -38,8 +38,6 @@ need this:
 {
 	total_offers: 385,
 
-	name: 'cool-nft',
-	symbol: 'blah',
 	summary: {
 		'minAmount': '5000000000000000000000000',
 		'maxAmount': '25000000000000000000000000',

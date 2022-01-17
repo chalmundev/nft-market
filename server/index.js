@@ -1,10 +1,10 @@
 const fastify = require('fastify')({ logger: true });
-const fpg = require('fastify-postgres')
+const fpg = require('fastify-postgres');
 
 const { market, contracts } = require('./db');
 
-const PORT = 3000
-const HOST = process.env.ENV === 'prod' ? '0.0.0.0' : '127.0.0.1'
+const PORT = 3000;
+const HOST = process.env.ENV === 'prod' ? '0.0.0.0' : '127.0.0.1';
 
 fastify.register(fpg, {
 	name: 'mainnet',
@@ -30,7 +30,7 @@ fastify.get('/contracts', (req, reply) => {
 });
 
 fastify.get('/market', (req, reply) => {
-	return market(fastify.pg.market);
+	return market(fastify.pg.testnet);
 });
 
 const start = async () => {
