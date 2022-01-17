@@ -2,6 +2,12 @@ const { writeFile } = require('fs/promises');
 const { execSync } = require('child_process');
 const { providers } = require('near-api-js');
 
+
+const getConfig = require("../utils/config");
+const {
+	contractId,
+} = getConfig();
+
 async function getContractMetadata(provider, accountId) {
 	const rawResult = await provider.query({
 	  request_type: "call_function",
@@ -23,30 +29,18 @@ async function getTransactionInformation(provider, transactionHash) {
 	]);
 }
 
-function formatDataForFile(formattedData, currentLog) {
+function appendEventToContract(contracts, log) {
+
+	console.log(log)
 	//remove unnecessary info by creating new item to store object
-	const itemToStore = new Object(); 
+	const event = { ...log.data };
+	const { contract_id } = event;
 
-	itemToStore.event = currentLog.event;
-	itemToStore.maker_id = currentLog.data.maker_id;
-	itemToStore.taker_id = currentLog.data.taker_id;
-	itemToStore.amount = currentLog.data.amount;
-	itemToStore.updated_at = currentLog.data.updated_at;
-	itemToStore.token_id = currentLog.data.token_id;
-
-	//default the contract's data if it's not in file
-	if (!formattedData[currentLog.data.contract_id]) {
-		formattedData[currentLog.data.contract_id] = {};
-		formattedData[currentLog.data.contract_id].tokens = {};
-	}
-
-	//default the current token to empty vec if it's not in file
-	if(!formattedData[currentLog.data.contract_id].tokens[currentLog.data.token_id]) {
-		//default token's data if it's not in the contract
-		formattedData[currentLog.data.contract_id].tokens[currentLog.data.token_id] = [];
-	}
+	const contract = contracts[contract_id] = contracts[contract_id] || {}
+	const tokens = contract.tokens = contract.tokens || {}
+	const events = tokens[event.token_id] = tokens[event.token_id] || []
 	
-	formattedData[currentLog.data.contract_id].tokens[currentLog.data.token_id].push(itemToStore);
+	events.push(event);
 }
 
 
@@ -63,58 +57,59 @@ module.exports = {
 				`
 				SELECT *
 					FROM receipts 
-					where receiver_account_id = 'dev-1642397812464-81288426033213'
+					where receiver_account_id = $1
 					AND DIV(included_in_block_timestamp, 1000 * 1000) >= 1628216994837 
 					AND receipt_kind = 'ACTION'
 					ORDER BY included_in_block_timestamp
 				limit 1000
-				`, [],
+				`, [contractId],
 				onResult = async (err, result) => {
 					release();
 					if (err) {
 						return rej(err);
 					}
 
-					let formattedRows = new Object();
-					let transactionsFinished = new Object();
+					const contracts = {};
+					const txDone = {};
 					
-					for(var rowNum = 0; rowNum < result.rows.length; rowNum++) {
+					for(let rowNum = 0; rowNum < result.rows.length; rowNum++) {
+
+						const hash = result.rows[rowNum].originated_from_transaction_hash.toString()
 						try {
 							//console.log('transactionsFinished[result.rows[rowNum].originated_from_transaction_hash: ', result.rows[rowNum].originated_from_transaction_hash.toString());
-							//has hash been analyzed already?
 							
-							if(!transactionsFinished[result.rows[rowNum].originated_from_transaction_hash.toString()]) {
-								//get the list of receipts including logs
-								const transactionInformation = await getTransactionInformation(provider, result.rows[rowNum].originated_from_transaction_hash);
+							//has hash been analyzed already?
+							if(txDone[hash]) {
+								console.log('SEEN HASH')
+								continue;
+							}
 								
-								//loop through each receipt
-								for(var i = 0; i < transactionInformation.receipts_outcome.length; i++) {						
-									
-									//loop through each log in the receipt
-									for(var j = 0; j < transactionInformation.receipts_outcome[i].outcome.logs.length; j++) {
-										//check if the logs start with MARKET_EVENT
-										if(transactionInformation.receipts_outcome[i].outcome.logs[j].startsWith("MARKET_EVENT")) {
-											//get the current log object
-											const currentLog = JSON.parse(transactionInformation.receipts_outcome[i].outcome.logs[j].replace('MARKET_EVENT:', ''));
+							//get the list of receipts including logs
+							const { receipts_outcome } = await getTransactionInformation(provider, result.rows[rowNum].originated_from_transaction_hash);
+							
+							//loop through each receipt
+							for(let i = 0; i < receipts_outcome.length; i++) {
+								const { logs } = receipts_outcome[i].outcome
+								
+								//loop through each log in the receipt
+								for(let j = 0; j < logs.length; j++) {
+									//check if the logs start with MARKET_EVENT
+									if(/MARKET_EVENT/.test(logs[j])) {
+										//get the current log object
+										const log = JSON.parse(logs[j].replace('MARKET_EVENT:', ''));
 
-											//if update offer was logged
-											if(currentLog.event == 'update_offer') {
-												formatDataForFile(formattedRows, currentLog);
-											//if resolve offer was called
-											} else if (currentLog.event == 'resolve_offer') {
-												formatDataForFile(formattedRows, currentLog);
-											//some unrecognizable log
-											} else {
-												console.log("Log of non recognizable market event --> ", currentLog);
-											}
+										//if market event was logged
+										if(/update_offer|resolve_offer/.test(log.event)) {
+											appendEventToContract(contracts, log);
+										} else {
+											console.log("Log of non recognizable market event --> ", log);
 										}
 									}
-								}		
-								transactionsFinished[result.rows[rowNum].originated_from_transaction_hash.toString()] = "analyzed";					
-							} else {
-								//console.log("ALREADY ANALYZED - ", result.rows[rowNum].originated_from_transaction_hash);
-							}
-							//console.log('transactionsFinished: ', transactionsFinished);
+								}
+							}		
+
+							txDone[hash] = true;	
+
 						} catch(e) {
 							console.log("Skipping. Error: ", e, result.rows[rowNum].originated_from_transaction_hash);
 						}
@@ -123,7 +118,7 @@ module.exports = {
 
 					//console.log("length - ", Object.keys(transactionsFinished).length);
 
-					await writeFile('../static/transactions.json', JSON.stringify(formattedRows));
+					await writeFile('../static/transactions.json', JSON.stringify(contracts));
 					res(result.rows);
 				}
 			);
@@ -159,7 +154,7 @@ module.exports = {
 					let formattedRows = []; 
 
 					//loop through each row of the result and gets metadata information from RPC
-					for(var i = 0; i < result.rows.length; i++) {
+					for(let i = 0; i < result.rows.length; i++) {
 						try {
 							//get the symbol and name for the contract. If the provider can't call the nft_metadata function, skips contract.
 							const data = await getContractMetadata(provider, result.rows[i].contract_id);

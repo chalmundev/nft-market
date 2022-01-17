@@ -66,6 +66,7 @@ impl Contract {
 						if offer_amount.0 >= offer.amount.0 {
 							offer.amount = offer_amount;
 							offer.maker_id = maker_id;
+							self.offer_by_id.insert(&offer_id, &offer);
 							self.internal_accept_offer(offer_id, &offer);
 							return;
 						}
