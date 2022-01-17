@@ -29,105 +29,102 @@ impl Contract {
 		self.internal_increase_offer_storage(&maker_id, None);
 		require!(offer_amount.0 > MIN_OUTBID_AMOUNT, "must be higher than min bid ???");
 
-		let offer_id = self.offer_by_contract_token_id.get(&contract_token_id);
+		let offer_id_option = self.offer_by_contract_token_id.get(&contract_token_id);
 
-		if let Some(offer_id) = offer_id {
-			// offer exists
-			let mut offer = self.offer_by_id.get(&offer_id).unwrap();
-
-			// existing offer is not by the token owner - check offer reqs
-			if offer.maker_id != offer.taker_id {
-				require!(offer.maker_id != maker_id, "can't outbid self");
-				require!(offer.taker_id != maker_id, "owner can't outbid");
-				require!(offer_amount.0 > offer.amount.0 + MIN_OUTBID_AMOUNT, "must bid higher by ???");
-				// continue execution below - alice outbids bob
-			} else {
-				// offer made by token owner on offer created by token owner (price adjustment)
-				if maker_id == offer.maker_id {
-					// make_offer caller is offer maker
-					offer.amount = amount.unwrap_or_else(|| env::panic_str("must specify offer amount"));
-					offer.updated_at = env::block_timestamp();
-					self.offer_by_id.insert(&offer_id, &offer);
-
-					env::log_str(&EventLog {
-						event: EventLogVariant::UpdateOffer(OfferLog {
-							contract_id: offer.contract_id,	
-							token_id: offer.token_id,
-							maker_id: offer.maker_id,
-							taker_id: offer.taker_id,
-							amount: offer.amount,
-							updated_at: offer.updated_at,
-						})
-					}.to_string());
-
-					return;
-				} else {
-					if offer.amount.0 != OPEN_OFFER_AMOUNT {
-						if offer_amount.0 >= offer.amount.0 {
-							offer.amount = offer_amount;
-							offer.maker_id = maker_id;
-							self.internal_accept_offer(offer_id, &offer);
-							return;
-						}
-						env::panic_str("bid not greater than offer amount");
-					}
-					// continue execution below - alice outbids token owner because offer.amount == OPEN_OFFER_AMOUNT (open for bids)
-				}
-			}
-
-			// save values in case we need to revert state in callback
-			let prev_maker_id = offer.maker_id.clone();
-			let prev_offer_amount = offer.amount.clone();
-			let prev_updated_at = offer.updated_at.clone();
-			// valid offer, money in contract, update state
-			offer.maker_id = maker_id.clone();
-			offer.amount = offer_amount;
-			offer.updated_at = env::block_timestamp();
-			self.offer_by_id.insert(&offer_id, &offer);
-
-			// first non-owner bid
-			if prev_offer_amount.0 == OPEN_OFFER_AMOUNT {
-				env::log_str(&EventLog {
-					event: EventLogVariant::UpdateOffer(OfferLog {
-						contract_id: offer.contract_id,	
-						token_id: offer.token_id,
-						maker_id: offer.maker_id,
-						taker_id: offer.taker_id,
-						amount: offer.amount,
-						updated_at: offer.updated_at,
-					})
-				}.to_string());
-				return;
-			}
-			// pay back prev offer maker + storage
-			Promise::new(prev_maker_id.clone())
-				.transfer(prev_offer_amount.0 + DEFAULT_OFFER_STORAGE_AMOUNT)
-				.then(ext_self::outbid_callback(
-					offer_id,
-					maker_id,
-					prev_maker_id,
-					prev_offer_amount,
-					prev_updated_at,
-					env::current_account_id(),
-					offer_amount.0,
-					CALLBACK_GAS,
-				));
+		if offer_id_option.is_none() {
+			// new offer
+			ext_contract::nft_token(
+				token_id,
+				contract_id.clone(),
+				0,
+				env::prepaid_gas() - CALLBACK_GAS - CALLBACK_GAS,
+			).then(ext_self::new_offer_callback(
+				maker_id,
+				contract_id,
+				env::current_account_id(),
+				offer_amount.0,
+				CALLBACK_GAS,
+			));
 			return;
 		}
 
-		// new offer
-		ext_contract::nft_token(
-			token_id,
-			contract_id.clone(),
-			0,
-			env::prepaid_gas() - CALLBACK_GAS - CALLBACK_GAS,
-		).then(ext_self::new_offer_callback(
-			maker_id,
-			contract_id,
-			env::current_account_id(),
-			offer_amount.0,
-			CALLBACK_GAS,
-		));
+		//offer exists
+		let offer_id = offer_id_option.unwrap();
+		let mut offer = self.offer_by_id.get(&offer_id).unwrap();
+
+		let update_offer_event = |offer: Offer| {
+			env::log_str(&EventLog {
+				event: EventLogVariant::UpdateOffer(OfferLog {
+					contract_id: offer.contract_id,	
+					token_id: offer.token_id,
+					maker_id: offer.maker_id,
+					taker_id: offer.taker_id,
+					amount: offer.amount,
+					updated_at: offer.updated_at,
+				})
+			}.to_string());
+		};
+
+		// existing offer is not by the token owner - check offer reqs
+		if offer.maker_id != offer.taker_id {
+			require!(offer.maker_id != maker_id, "can't outbid self");
+			require!(offer.taker_id != maker_id, "owner can't outbid");
+			require!(offer_amount.0 > offer.amount.0 + MIN_OUTBID_AMOUNT, "must bid higher by ???");
+			// continue execution below - alice outbids bob
+		} else {
+			// offer made by token owner on offer created by token owner (price adjustment)
+			if maker_id == offer.maker_id {
+				// make_offer caller is offer maker
+				offer.amount = amount.unwrap_or_else(|| env::panic_str("must specify offer amount"));
+				offer.updated_at = env::block_timestamp();
+				self.offer_by_id.insert(&offer_id, &offer);
+				update_offer_event(offer);
+				return;
+			} else {
+				if offer.amount.0 != OPEN_OFFER_AMOUNT { 
+					if offer_amount.0 < offer.amount.0 {
+						env::panic_str("bid not greater than offer amount");
+					}
+					offer.amount = offer_amount;
+					offer.maker_id = maker_id;
+					offer.updated_at = env::block_timestamp();
+					self.offer_by_id.insert(&offer_id, &offer);
+					self.internal_accept_offer(offer_id, &offer);
+					return;
+				}
+				// continue execution below - alice outbids token owner because offer.amount == OPEN_OFFER_AMOUNT (open for bids)
+			}
+		}
+
+		// save values in case we need to revert state in outbid_callback
+		let prev_maker_id = offer.maker_id.clone();
+		let prev_offer_amount = offer.amount.clone();
+		let prev_updated_at = offer.updated_at.clone();
+		// valid offer, money in contract, update state
+		offer.maker_id = maker_id.clone();
+		offer.amount = offer_amount;
+		offer.updated_at = env::block_timestamp();
+		self.offer_by_id.insert(&offer_id, &offer);
+
+		// first non-owner bid, no need to pay back nft owner because we don't have the funds
+		if prev_offer_amount.0 == OPEN_OFFER_AMOUNT {
+			update_offer_event(offer);
+			return;
+		}
+
+		// pay back prev offer maker + storage
+		Promise::new(prev_maker_id.clone())
+			.transfer(prev_offer_amount.0 + DEFAULT_OFFER_STORAGE_AMOUNT)
+			.then(ext_self::outbid_callback(
+				offer_id,
+				maker_id,
+				prev_maker_id,
+				prev_offer_amount,
+				prev_updated_at,
+				env::current_account_id(),
+				offer_amount.0,
+				CALLBACK_GAS,
+			));
     }
 
 	#[payable]
