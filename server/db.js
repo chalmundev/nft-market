@@ -33,7 +33,7 @@ function appendEventToContract(contracts, log) {
 
 	console.log(log)
 	//remove unnecessary info by creating new item to store object
-	const event = { ...log.data };
+	const event = { event: log.event, ...log.data };
 	const { contract_id } = event;
 
 	const contract = contracts[contract_id] = contracts[contract_id] || {}
