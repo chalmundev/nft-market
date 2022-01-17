@@ -4,8 +4,10 @@ const { providers } = require('near-api-js');
 
 
 const getConfig = require("../utils/config");
+const { readFile, readFileSync } = require('fs');
 const {
 	contractId,
+	transactionsFile,
 } = getConfig();
 
 async function getContractMetadata(provider, accountId) {
@@ -29,18 +31,56 @@ async function getTransactionInformation(provider, transactionHash) {
 	]);
 }
 
-function appendEventToContract(contracts, log) {
-
-	console.log(log)
+function appendEventToContractAndUpdateSummary(contracts, log) {
 	//remove unnecessary info by creating new item to store object
-	const event = { event: log.event, ...log.data };
-	const { contract_id } = event;
+	const offer = { event: log.event == "update_offer" ? "0" : "1",  maker_id: log.data.maker_id, taker_id: log.data.taker_id, amount: log.data.amount, updated_at: log.data.updated_at};
 
-	const contract = contracts[contract_id] = contracts[contract_id] || {}
-	const tokens = contract.tokens = contract.tokens || {}
-	const events = tokens[event.token_id] = tokens[event.token_id] || []
+	const tokens = contracts.tokens = contracts.tokens || {};
+	const token = tokens[log.data.token_id] = tokens[log.data.token_id] || {};
+	const offers = token.offers = token.offers || [];
 	
-	events.push(event);
+	offers.push(offer);
+	updateSummary(contracts, log);
+}
+
+function updateSummary(contracts, log) {
+	//remove unnecessary info by creating new item to store object
+	const contractSummaryInfo = { amount: log.data.amount, updated_at: log.data.updated_at };
+	
+	//make sure the summaries for tokens and the contract are defined.
+	contracts.summary = contracts.summary || {};
+	contracts.tokens[log.data.token_id].summary = contracts.tokens[log.data.token_id].summary || {};
+	
+	//increment total offers made
+	if(log.event == "update_offer") {
+		//update contract summary
+		contracts.summary.offers_len ? contracts.summary.offers_len += 1 : contracts.summary.offers_len = 1;
+		//update token summary
+		contracts.tokens[log.data.token_id].summary.offers_len ? contracts.tokens[log.data.token_id].summary.offers_len += 1 : contracts.tokens[log.data.token_id].summary.offers_len = 1;
+	} 
+	//potentially change highest and lowest offer
+	else {
+		//check if highest offer exists
+		if(contracts.summary.highest_offer_sold) {
+			if(log.data.amount > contracts.summary.highest_offer_sold.amount) {
+				contracts.summary.highest_offer_sold = contractSummaryInfo;
+			}
+		} 
+		//first offer sold - set it to highest offer sold.
+		else {
+			contracts.summary.highest_offer_sold = contractSummaryInfo;
+		}
+
+		if(contracts.summary.lowest_offer_sold) {
+			if(log.data.amount.amount < contracts.summary.lowest_offer_sold.amount) {
+				contracts.summary.lowest_offer_sold = contractSummaryInfo;
+			}
+		}
+		//first offer sold - set it to lowest offer sold
+		else {
+			contracts.summary.lowest_offer_sold = contractSummaryInfo;
+		}
+	}
 }
 
 
@@ -69,18 +109,19 @@ module.exports = {
 						return rej(err);
 					}
 
-					const contracts = {};
 					const txDone = {};
+					const eventsPerContract = {};
 					
+					//loop through and bulk all logs together for each contract
 					for(let rowNum = 0; rowNum < result.rows.length; rowNum++) {
 
-						const hash = result.rows[rowNum].originated_from_transaction_hash.toString()
+						const hash = result.rows[rowNum].originated_from_transaction_hash.toString();
 						try {
 							//console.log('transactionsFinished[result.rows[rowNum].originated_from_transaction_hash: ', result.rows[rowNum].originated_from_transaction_hash.toString());
 							
 							//has hash been analyzed already?
 							if(txDone[hash]) {
-								console.log('SEEN HASH')
+								console.log('SEEN HASH');
 								continue;
 							}
 								
@@ -89,7 +130,7 @@ module.exports = {
 							
 							//loop through each receipt
 							for(let i = 0; i < receipts_outcome.length; i++) {
-								const { logs } = receipts_outcome[i].outcome
+								const { logs } = receipts_outcome[i].outcome;
 								
 								//loop through each log in the receipt
 								for(let j = 0; j < logs.length; j++) {
@@ -100,7 +141,8 @@ module.exports = {
 
 										//if market event was logged
 										if(/update_offer|resolve_offer/.test(log.event)) {
-											appendEventToContract(contracts, log);
+											eventsPerContract[log.data.contract_id] = eventsPerContract[log.data.contract_id] || [];
+											eventsPerContract[log.data.contract_id].push(log);
 										} else {
 											console.log("Log of non recognizable market event --> ", log);
 										}
@@ -116,9 +158,36 @@ module.exports = {
 						console.log("Finished ", rowNum+1, " of ", result.rows.length);
 					}
 
+					//loop through the logs for each contract
+					for (var key in eventsPerContract) {
+						console.log("looping through keys - ", key);
+						if (eventsPerContract.hasOwnProperty(key)) {
+							console.log("READING DATA");
+							let currentContractData = {};
+							try {
+								let rawContractData = readFileSync(`../static/${key}.json`);
+								currentContractData = JSON.parse(rawContractData);
+							} catch(e) {
+								console.log("Unable to read file for contract: ", key);
+							}
+							
+							//loop through each event per contract
+							for(var i = 0; i < eventsPerContract[key].length; i++) {
+								console.log("looping through each log for ", key, " - ", i);
+								appendEventToContractAndUpdateSummary(currentContractData, eventsPerContract[key][i]);
+							}
+
+							await writeFile(`../static/${key}.json`, JSON.stringify(currentContractData));
+						}
+					}
+
+					if(result.rows.length >= 1000) {
+						console.log("Warning. 1000 rows returned from indexer. Potential data missed.");
+					}
+
 					//console.log("length - ", Object.keys(transactionsFinished).length);
 
-					await writeFile('../static/transactions.json', JSON.stringify(contracts));
+					
 					res(result.rows);
 				}
 			);

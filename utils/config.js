@@ -1,4 +1,7 @@
-const contractName = 'dev-1642438132005-16254298383933';
+var path = require("path");
+
+const contractName = 'dev-1642459444523-20205142494006';
+const transactionsFile = path.resolve("../static/transactions.json");
 
 module.exports = function getConfig(network = 'testnet') {
 	let config = {
@@ -7,6 +10,7 @@ module.exports = function getConfig(network = 'testnet') {
 		walletUrl: "https://wallet.testnet.near.org",
 		helperUrl: "https://helper.testnet.near.org",
 		contractName,
+		transactionsFile
 	};
 
 	switch (network) {
@@ -20,6 +24,7 @@ module.exports = function getConfig(network = 'testnet') {
 			NEW_ACCOUNT_AMOUNT: '10000000000000000000000000', // 10 N
 			NEW_CONTRACT_AMOUNT: '5000000000000000000000000', // 5 N
 			contractId: contractName,
+			transactionsFile,
 			isBrowser: new Function("try {return this===window;}catch(e){ return false;}")(),
 		};
 		break;

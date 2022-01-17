@@ -46,7 +46,7 @@ need this:
 	tokens: {
 		'cool-nft:345': {
 			summary: {
-
+				
 			},
 			offers: [...]
 		},
