@@ -23,6 +23,7 @@ export const initNear = () => async ({ update }) => {
 	let account;
 	if (wallet.signedIn) {
 		account = wallet.account();
+		account.account_id = account.accountId;
 	}
 
 	await update('', { near, wallet, account });

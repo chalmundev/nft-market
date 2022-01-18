@@ -17,8 +17,8 @@ jobs:
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
-        source: "./server"
-        target: "/root"
+        source: "."
+        target: "/root/nft-market"
 
     - name: exec command
       uses: appleboy/ssh-action@master

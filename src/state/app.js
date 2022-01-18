@@ -13,6 +13,8 @@ const initialState = {
 		tokens: [],
 		token: {},
 		index: 0,
+		offersMaker:[0, []],
+		offersTaker:[0, []],
 	}
 };
 

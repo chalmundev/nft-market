@@ -12,21 +12,23 @@ impl Contract {
     }
 
 	// get offers by maker_id
-    pub fn get_offers_by_maker_id(&self, account_id: AccountId, from_index: Option<U128>, limit: Option<u64>) -> Vec<Offer> {
-		let set = self.offers_by_taker_id.get(&account_id);
-		if set.is_none() {
-			return vec![];
+    pub fn get_offers_by_maker_id(&self, account_id: AccountId, from_index: Option<U128>, limit: Option<u64>) -> (u64, Vec<Offer>) {
+		let set_option = self.offers_by_maker_id.get(&account_id);
+		if set_option.is_none() {
+			return (0, vec![]);
 		}
-		self.id_to_offer(paginate(set.unwrap().as_vector(), from_index, limit))
+		let set = set_option.unwrap();
+		(set.len(), self.id_to_offer(paginate(set.as_vector(), from_index, limit)))
     }
 	
 	// get offers by maker_id
-    pub fn get_offers_by_taker_id(&self, account_id: AccountId, from_index: Option<U128>, limit: Option<u64>) -> Vec<Offer> {
-        let set = self.offers_by_taker_id.get(&account_id);
-		if set.is_none() {
-			return vec![];
+    pub fn get_offers_by_taker_id(&self, account_id: AccountId, from_index: Option<U128>, limit: Option<u64>) -> (u64, Vec<Offer>) {
+        let set_option = self.offers_by_taker_id.get(&account_id);
+		if set_option.is_none() {
+			return (0, vec![]);
 		}
-		self.id_to_offer(paginate(set.unwrap().as_vector(), from_index, limit))
+		let set = set_option.unwrap();
+		(set.len(), self.id_to_offer(paginate(set.as_vector(), from_index, limit)))
     }
 
     // Get information about a specific offer

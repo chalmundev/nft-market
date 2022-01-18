@@ -2,7 +2,6 @@ const { writeFile } = require('fs/promises');
 const { execSync } = require('child_process');
 const { providers } = require('near-api-js');
 
-
 const getConfig = require("../utils/config");
 const {
 	contractId,

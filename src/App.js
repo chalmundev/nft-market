@@ -10,6 +10,7 @@ import {
 import data from '../static/data.json';
 import { appStore, onAppMount } from './state/app';
 
+import { RouteOffersMaker } from './components/RouteOffersMaker';
 import { RouteContract } from './components/RouteContract';
 import { RouteToken } from './components/RouteToken';
 
@@ -22,18 +23,18 @@ const App = () => {
 
 	const navigate = useNavigate();
 
-	const { wallet, account } = state;
-
 	const onMount = () => {
 		dispatch(onAppMount());
 	};
 	useEffect(onMount, []);
 
-	const handleClick = () => {
-		update('clicked', !state.clicked);
-	};
-
-	const { contractId, index, tokens, supply } = state.data;
+	const {
+		wallet, account,
+		data: { 
+			contractId, index, tokens, supply,
+			offersMaker, offersTaker,
+		}
+	 } = state;
 
 	const showBackToken = /\/(token)/gi.test(window.location.pathname)
 	const showBackContact = /\/(contract)/gi.test(window.location.pathname)
@@ -78,6 +79,10 @@ const App = () => {
 			</div>
 
 			<Routes>
+				<Route path="/offers-maker" element={
+					<RouteOffersMaker {...{ dispatch, update, account, index, offersMaker }} />
+				} />
+
 				<Route path="/contract/:contract_id" element={
 					<RouteContract {...{ dispatch, update, contractId, index, supply, tokens }} />
 				} />
