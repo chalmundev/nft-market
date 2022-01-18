@@ -27,4 +27,4 @@ jobs:
         username: ${{ secrets.USERNAME }}
         password: ${{ secrets.PASSWORD }}
         port: ${{ secrets.PORT }}
-        script: cd server && yarn && yarn start-prod
+        script: cd nft-market/server && yarn && yarn start-prod
