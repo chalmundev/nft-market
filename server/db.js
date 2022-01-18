@@ -1,6 +1,7 @@
 const { writeFile, mkdir, readFile } = require('fs/promises');
 const { execSync } = require('child_process');
 const { providers } = require('near-api-js');
+const BN = require('bn.js');
 
 const getConfig = require("../utils/config");
 const {
@@ -46,36 +47,44 @@ function updateSummary(contracts, log) {
 	const contractSummaryInfo = { amount: log.data.amount, updated_at: log.data.updated_at };
 	
 	//make sure the summaries for tokens and the contract are defined.
-	contracts.summary = contracts.summary || {};
-	contracts.tokens[log.data.token_id].summary = contracts.tokens[log.data.token_id].summary || {};
+	contracts.summary = contracts.summary || { offers_len: 0, vol_traded: 0, avg_sale: "0" };
+	contracts.tokens[log.data.token_id].summary = contracts.tokens[log.data.token_id].summary || { offers_len: 0, vol_traded: 0, avg_sale: "0"};
 	
 	//increment total offers made
 	if(log.event == "update_offer") {
 		//update contract summary
-		contracts.summary.offers_len ? contracts.summary.offers_len += 1 : contracts.summary.offers_len = 1;
+		contracts.summary.offers_len += 1;
 		//update token summary
-		contracts.tokens[log.data.token_id].summary.offers_len ? contracts.tokens[log.data.token_id].summary.offers_len += 1 : contracts.tokens[log.data.token_id].summary.offers_len = 1;
+		contracts.tokens[log.data.token_id].summary.offers_len += 1;
 	} 
 	//potentially change highest and lowest offer
 	else {
+		//update token volume traded
+		contracts.tokens[log.data.token_id].summary.vol_traded += 1;
+		//update contract volume traded
+		contracts.summary.vol_traded += 1;
+
+
+		//perform the average sale calculations. Adding 1 to avg --> new_avg = old_avg + (val - avg)/numValues
+		contracts.tokens[log.data.token_id].summary.avg_sale = 
+		new BN(contracts.tokens[log.data.token_id].summary.avg_sale)
+			.add((new BN(log.data.amount).sub(new BN(contracts.tokens[log.data.token_id].summary.avg_sale)))
+				.div(new BN(contracts.tokens[log.data.token_id].summary.vol_traded))).toString();
+		
+		contracts.summary.avg_sale = 
+			new BN(contracts.summary.avg_sale)
+				.add((new BN(log.data.amount).sub(new BN(contracts.summary.avg_sale)))
+					.div(new BN(contracts.summary.vol_traded))).toString();
+		
+		//make sure highest and lowest aren't undefined
+		contracts.summary.highest_offer_sold = contracts.summary.highest_offer_sold || contractSummaryInfo;
+		contracts.summary.lowest_offer_sold = contracts.summary.lowest_offer_sold || contractSummaryInfo;
 		//check if highest offer exists
-		if(contracts.summary.highest_offer_sold) {
-			if(log.data.amount > contracts.summary.highest_offer_sold.amount) {
-				contracts.summary.highest_offer_sold = contractSummaryInfo;
-			}
-		} 
-		//first offer sold - set it to highest offer sold.
-		else {
+		if(log.data.amount > contracts.summary.highest_offer_sold.amount) {
 			contracts.summary.highest_offer_sold = contractSummaryInfo;
 		}
-
-		if(contracts.summary.lowest_offer_sold) {
-			if(log.data.amount.amount < contracts.summary.lowest_offer_sold.amount) {
-				contracts.summary.lowest_offer_sold = contractSummaryInfo;
-			}
-		}
-		//first offer sold - set it to lowest offer sold
-		else {
+		
+		if(log.data.amount.amount < contracts.summary.lowest_offer_sold.amount) {
 			contracts.summary.lowest_offer_sold = contractSummaryInfo;
 		}
 	}
@@ -121,8 +130,6 @@ module.exports = {
 					if (err) {
 						return rej(err);
 					}
-
-					console.log("RESULT - ", result.rows);
 
 					const txDone = {};
 					const eventsPerContract = {};
