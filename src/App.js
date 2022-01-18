@@ -104,7 +104,7 @@ const App = () => {
 				} />
 
 				<Route path="/" element={
-					contracts.filter(({ contract_id, name }) => /loot/gi.test(name) || contract_id === 'tests.nft-market.testnet')
+					contracts.filter(({ contract_id, name }) => /loot|Luna/gi.test(name) || contract_id === 'tests.nft-market.testnet')
 						.map(({ contract_id, ts, name }) => {
 							return <div key={contract_id} onClick={() => navigate('/contract/' + contract_id)}>
 								{name} - {contract_id} - {ts}

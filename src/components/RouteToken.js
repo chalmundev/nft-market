@@ -62,6 +62,8 @@ export const RouteToken = ({ dispatch, tokens, data }) => {
 		summary, offers = []
 	} = data[contract_id]?.tokens?.[token_id] || {}
 
+	console.log(offers)
+
 	return (
 		<div>
 
@@ -71,11 +73,6 @@ export const RouteToken = ({ dispatch, tokens, data }) => {
 					alert('fetched. reloading page')
 					window.location.reload()
 				}}>SOFT Update Market Data</button>
-				<button onClick={async () => {
-					await fetch('http://107.152.39.196:3000/market/true', { mode: 'no-cors' }).then(r => r.json())
-					alert('fetched. reloading page')
-					window.location.reload()
-				}}>HARD SOFT Update Market Data</button>
 			</div>
 
 			<img src={token.metadata.media} />
