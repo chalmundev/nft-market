@@ -83,7 +83,7 @@ function updateSummary(contracts, log) {
 
 
 module.exports = {
-	market: (db) => new Promise((res, rej) => {
+	market: (db, force) => new Promise((res, rej) => {
 		const provider = new providers.JsonRpcProvider("https://rpc.testnet.near.org");
 
 		db.connect(onConnect = async (err, client, release) => {
@@ -101,7 +101,7 @@ module.exports = {
 			try {
 				let rawMarketSummary = await readFile(`../static/${contractId}/marketSummary.json`);
 				marketSummary = JSON.parse(rawMarketSummary);
-				currentHighestBlockTimestamp = marketSummary.blockstamp; 
+				currentHighestBlockTimestamp = force ? '0' : marketSummary.blockstamp; 
 			} catch(e) {
 				console.log("Cannot read market summary for contract ", contractId);
 			}

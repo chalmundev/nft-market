@@ -29,8 +29,8 @@ fastify.get('/contracts', (req, reply) => {
 	return contracts(fastify.pg.testnet);
 });
 
-fastify.get('/market', (req, reply) => {
-	return market(fastify.pg.testnet);
+fastify.get('/market/:force?', (req, reply) => {
+	return market(fastify.pg.testnet, req.params.force || false);
 });
 
 const start = async () => {
