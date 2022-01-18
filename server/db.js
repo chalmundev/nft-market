@@ -219,11 +219,13 @@ module.exports = {
 						execSync(`cd ../../nft-market-data && git pull`);
 					} catch(e) {
 						console.log("ERROR 1:\n", e.stdout.toString(), e.stderr.toString());
+						console.log("ERROR 1:\n", e)
 					}
 					try {
 						execSync(`git add --all && git commit -am 'update' && git push`);
 					} catch(e) {
 						console.log("ERROR 2:\n", e.stdout.toString(), e.stderr.toString());
+						console.log("ERROR 2:\n", e)
 					}
 
 					console.log("done.");
