@@ -49,6 +49,7 @@ impl Contract {
 		require!(maker_id != taker_id, "can't make new offer on your own token");
 
 		let amount = U128(env::attached_deposit());
+		let updated_at = env::block_timestamp();
 		
 		self.internal_add_offer(&Offer{
 			maker_id: maker_id.clone(),
@@ -56,10 +57,21 @@ impl Contract {
 			contract_id: contract_id.clone(),
 			token_id: token_id.clone(),
 			amount,
-			updated_at: env::block_timestamp(),
+			updated_at,
 			approval_id: None,
 			has_failed_promise: false,
 		});
+
+		env::log_str(&EventLog {
+			event: EventLogVariant::UpdateOffer(OfferLog {
+				contract_id,
+				token_id,
+				maker_id,
+				taker_id,
+				amount,
+				updated_at,
+			})
+		}.to_string());
 	}
 
     #[payable]

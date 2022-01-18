@@ -122,17 +122,6 @@ impl Contract {
 			&contract_token_id.clone(),
 			&self.offer_id
 		);
-
-		env::log_str(&EventLog {
-			event: EventLogVariant::UpdateOffer(OfferLog {
-				contract_id,
-				token_id,
-				maker_id,
-				taker_id,
-				amount: offer.amount,
-				updated_at: offer.updated_at,
-			})
-		}.to_string());
     }
 
 	// Removes the offer from the contract state

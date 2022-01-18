@@ -10,8 +10,9 @@ export const RouteToken = ({ dispatch, tokens, data }) => {
 	const { contract_id, token_id } = params;
 
 	const [token, setToken] = useState()
+	const [offer, setOffer] = useState()
 	const [amount, setAmount] = useState('')
-	
+
 	const onMount = async () => {
 		let token = tokens.find((token) => token.token_id === token_id)
 		if (!token) {
@@ -28,16 +29,18 @@ export const RouteToken = ({ dispatch, tokens, data }) => {
 			dispatch(fetchData(contract_id))
 		}
 
-		/// todo put in UI
-		const offer = await dispatch(view({
-			methodName: 'get_offer',
-			args: {
-				contract_id,
-				token_id,
-			}
-		}))
-		console.log(offer)
-		
+		try {
+			setOffer(await dispatch(view({
+				methodName: 'get_offer',
+				args: {
+					contract_id,
+					token_id,
+				}
+			})))
+		} catch (e) {
+			console.warn(e)
+		}
+
 		setToken(token)
 	};
 	useEffect(onMount, []);
@@ -59,24 +62,26 @@ export const RouteToken = ({ dispatch, tokens, data }) => {
 		summary, offers = []
 	} = data[contract_id]?.tokens?.[token_id] || {}
 
-	console.log(summary, offers)
-
 	return (
 		<div>
 
-			<button onClick={async () => {
-				// will cors error but fire
-				try {
-					await fetch('http://107.152.39.196:3000/market').then(r => r.json())
-				} catch(e) {}
-				alert('fetched. reloading page')
-				window.location.reload()
-			}}>Update Server Data (DEBUGGING)</button>
+			<div className="button-row">
+				<button onClick={async () => {
+					await fetch('http://107.152.39.196:3000/market', { mode: 'no-cors' }).then(r => r.json())
+					alert('fetched. reloading page')
+					window.location.reload()
+				}}>SOFT Update Market Data</button>
+				<button onClick={async () => {
+					await fetch('http://107.152.39.196:3000/market/true', { mode: 'no-cors' }).then(r => r.json())
+					alert('fetched. reloading page')
+					window.location.reload()
+				}}>HARD SOFT Update Market Data</button>
+			</div>
 
 			<img src={token.metadata.media} />
 
-			<p>{ token.token_id }</p>
-			<p>{ token.owner_id }</p>
+			<p>{token.token_id}</p>
+			<p>{token.owner_id}</p>
 
 			{summary && <>
 				<h3>Market Summary</h3>
@@ -84,6 +89,18 @@ export const RouteToken = ({ dispatch, tokens, data }) => {
 				<p>Volume: {summary.vol_traded}</p>
 				<p>Offers (all time): {summary.offers_len}</p>
 			</>}
+			{
+				offer && <>
+					<h3>Current Offer</h3>
+					<div className="offer">
+						<div>
+							<div>Offer Maker: {offer.maker_id}</div>
+							<div>Amount: {formatNearAmount(offer.amount, 4)}</div>
+							<div>{howLongAgo({ ts: offer.updated_at / (1000 * 1000), detail: 'minute' })} ago</div>
+						</div>
+					</div>
+				</>
+			}
 
 			<h3>Offers</h3>
 			{

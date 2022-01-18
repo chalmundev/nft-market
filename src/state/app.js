@@ -23,11 +23,11 @@ export const { appStore, AppProvider } = State(initialState, 'app');
 // example app function
 export const onAppMount = (message) => async ({ update, getState, dispatch }) => {
 	update('app', { mounted: true });
-	
 };
 
 export const fetchContracts = () => async ({ update }) => {
-	const { contracts } = await fetchJson(`https://raw.githubusercontent.com/chalmundev/nft-market-data/main/contracts.json`)
+	const res = await fetchJson(`https://raw.githubusercontent.com/chalmundev/nft-market-data/main/contracts.json`)
+	const contracts = res.contracts || res
 	update('data', { contracts })
 }
 
