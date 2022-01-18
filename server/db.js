@@ -91,7 +91,7 @@ module.exports = {
 			execSync(`cd ../../nft-market-data && git pull`);
 			execSync(`git add --all && git commit -am 'update' && git push`);
 		} catch(e) {
-			console.log("ERROR:\n", e.stderr.toString());
+			console.log("ERROR:\n", e.stdout.toString(), e.stderr.toString());
 		}
 
 		return res(true)
