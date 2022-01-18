@@ -1,0 +1,1 @@
+await account.createAccount('v1.nft-market.testnet', 'ed25519:38MJjikXFbr28fAQXH521dsf325rha2TcursPKMAoPEe', '500000000000000000000000000')

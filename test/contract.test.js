@@ -42,15 +42,6 @@ test('contract is deployed', async (t) => {
 	t.is(contractId, contractAccount.accountId);
 });
 
-test('owner remove offers', async (t) => {
-	const res = await contractAccount.functionCall({
-		contractId,
-		methodName: 'remove_offers',
-		gas
-	});
-	t.is(res?.status?.SuccessValue, '');
-});
-
 test('users initialized', async (t) => {
 
 	// consistent alice and bob
@@ -84,6 +75,33 @@ test('users initialized', async (t) => {
 	royaltyAccountOne = await getAccount(royaltyIdOne);
 	royaltyAccountTwo = await getAccount(royaltyIdTwo);
 
+	t.true(true);
+});
+
+test('owner remove offers', async (t) => {
+	try {
+		await Promise.all([
+			contractAccount.functionCall({
+				contractId,
+				methodName: 'remove_offers',
+				gas
+			}),
+			contractAccount.functionCall({
+				contractId,
+				methodName: 'remove_offers_by_maker_id',
+				args: { account_id: aliceId },
+				gas
+			}),
+			contractAccount.functionCall({
+				contractId,
+				methodName: 'remove_offers_by_taker_id',
+				args: { account_id: aliceId },
+				gas
+			})
+		])
+	} catch(e) {
+		console.warn(e)
+	}
 	t.true(true);
 });
 
@@ -402,7 +420,7 @@ test('Alice opens token for bidding by calling nft_approve with U128_MAX', async
 		{ account_id: aliceId }
 	);
 	console.log('aliceOffers', aliceOffers)
-	t.is(aliceOffers.length, 0);
+	t.is(aliceOffers[0], 0);
 
 
 	const res = await alice.functionCall({

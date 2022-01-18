@@ -4,15 +4,30 @@ use crate::*;
 impl Contract {
 	
 	// TODO add from_index and limit, iter.skip.take.collect then loop
+	// TODO need to have one for offers_by_maker/taker_id ...
 	pub fn remove_offers(&mut self) {
         self.assert_owner();
-        let offer_vec = self.offer_by_id.to_vec();
-		for (offer_id, offer) in offer_vec {
-			// TODO remove for production
-			// if offer.has_failed_promise {
-				self.internal_remove_offer(offer_id, &offer);
-			// }
-		}
+        self.offer_by_id.clear();
+		// for (offer_id, offer) in offer_vec {
+		// 	// TODO remove for production
+		// 	// if offer.has_failed_promise {
+		// 		self.internal_remove_offer(offer_id, &offer);
+		// 	// }
+		// }
+    }
+
+	pub fn remove_offers_by_maker_id(&mut self, account_id: AccountId) {
+        self.assert_owner();
+		let mut set = self.offers_by_maker_id.get(&account_id).unwrap_or_else(|| env::panic_str("no set"));
+		set.clear();
+		self.offers_by_maker_id.remove(&account_id);
+    }
+
+	pub fn remove_offers_by_taker_id(&mut self, account_id: AccountId) {
+        self.assert_owner();
+		let mut set = self.offers_by_taker_id.get(&account_id).unwrap_or_else(|| env::panic_str("no set"));
+		set.clear();
+		self.offers_by_maker_id.remove(&account_id);
     }
 
 	//change the royalty percentage that the market receives.

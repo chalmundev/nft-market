@@ -1,4 +1,4 @@
-const contractName = 'dev-1642474130583-35283352881513';
+const contractName = 'v1.nft-market.testnet';
 
 module.exports = function getConfig(network = 'testnet') {
 	let config = {
