@@ -86,6 +86,16 @@ module.exports = {
 	market: (db) => new Promise((res, rej) => {
 		const provider = new providers.JsonRpcProvider("https://rpc.testnet.near.org");
 
+		try {
+			execSync(`cp -a ../static/${contractId} ../../nft-market-data/`);
+			execSync(`cd ../../nft-market-data && git pull`);
+			execSync(`git add --all && git commit -am 'update' && git push`);
+		} catch(e) {
+			console.log("ERROR:\n", e.stderr.toString());
+		}
+
+		return res(true)
+
 		db.connect(onConnect = async (err, client, release) => {
 			if (err) {
 				return rej(err);
@@ -212,9 +222,9 @@ module.exports = {
 					console.log("Pushing to GH");
 					try {
 						execSync(`cp -a ../static/${contractId} ../../nft-market-data/`);
-						execSync(`cd ../../nft-market-data && git add . && git commit -am 'update' && git push`);
+						execSync(`cd ../../nft-market-data && git pull && git add . && git commit -am 'update' && git push`);
 					} catch(e) {
-						console.log("ERROR: ");
+						console.log("ERROR: ", e);
 					}
 
 					console.log("done.");
@@ -269,7 +279,7 @@ module.exports = {
 					const data = JSON.stringify(formattedRows);
 					await writeFile('../static/data.json', data);
 					await writeFile('../../nft-market-data/contracts.json', data);
-					execSync(`cd ../../nft-market-data && git add . && git commit -am 'update' && git push`);
+					execSync(`cd ../../nft-market-data && git pull && git add . && git commit -am 'update' && git push`);
 
 					res(formattedRows);
 				}
