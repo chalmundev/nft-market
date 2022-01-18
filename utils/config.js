@@ -7,6 +7,7 @@ module.exports = function getConfig(network = 'testnet') {
 		walletUrl: "https://wallet.testnet.near.org",
 		helperUrl: "https://helper.testnet.near.org",
 		contractName,
+		transactionsFile
 	};
 
 	switch (network) {
@@ -20,6 +21,7 @@ module.exports = function getConfig(network = 'testnet') {
 			NEW_ACCOUNT_AMOUNT: '10000000000000000000000000', // 10 N
 			NEW_CONTRACT_AMOUNT: '5000000000000000000000000', // 5 N
 			contractId: contractName,
+			transactionsFile,
 			isBrowser: new Function("try {return this===window;}catch(e){ return false;}")(),
 		};
 		break;
