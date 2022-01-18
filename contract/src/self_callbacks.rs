@@ -92,11 +92,15 @@ impl Contract {
 
 		// revert state
 		let mut offer = self.offer_by_id.get(&offer_id).unwrap();
+		
+		self.internal_swap_offer_maker(offer_id, &offer.maker_id, &prev_maker_id);
+
 		offer.maker_id = prev_maker_id;
 		offer.amount = prev_offer_amount;
 		offer.updated_at = prev_updated_at;
 		offer.has_failed_promise = true;
 		self.offer_by_id.insert(&offer_id, &offer);
+
 	}
 
 	/*

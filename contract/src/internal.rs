@@ -12,6 +12,8 @@ pub(crate) fn is_promise_success() -> bool {
     }
 }
 
+/// enumeration
+
 pub(crate) fn paginate<V>(
 	values: &Vector<V>,
 	from_index: Option<U128>,
@@ -52,14 +54,6 @@ pub(crate) fn unordered_map_key_pagination<K, V>(
 	paginate(map.keys_as_vector(), from_index, limit)
 }
 
-// pub(crate) fn unordered_set_pagination<V>(
-//     set: &UnorderedSet<V>,
-//     from_index: Option<U128>,
-//     limit: Option<u64>,
-// ) -> Vec<V> where V: BorshSerialize + BorshDeserialize {
-// 	paginate(set.as_vector(), from_index, limit)
-// }
-
 /// set management
 
 pub(crate) fn map_set_insert<K, V> (
@@ -80,8 +74,8 @@ pub(crate) fn map_set_remove<K, V> (
 	map_key: &K,
 	val: V,
 ) where K: BorshSerialize + BorshDeserialize, V: BorshSerialize + BorshDeserialize {
-	let set = map.get(map_key);
-	if let Some(mut set) = set {
+	let mut set = map.get(map_key);
+	if let Some(set) = set.as_mut() {
 		set.remove(&val);
 		if set.len() == 0 {
 			map.remove(&map_key);
@@ -92,6 +86,12 @@ pub(crate) fn map_set_remove<K, V> (
 }
 
 impl Contract {
+
+	pub(crate) fn id_to_offer(&self, set: Vec<u64>) -> Vec<Offer> {
+		set.iter()
+			.map(|offer_id| self.offer_by_id.get(&offer_id).unwrap())
+			.collect()
+	}
     // Add the offer to the contract state
     pub(crate) fn internal_add_offer(&mut self, offer: &Offer) {
         self.offer_id += 1;
@@ -135,6 +135,22 @@ impl Contract {
 		}.to_string());
     }
 
+	// Removes the offer from the contract state
+    pub(crate) fn internal_swap_offer_maker(&mut self, offer_id: u64, prev_maker_id: &AccountId, new_maker_id: &AccountId) {
+        map_set_remove(
+			&mut self.offers_by_maker_id,
+			&prev_maker_id,
+			offer_id,
+		);
+		
+        map_set_insert(
+			&mut self.offers_by_maker_id, 
+			&new_maker_id, 
+			StorageKey::OfferByMakerIdInner { maker_id: new_maker_id.clone() },
+			self.offer_id
+		);
+    }
+
     // Removes the offer from the contract state
     pub(crate) fn internal_remove_offer(&mut self, offer_id: u64, offer: &Offer) {
         //remove the offer from its ID
@@ -157,6 +173,12 @@ impl Contract {
         //remove the offer from the contract and token ID
         let contract_token_id = get_contract_token_id(&offer.contract_id, &offer.token_id);
         self.offer_by_contract_token_id.remove(&contract_token_id);
+
+		if offer.maker_id == offer.taker_id {
+			return self.internal_withdraw_one_storage(&offer.maker_id);
+		}
+		
+		Promise::new(offer.maker_id.clone()).transfer(DEFAULT_OFFER_STORAGE_AMOUNT);
     }
 
 	pub(crate) fn internal_accept_offer(

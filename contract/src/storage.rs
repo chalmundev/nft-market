@@ -3,19 +3,22 @@ use crate::*;
 #[near_bindgen]
 impl Contract {
 	#[payable]
-	pub fn pay_offer_storage(&mut self, owner_id: Option<AccountId>) {
-		let attached_deposit = env::attached_deposit();
-		require!(attached_deposit >= DEFAULT_OFFER_STORAGE_AMOUNT, "must attach at least 1 storage amount");
-		self.internal_increase_offer_storage(
-			&owner_id.unwrap_or_else(|| env::predecessor_account_id()),
-			Some(u64::try_from(env::attached_deposit() / DEFAULT_OFFER_STORAGE_AMOUNT).unwrap())
-		);
+	pub fn pay_offer_storage(&mut self, owner_id: Option<AccountId>, num: Option<u64>) {
+		let num = num.unwrap_or_else(|| 1);
+		require!(env::attached_deposit() == num as u128 * DEFAULT_OFFER_STORAGE_AMOUNT, "attach deposit to pay for storage");
+		let owner_id = owner_id.unwrap_or_else(|| env::predecessor_account_id());
+		self.offer_storage_by_owner_id.insert(&owner_id, &(
+			self.offer_storage_by_owner_id.get(&owner_id).unwrap_or_else(|| 0) + num
+		));
     }
 
-	pub(crate) fn internal_increase_offer_storage(&mut self, owner_id: &AccountId, num: Option<u64>) {
-		self.offer_storage_by_owner_id.insert(&owner_id, &(
-			self.offer_storage_by_owner_id.get(&owner_id).unwrap_or_else(|| 0) + num.unwrap_or_else(|| 1)
-		));
+	pub(crate) fn internal_withdraw_one_storage(&mut self, owner_id: &AccountId) {
+		let offer_storage_count = self.offer_storage_by_owner_id.get(&owner_id).unwrap_or_else(|| 0);
+		if offer_storage_count == 0 {
+			return;
+		}
+		self.offer_storage_by_owner_id.insert(&owner_id, &(offer_storage_count - 1));
+		Promise::new(owner_id.clone()).transfer(DEFAULT_OFFER_STORAGE_AMOUNT);
 	}
 
 	pub fn withdraw_offer_storage(&mut self) {

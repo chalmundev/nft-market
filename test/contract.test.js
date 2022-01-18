@@ -66,6 +66,18 @@ test('users initialized', async (t) => {
 	alice = await getAccount(aliceId);
 	bob = await getAccount(bobId);
 
+	await alice.functionCall({
+		contractId,
+		methodName: 'withdraw_offer_storage',
+		gas,
+	})
+
+	await bob.functionCall({
+		contractId,
+		methodName: 'withdraw_offer_storage',
+		gas,
+	})
+
 	//royalty accounts for NFT payouts
 	royaltyIdOne = '10-percent.' + contractId;
 	royaltyIdTwo = '5-percent.' + contractId;
@@ -383,7 +395,16 @@ test('withdrawing market balance 2', async (t) => {
 
 
 test('Alice opens token for bidding by calling nft_approve with U128_MAX', async (t) => {
-	
+
+	const aliceOffers = await contractAccount.viewFunction(
+		contractId,
+		'get_offers_by_maker_id',
+		{ account_id: aliceId }
+	);
+	console.log('aliceOffers', aliceOffers)
+	t.is(aliceOffers.length, 0);
+
+
 	const res = await alice.functionCall({
 		contractId,
 		methodName: 'pay_offer_storage',
@@ -393,16 +414,6 @@ test('Alice opens token for bidding by calling nft_approve with U128_MAX', async
 	});
 
 	t.is(res?.status?.SuccessValue, '');
-
-	const res2 = await alice.viewFunction(
-		contractId,
-		'offer_storage_available',
-		{
-			owner_id: aliceId,
-		},
-	);
-
-	console.log('offer_storage_available', res2);
 
 	const msg = JSON.stringify({
 		amount: U128_MAX
@@ -511,9 +522,16 @@ test('Bob opens token for bidding by calling nft_approve with fixed price', asyn
 		{}
 	);
 
-	console.log(offers);
-
 	t.is(offers.length, 1);
+
+	const bobStorageAvailable = await contractAccount.viewFunction(
+		contractId,
+		'offer_storage_available',
+		{ owner_id: bobId }
+	);
+
+	t.is(bobStorageAvailable, 0);
+
 });
 
 test('Alice makes lower offer and panics', async (t) => {
@@ -533,7 +551,7 @@ test('Alice makes lower offer and panics', async (t) => {
 	}
 });
 
-test('Alice can make offer of exact amount and purchase', async (t) => {
+test('Alice can make offer of exact amount and purchase AND bob has no more storage available', async (t) => {
 	const res = await alice.functionCall({
 		contractId,
 		methodName: 'make_offer',
@@ -553,6 +571,16 @@ test('Alice can make offer of exact amount and purchase', async (t) => {
 	);
 
 	t.is(offers.length, 0);
+
+	const bobStorageAvailable = await contractAccount.viewFunction(
+		contractId,
+		'offer_storage_available',
+		{ owner_id: bobId }
+	);
+
+	console.log('bobStorageAvailable', bobStorageAvailable)
+
+	t.is(bobStorageAvailable, 0);
 });
 
 

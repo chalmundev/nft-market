@@ -26,13 +26,12 @@ impl Contract {
 		let maker_id = env::predecessor_account_id();
 		let contract_token_id = get_contract_token_id(&contract_id, &token_id);
 		let offer_amount = U128(env::attached_deposit() - DEFAULT_OFFER_STORAGE_AMOUNT);
-		self.internal_increase_offer_storage(&maker_id, None);
 		require!(offer_amount.0 > MIN_OUTBID_AMOUNT, "must be higher than min bid ???");
 
 		let offer_id_option = self.offer_by_contract_token_id.get(&contract_token_id);
 
 		if offer_id_option.is_none() {
-			// new offer
+			// new offer (log update_offer in internal_add_offer)
 			ext_contract::nft_token(
 				token_id,
 				contract_id.clone(),
@@ -83,16 +82,18 @@ impl Contract {
 			} else {
 				if offer.amount.0 != OPEN_OFFER_AMOUNT { 
 					if offer_amount.0 < offer.amount.0 {
-						env::panic_str("bid not greater than offer amount");
+						env::panic_str("bid not equal or greater than to offer amount");
 					}
+					// maker offer is acceptable by taker, don't log update_offer
 					offer.amount = offer_amount;
 					offer.maker_id = maker_id;
 					offer.updated_at = env::block_timestamp();
 					self.offer_by_id.insert(&offer_id, &offer);
 					self.internal_accept_offer(offer_id, &offer);
-					return;
+					// DO pay back nft owner storage and decrement storage amount
+					return self.internal_withdraw_one_storage(&offer.taker_id);
 				}
-				// continue execution below - alice outbids token owner because offer.amount == OPEN_OFFER_AMOUNT (open for bids)
+				// continue execution below - (open for bids) alice outbids token owner because offer.amount == OPEN_OFFER_AMOUNT
 			}
 		}
 
@@ -106,11 +107,14 @@ impl Contract {
 		offer.updated_at = env::block_timestamp();
 		self.offer_by_id.insert(&offer_id, &offer);
 
-		// first non-owner bid, no need to pay back nft owner because we don't have the funds
+		// first non-owner bid, DO NOT pay back nft owner because we DO NOT have the funds
+		// DO pay back nft owner storage and decrement storage amount
 		if prev_offer_amount.0 == OPEN_OFFER_AMOUNT {
 			update_offer_event(offer);
-			return;
+			return self.internal_withdraw_one_storage(&prev_maker_id);
 		}
+
+		self.internal_swap_offer_maker(offer_id, &prev_maker_id, &offer.maker_id);
 
 		// pay back prev offer maker + storage
 		Promise::new(prev_maker_id.clone())
@@ -143,9 +147,6 @@ impl Contract {
 
         //remove the offer based on its ID and offer object.
         self.internal_remove_offer(offer_id, &offer);
-
-		// pay back storage to current offer maker
-		Promise::new(offer.maker_id).transfer(DEFAULT_OFFER_STORAGE_AMOUNT);
     }
 
 	//accepts an offer. Only the taker ID can call this. Offer must have approval ID.

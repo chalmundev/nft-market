@@ -11,6 +11,24 @@ impl Contract {
         )
     }
 
+	// get offers by maker_id
+    pub fn get_offers_by_maker_id(&self, account_id: AccountId, from_index: Option<U128>, limit: Option<u64>) -> Vec<Offer> {
+		let set = self.offers_by_taker_id.get(&account_id);
+		if set.is_none() {
+			return vec![];
+		}
+		self.id_to_offer(paginate(set.unwrap().as_vector(), from_index, limit))
+    }
+	
+	// get offers by maker_id
+    pub fn get_offers_by_taker_id(&self, account_id: AccountId, from_index: Option<U128>, limit: Option<u64>) -> Vec<Offer> {
+        let set = self.offers_by_taker_id.get(&account_id);
+		if set.is_none() {
+			return vec![];
+		}
+		self.id_to_offer(paginate(set.unwrap().as_vector(), from_index, limit))
+    }
+
     // Get information about a specific offer
     pub fn get_offer(&self, contract_id: AccountId, token_id: String) -> Offer {
         let contract_and_token_id = get_contract_token_id(&contract_id, &token_id);
