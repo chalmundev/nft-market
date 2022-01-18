@@ -10,7 +10,7 @@ const {
 	Contract,
 	KeyPair,
 	utils: {
-		format: { parseNearAmount },
+		format: { parseNearAmount, formatNearAmount },
 	},
 } = nearAPI;
 
@@ -60,4 +60,5 @@ module.exports = {
 	contractId,
 	contractAccount,
 	parseNearAmount,
+	formatNearAmount,
 };

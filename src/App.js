@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
 	Routes,
 	Route,
@@ -7,8 +7,8 @@ import {
 	useNavigate,
 } from "react-router-dom";
 
-import data from '../static/data.json';
-import { appStore, onAppMount } from './state/app';
+import { appStore, fetchContracts, fetchData } from './state/app';
+import { initNear } from './state/near';
 
 import { RouteOffersMaker } from './components/RouteOffersMaker';
 import { RouteContract } from './components/RouteContract';
@@ -19,22 +19,32 @@ import './App.scss';
 const App = () => {
 	const { state, dispatch, update } = useContext(appStore);
 
-	// console.log('state', state);
+	// console.log(state)
 
 	const navigate = useNavigate();
 
-	const onMount = () => {
-		dispatch(onAppMount());
+	const onMount = async () => {
+		await Promise.all([
+			dispatch(initNear()),
+			dispatch(fetchData()),
+			dispatch(fetchContracts()),
+		])
+		update('loading', false)
 	};
 	useEffect(onMount, []);
 
+	if (state.loading) return <p>Loading</p>
+
+	/// let's go!
+
 	const {
-		wallet, account,
-		data: { 
+		wallet, account, data,
+		data: {
+			contracts, marketSummary,
 			contractId, index, tokens, supply,
 			offersMaker, offersTaker,
 		}
-	 } = state;
+	} = state;
 
 	const showBackToken = /\/(token)/gi.test(window.location.pathname)
 	const showBackContact = /\/(contract)/gi.test(window.location.pathname)
@@ -55,17 +65,17 @@ const App = () => {
 					<li>
 						{
 							account
-							?
-							<Link to="/" onClick={() => wallet.signOut()}>Sign Out</Link>
-							:
-							<Link to="/" onClick={() => wallet.signIn()}>Sign In</Link>
+								?
+								<Link to="/" onClick={() => wallet.signOut()}>Sign Out</Link>
+								:
+								<Link to="/" onClick={() => wallet.signIn()}>Sign In</Link>
 						}
 					</li>
 				</ul>
 			</nav>
 
 			<div className='crumbs'>
-				{ showBackToken || showBackContact ? <div><Link to="/" onClick={(e) => {
+				{showBackToken || showBackContact ? <div><Link to="/" onClick={(e) => {
 					e.preventDefault()
 					if (showBackToken) {
 						return navigate(window.location.pathname.split('/').slice(0, -1).join('/').replace('/token', '/contract'))
@@ -74,8 +84,8 @@ const App = () => {
 						update('data.index', 0)
 					}
 					navigate('/')
-				}}>Back</Link></div> : <div></div> }
-				{ account && <div>{account.accountId}</div> }
+				}}>Back</Link></div> : <div></div>}
+				{account && <div>{account.accountId}</div>}
 			</div>
 
 			<Routes>
@@ -84,7 +94,7 @@ const App = () => {
 				} />
 
 				<Route path="/contract/:contract_id" element={
-					<RouteContract {...{ dispatch, update, contractId, index, supply, tokens }} />
+					<RouteContract {...{ dispatch, update, data }} />
 				} />
 
 				<Route path="/token/:contract_id/:token_id" element={
@@ -92,13 +102,12 @@ const App = () => {
 				} />
 
 				<Route path="/" element={
-					data
-						.filter(({ contract_id, name }) => /loot/gi.test(name) || contract_id === 'tests.nft-market.testnet')
+					contracts.filter(({ contract_id, name }) => /loot/gi.test(name) || contract_id === 'tests.nft-market.testnet')
 						.map(({ contract_id, ts, name }) => {
-						return <div key={contract_id} onClick={() => navigate('/contract/' + contract_id)}>
-							{name} - {contract_id} - {ts}
-						</div>;
-					})
+							return <div key={contract_id} onClick={() => navigate('/contract/' + contract_id)}>
+								{name} - {contract_id} - {ts}
+							</div>;
+						})
 				} />
 			</Routes>
 

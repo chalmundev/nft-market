@@ -5,7 +5,7 @@ const BN = require('bn.js');
 
 const getConfig = require("../utils/config");
 const {
-	contractId,
+	contractId: marketId,
 } = getConfig();
 
 async function getContractMetadata(provider, accountId) {
@@ -100,19 +100,17 @@ module.exports = {
 				return rej(err);
 			}
 
-			await mkdir(`../static/${contractId}`).catch((e) => {
-				console.log("Unable to create directory for contract ", contractId);
+			await mkdir(`../static/${marketId}`).catch((e) => {
+				console.log("Unable to create directory for contract ", marketId);
 			});
 
-			
-
 			let currentHighestBlockTimestamp = 0;
+			let marketSummary = {}
 			try {
-				let rawMarketSummary = await readFile(`../static/${contractId}/marketSummary.json`);
-				marketSummary = JSON.parse(rawMarketSummary);
+				marketSummary = JSON.parse(await readFile(`../static/${marketId}/marketSummary.json`));
 				currentHighestBlockTimestamp = force ? '0' : marketSummary.blockstamp; 
 			} catch(e) {
-				console.log("Cannot read market summary for contract ", contractId);
+				console.log("Cannot read market summary for contract ", marketId);
 			}
 	
 			client.query(
@@ -124,7 +122,7 @@ module.exports = {
 					AND receipt_kind = 'ACTION'
 					ORDER BY included_in_block_timestamp
 				limit 1000
-				`, [contractId, currentHighestBlockTimestamp],
+				`, [marketId, currentHighestBlockTimestamp],
 				onResult = async (err, result) => {
 					release();
 					if (err) {
@@ -137,7 +135,7 @@ module.exports = {
 					
 					if(result.rows.length == 0) {
 						console.log("No extra receipts found for the current timestamp: ", currentHighestBlockTimestamp);
-						return res(result.rows);
+						return res(marketSummary);
 					}
 
 					//loop through and bulk all logs together for each contract
@@ -181,30 +179,30 @@ module.exports = {
 							txDone[hash] = true;	
 
 						} catch(e) {
-							console.log("Skipping. Error: ", e, result.rows[rowNum].originated_from_transaction_hash);
+							console.log("SKIPPING: ", e, result.rows[rowNum].originated_from_transaction_hash);
 						}
 						console.log("Receipt ", rowNum+1, " of ", result.rows.length, " done.");
 					}
 
 					//loop through the logs for each contract
-					for (var key in eventsPerContract) {
-						console.log("Contract: ", key);
-						if (eventsPerContract.hasOwnProperty(key)) {
+					for (var contractId in eventsPerContract) {
+						console.log("CONTRACT: ", contractId);
+						if (eventsPerContract.hasOwnProperty(contractId)) {
 							let currentContractData = {};
 							try {
-								let rawContractData = await readFile(`../static/${contractId}/${key}.json`);
+								let rawContractData = await readFile(`../static/${marketId}/${contractId}.json`);
 								currentContractData = JSON.parse(rawContractData);
 							} catch(e) {
-								console.log("WARNING: unable to read contract file: ", key, " creating new file.");
+								console.log("WARNING: unable to read contract file: ", contractId, " creating new file.");
 							}
 							
 							//loop through each event per contract
-							for(var i = 0; i < eventsPerContract[key].length; i++) {
-								console.log("looping through each log: ", i, " of ", eventsPerContract[key].length);
-								appendEventToContractAndUpdateSummary(currentContractData, eventsPerContract[key][i]);
+							for(var i = 0; i < eventsPerContract[contractId].length; i++) {
+								console.log("LOOPING LOG: ", i, "OF", eventsPerContract[contractId].length);
+								appendEventToContractAndUpdateSummary(currentContractData, eventsPerContract[contractId][i]);
 							}
-							console.log("writing to contract file.");
-							await writeFile(`../static/${contractId}/${key}.json`, JSON.stringify(currentContractData));
+							console.log("WRITING CONTRACT FILE");
+							await writeFile(`../static/${marketId}/${contractId}.json`, JSON.stringify(currentContractData));
 						}
 					}
 
@@ -212,22 +210,22 @@ module.exports = {
 						console.log("Warning. 1000 rows returned from indexer. Potential data missed.");
 					}
 
-					console.log("writing to market summary file.");
-					const marketSummary = {
-						randomBits: (Math.random() * 10000000000).toString(),
-						blockstamp: futureHighestBlockTimestamp
+					console.log("MARKET SUMMARY");
+					marketSummary = {
+						blockstamp: futureHighestBlockTimestamp,
+						updated_at: Date.now(),
 					}; 
-					await writeFile(`../static/${contractId}/marketSummary.json`, JSON.stringify(marketSummary));
+					await writeFile(`../static/${marketId}/marketSummary.json`, JSON.stringify(marketSummary));
 
-					console.log("Pushing to GH");
+					console.log("PUSH TO GH");
 					try {
-						execSync(`cp -a ../static/${contractId} ../../nft-market-data/`);
-						execSync(`cd ../../nft-market-data && git pull && git add --all && git commit -am 'update' && git push`);
+						execSync(`cp -a ../static/${marketId} ../../nft-market-data/`);
+						execSync(`cd ../../nft-market-data && git add --all && git commit -am 'update' && git push -f`);
 					} catch(e) {
 						console.log("ERROR:\n", e.stdout.toString(), e.stderr.toString());
 					}
 					console.log("DONE");
-					res("DONE");
+					res(marketSummary);
 				}
 			);
 		});
@@ -275,10 +273,13 @@ module.exports = {
 						console.log("Finished ", i+1, " of ", result.rows.length);
 					}
 
-					const data = JSON.stringify(formattedRows);
-					await writeFile('../static/data.json', data);
+					const data = JSON.stringify({
+						updated_at: Date.now(),
+						contracts: formattedRows,
+					});
+					await writeFile('../static/contracts.json', data);
 					await writeFile('../../nft-market-data/contracts.json', data);
-					execSync(`cd ../../nft-market-data && git pull && git add . && git commit -am 'update' && git push`);
+					execSync(`cd ../../nft-market-data && git add . && git commit -am 'update' && git push -f`);
 
 					res(formattedRows);
 				}

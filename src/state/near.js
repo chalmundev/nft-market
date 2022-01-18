@@ -1,16 +1,26 @@
 import * as nearAPI from 'near-api-js';
 const { WalletAccount } = nearAPI;
-import { near, contractAccount, contractId } from '../../utils/near-utils';
+import {
+	near, contractAccount, contractId
+} from '../../utils/near-utils';
 import { parseToken } from '../utils/token';
 import getConfig from '../../utils/config';
-const { contractId, contractId: _contractId, gas, attachedDeposit: defaultAttachedDeposit } = getConfig();
+const {
+	contractId,
+	gas,
+	attachedDeposit: defaultAttachedDeposit
+} = getConfig();
+export const marketId = contractId
+export {
+	parseNearAmount, formatNearAmount,
+} from '../../utils/near-utils';
 
 export const initNear = () => async ({ update }) => {
 
 	const wallet = new WalletAccount(near);
 
 	wallet.signIn = () => {
-		wallet.requestSignIn(contractId, 'Blah Blah');
+		wallet.requestSignIn(marketId, 'Blah Blah');
 	};
 	const signOut = wallet.signOut;
 	wallet.signOut = () => {
@@ -34,7 +44,7 @@ export const initNear = () => async ({ update }) => {
 /// actions
 
 export const action = ({
-	contractId = _contractId,
+	contractId = marketId,
 	methodName,
 	args,
 	attachedDeposit = defaultAttachedDeposit
@@ -54,7 +64,7 @@ export const action = ({
 }
 
 export const view = ({
-	contract_id = contractId,
+	contract_id = marketId,
 	methodName,
 	args,
 	key,
@@ -85,7 +95,7 @@ export const view = ({
 	}
 }
 
-export const fetchContract = (contract_id, args) => async ({ getState, dispatch }) => {
+export const fetchTokens = (contract_id, args) => async ({ getState, dispatch }) => {
 	const { contractId } = getState()?.data || {}
 	dispatch(view({
 		contract_id,
