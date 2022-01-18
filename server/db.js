@@ -213,23 +213,14 @@ module.exports = {
 					await writeFile(`../static/${contractId}/marketSummary.json`, JSON.stringify(marketSummary));
 
 					console.log("Pushing to GH");
-					
 					try {
 						execSync(`cp -a ../static/${contractId} ../../nft-market-data/`);
-						execSync(`cd ../../nft-market-data && git pull`);
+						execSync(`cd ../../nft-market-data && git pull && git add --all && git commit -am 'update' && git push`);
 					} catch(e) {
-						console.log("ERROR 1:\n", e.stdout.toString(), e.stderr.toString());
-						console.log("ERROR 1:\n", e)
+						console.log("ERROR:\n", e.stdout.toString(), e.stderr.toString());
 					}
-					try {
-						execSync(`git add --all && git commit -am 'update' && git push`);
-					} catch(e) {
-						console.log("ERROR 2:\n", e.stdout.toString(), e.stderr.toString());
-						console.log("ERROR 2:\n", e)
-					}
-
-					console.log("done.");
-					res("done.");
+					console.log("DONE");
+					res("DONE");
 				}
 			);
 		});
