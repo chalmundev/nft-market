@@ -56,3 +56,11 @@ body {
 		margin-right: 0;
 	}
 }
+
+.offer {
+	> div {
+		display: flex;
+		justify-content: space-evenly;
+		align-items: center;
+	}
+}

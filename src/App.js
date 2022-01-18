@@ -49,6 +49,8 @@ const App = () => {
 	const showBackToken = /\/(token)/gi.test(window.location.pathname)
 	const showBackContact = /\/(contract)/gi.test(window.location.pathname)
 
+	console.log(contracts)
+
 	return (
 		<main className="container-fluid">
 
@@ -98,7 +100,7 @@ const App = () => {
 				} />
 
 				<Route path="/token/:contract_id/:token_id" element={
-					<RouteToken {...{ dispatch, tokens }} />
+					<RouteToken {...{ dispatch, update, tokens, data }} />
 				} />
 
 				<Route path="/" element={
