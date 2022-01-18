@@ -1,12 +1,10 @@
 import { State } from '../utils/state';
 
-import { initNear } from './near';
+import { initNear, marketId } from './near';
 
 // example
 const initialState = {
-	app: {
-		mounted: false
-	},
+	loading: true,
 	data: {
 		contractId: '',
 		supply: 0,
@@ -15,6 +13,8 @@ const initialState = {
 		index: 0,
 		offersMaker:[0, []],
 		offersTaker:[0, []],
+		marketSummary: {},
+		contracts: [],
 	}
 };
 
@@ -23,5 +23,27 @@ export const { appStore, AppProvider } = State(initialState, 'app');
 // example app function
 export const onAppMount = (message) => async ({ update, getState, dispatch }) => {
 	update('app', { mounted: true });
-	dispatch(initNear());
+	
 };
+
+export const fetchContracts = () => async ({ update }) => {
+	const { contracts } = await fetchJson(`https://raw.githubusercontent.com/chalmundev/nft-market-data/main/contracts.json`)
+	update('data', { contracts })
+}
+
+export const fetchData = (fn = 'marketSummary') => async ({ update }) => {
+	const res = await fetchJson(`https://raw.githubusercontent.com/chalmundev/nft-market-data/main/${marketId}/${fn}.json`)
+	update('data', { [fn]: res })
+}
+
+/// helper
+export const fetchJson = async (url) => {
+	let res
+	try {
+		res = await fetch(url).then((r) => r.json())
+	} catch(e) {
+		console.warn('ERROR: fetching data', fn, e)
+		res = {}
+	}
+	return res
+}

@@ -1,21 +1,28 @@
+import { formatNearAmount } from 'near-api-js/lib/utils/format';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { fetchContract } from '../state/near';
+import { fetchData,  } from '../state/app';
+import { fetchTokens } from '../state/near';
 
 const PAGE_LIMIT = 3;
 
-export const RouteContract = ({ dispatch, update, contractId, index, supply, tokens }) => {
+export const RouteContract = ({ dispatch, update, data }) => {
 
 	const navigate = useNavigate();
 	const params = useParams();
 	const { contract_id } = params;
 
+	const { contractId, index, supply, tokens } = data
+	const summary = data?.[contract_id]?.summary;
+	console.log(summary)
+
 	const onMount = async () => {
 		if (contractId === contract_id) {
 			return
 		}
-		await handlePage(index)
-		await update('data.contractId', contract_id)
+		dispatch(fetchData(contract_id)),
+		handlePage(index)
+		update('data.contractId', contract_id)
 	};
 	useEffect(onMount, []);
 
@@ -24,7 +31,7 @@ export const RouteContract = ({ dispatch, update, contractId, index, supply, tok
 		if (index !== _index) {
 			update('data.index', _index)
 		}
-		await dispatch(fetchContract(contract_id, {
+		await dispatch(fetchTokens(contract_id, {
 			from_index: (parseInt(_index, 10) * PAGE_LIMIT).toString(),
 			limit: PAGE_LIMIT,
 		}))
@@ -37,6 +44,16 @@ export const RouteContract = ({ dispatch, update, contractId, index, supply, tok
 
 	return (
 		<div>
+
+			<h1>{ contract_id }</h1>
+			{ summary && <>
+				<h3>Market Summary</h3>
+				<p>Average: { formatNearAmount(summary.avg_sale, 4) }</p>
+				<p>Highest: { formatNearAmount(summary.highest_offer_sold.amount, 4) }</p>
+				<p>Lowest: { formatNearAmount(summary.lowest_offer_sold.amount, 4) }</p>
+				<p>Volume: { summary.vol_traded }</p>
+				<p>Offers (all time): { summary.offers_len }</p>
+			</>}
 
 			<p>Page {index + 1}</p>
 
