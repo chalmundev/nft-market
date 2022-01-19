@@ -20,7 +20,7 @@ const initNFT = async (newAccountId) => {
 	const nftContractAccount = await createNFTAccount(newAccountId);
 	await nftContractAccount.deployContract(fs.readFileSync("./out/nft-contract.wasm"));
 	
-	const result = await nftContractAccount.functionCall({
+	await nftContractAccount.functionCall({
 		contractId: newAccountId,
 		methodName: 'new_default_meta',
 		args: {
@@ -28,7 +28,6 @@ const initNFT = async (newAccountId) => {
 		},
 		gas
 	});
-	console.log("result of initializing NFT contract - ", result);
 };
 
 const init = async (owner_id = contractId) => {
