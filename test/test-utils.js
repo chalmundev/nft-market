@@ -16,9 +16,26 @@ const {
 
 const U128_MAX = '340282366920938463463374607431768211455';
 
+const initNFT = async (newAccountId) => {
+	const nftContractAccount = await createNFTAccount(newAccountId);
+	await nftContractAccount.deployContract(fs.readFileSync("./out/nft-contract.wasm"));
+	
+	const result = await nftContractAccount.functionCall({
+		contractId: newAccountId,
+		methodName: 'new_default_meta',
+		args: {
+			owner_id: newAccountId,
+		},
+		gas
+	});
+	console.log("result of initializing NFT contract - ", result);
+};
+
 const init = async (owner_id = contractId) => {
 	/// try to call new on contract, swallow e if already initialized
 	try {
+		
+
 		await contractAccount.functionCall({
 			contractId,
 			methodName: 'new',
@@ -40,7 +57,7 @@ const init = async (owner_id = contractId) => {
 const getAccount = async (accountId, fundingAmount = NEW_ACCOUNT_AMOUNT, secret) => {
 	const account = new nearAPI.Account(connection, accountId);
 	try {
-		let secret
+		let secret;
 		try {
 			secret = JSON.parse(fs.readFileSync(process.env.HOME + `/.near-credentials/${networkId}/${accountId}.json`, 'utf-8')).private_key;
 		} catch(e) {
@@ -64,6 +81,14 @@ const getAccount = async (accountId, fundingAmount = NEW_ACCOUNT_AMOUNT, secret)
 const createAccount = async (accountId, fundingAmount = NEW_ACCOUNT_AMOUNT, secret) => {
 	const newKeyPair = secret ? KeyPair.fromString(secret) : KeyPair.fromRandom('ed25519');
 	fs.writeFileSync(`./neardev/${accountId}` , newKeyPair.toString(), 'utf-8');
+	await contractAccount.createAccount(accountId, newKeyPair.publicKey, fundingAmount);
+	keyStore.setKey(networkId, accountId, newKeyPair);
+	return new nearAPI.Account(connection, accountId);
+};
+
+const createNFTAccount = async (accountId, fundingAmount = NEW_ACCOUNT_AMOUNT) => {
+	const newKeyPair = KeyPair.fromRandom('ed25519');
+	fs.writeFileSync(process.env.HOME + `/.near-credentials/${networkId}/${accountId}.json` , newKeyPair.toString(), 'utf-8');
 	await contractAccount.createAccount(accountId, newKeyPair.publicKey, fundingAmount);
 	keyStore.setKey(networkId, accountId, newKeyPair);
 	return new nearAPI.Account(connection, accountId);
@@ -114,5 +139,6 @@ module.exports = {
 	recordStop,
 	formatNearAmount,
 	parseNearAmount,
+	initNFT,
 	U128_MAX,
 };

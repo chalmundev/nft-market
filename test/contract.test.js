@@ -5,6 +5,7 @@ const {
 	recordStart, recordStop,
 	parseNearAmount,
 	U128_MAX,
+	initNFT,
 } = require('./test-utils');
 const getConfig = require("../utils/config");
 const {
@@ -15,10 +16,13 @@ const {
 // test.beforeEach((t) => {
 // });
 
-const nftContractId = "tests.nft-market.testnet";
+
 // Base token ID used for this set of runs. Actual token IDs will be runningTokenId + delimiter + incrementing token number.
 // This ensures all tests will have unique token IDs minted to the same NFT contract.
-let runningTokenId = new Date().getTime() / 1000;
+let runningTokenId = new Date().getTime();
+
+const nftContractId = process.env.DEPLOY_NFT_CONTRACT == "true" ? runningTokenId + "." + contractId : "tests.nft-market.testnet";
+
 const tokens = [
 	{
 		contract_id: nftContractId,
@@ -37,6 +41,17 @@ const royaltyAccounts = [
 let contractAccount, offerIds, offers, aliceId, bobId, tokenOwnerId, tokenOwner, alice, bob, royaltyIdOne, royaltyIdTwo;
 
 test('contract is deployed', async (t) => {
+	//env variable
+	const shouldDeploy = process.env.DEPLOY_NFT_CONTRACT;
+
+	//create, deploy, init NFT contract if flag passed in
+	if(shouldDeploy == "true") {
+		console.log("Deploying NFT contract");
+		await initNFT(nftContractId);
+	} else {
+		console.log("Using default NFT contract");
+	}
+
 	contractAccount = await init();
 
 	t.is(contractId, contractAccount.accountId);
@@ -54,6 +69,7 @@ test('users initialized', async (t) => {
 
 	tokenOwnerId = 'owner.' + contractId;
 	tokenOwner = await getAccount(tokenOwnerId);
+	console.log(tokenOwner);
 	alice = await getAccount(aliceId);
 	bob = await getAccount(bobId);
 
@@ -61,13 +77,13 @@ test('users initialized', async (t) => {
 		contractId,
 		methodName: 'withdraw_offer_storage',
 		gas,
-	})
+	});
 
 	await bob.functionCall({
 		contractId,
 		methodName: 'withdraw_offer_storage',
 		gas,
-	})
+	});
 
 	//royalty accounts for NFT payouts
 	royaltyIdOne = '10-percent.' + contractId;
@@ -97,10 +113,42 @@ test('owner remove offers', async (t) => {
 				methodName: 'remove_offers_by_taker_id',
 				args: { account_id: aliceId },
 				gas
+			}),
+			contractAccount.functionCall({
+				contractId,
+				methodName: 'remove_offers_by_maker_id',
+				args: { account_id: bobId },
+				gas
+			}),
+			contractAccount.functionCall({
+				contractId,
+				methodName: 'remove_offers_by_taker_id',
+				args: { account_id: bobId },
+				gas
 			})
-		])
+		]);
 	} catch(e) {
-		console.warn(e)
+		console.warn(e);
+	}
+	t.true(true);
+});
+
+test('alice and bob withdraw storage', async (t) => {
+	try {
+		await Promise.all([
+			alice.functionCall({
+				contractId,
+				methodName: 'withdraw_offer_storage',
+				gas
+			}),
+			bob.functionCall({
+				contractId,
+				methodName: 'withdraw_offer_storage',
+				gas
+			}),
+		]);
+	} catch(e) {
+		console.warn(e);
 	}
 	t.true(true);
 });
@@ -419,7 +467,7 @@ test('Alice opens token for bidding by calling nft_approve with U128_MAX', async
 		'get_offers_by_maker_id',
 		{ account_id: aliceId }
 	);
-	console.log('aliceOffers', aliceOffers)
+	console.log('aliceOffers', aliceOffers);
 	t.is(aliceOffers[0], 0);
 
 
@@ -509,6 +557,14 @@ test('Alice accepts Bob offer', async (t) => {
 
 
 test('Bob opens token for bidding by calling nft_approve with fixed price', async (t) => {
+
+	const bobOffers = await contractAccount.viewFunction(
+		contractId,
+		'get_offers_by_maker_id',
+		{ account_id: bobId }
+	);
+	console.log('bobOffers', bobOffers);
+	t.is(bobOffers[0], 0);
 	
 	const res = await bob.functionCall({
 		contractId,
@@ -596,7 +652,7 @@ test('Alice can make offer of exact amount and purchase AND bob has no more stor
 		{ owner_id: bobId }
 	);
 
-	console.log('bobStorageAvailable', bobStorageAvailable)
+	console.log('bobStorageAvailable', bobStorageAvailable);
 
 	t.is(bobStorageAvailable, 0);
 });
