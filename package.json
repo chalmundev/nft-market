@@ -29,7 +29,8 @@
 		"clean": "rimraf ./dist",
 		"start": "parcel src/index.html --open",
 
-		"test-v1": "node ./utils/patch-v1.js && yarn test",
+		"test-v1": "node ./utils/patch-v1.js && DEPLOY_NFT_CONTRACT=false yarn test",
+		"test-v1-nft": "node ./utils/patch-v1.js && DEPLOY_NFT_CONTRACT=true yarn test",
 		"test-v1-deploy": "yarn build-contract && near deploy --accountId v1.nft-market.testnet --wasmFile out/main.wasm && yarn test-v1",
 		"test-v1-delete": "near delete v1.nft-market.testnet nft-market.testnet"
 	}

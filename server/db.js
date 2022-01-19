@@ -105,7 +105,7 @@ module.exports = {
 			});
 
 			let currentHighestBlockTimestamp = 0;
-			let marketSummary = {}
+			let marketSummary = {};
 			try {
 				marketSummary = JSON.parse(await readFile(`../static/${marketId}/marketSummary.json`));
 				currentHighestBlockTimestamp = startTimestamp ? startTimestamp : marketSummary.blockstamp; 
