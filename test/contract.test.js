@@ -41,8 +41,10 @@ const royaltyAccounts = [
 let contractAccount, offerIds, offers, aliceId, bobId, tokenOwnerId, tokenOwner, alice, bob, royaltyIdOne, royaltyIdTwo;
 
 test('contract is deployed', async (t) => {
+	//env variable
 	const shouldDeploy = process.env.DEPLOY_NFT_CONTRACT;
 
+	//create, deploy, init NFT contract if flag passed in
 	if(shouldDeploy == "true") {
 		console.log("Deploying NFT contract");
 		await initNFT(nftContractId);
@@ -67,6 +69,7 @@ test('users initialized', async (t) => {
 
 	tokenOwnerId = 'owner.' + contractId;
 	tokenOwner = await getAccount(tokenOwnerId);
+	console.log(tokenOwner);
 	alice = await getAccount(aliceId);
 	bob = await getAccount(bobId);
 
