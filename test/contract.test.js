@@ -113,7 +113,39 @@ test('owner remove offers', async (t) => {
 				methodName: 'remove_offers_by_taker_id',
 				args: { account_id: aliceId },
 				gas
+			}),
+			contractAccount.functionCall({
+				contractId,
+				methodName: 'remove_offers_by_maker_id',
+				args: { account_id: bobId },
+				gas
+			}),
+			contractAccount.functionCall({
+				contractId,
+				methodName: 'remove_offers_by_taker_id',
+				args: { account_id: bobId },
+				gas
 			})
+		]);
+	} catch(e) {
+		console.warn(e);
+	}
+	t.true(true);
+});
+
+test('alice and bob withdraw storage', async (t) => {
+	try {
+		await Promise.all([
+			alice.functionCall({
+				contractId,
+				methodName: 'withdraw_offer_storage',
+				gas
+			}),
+			bob.functionCall({
+				contractId,
+				methodName: 'withdraw_offer_storage',
+				gas
+			}),
 		]);
 	} catch(e) {
 		console.warn(e);
@@ -525,6 +557,14 @@ test('Alice accepts Bob offer', async (t) => {
 
 
 test('Bob opens token for bidding by calling nft_approve with fixed price', async (t) => {
+
+	const bobOffers = await contractAccount.viewFunction(
+		contractId,
+		'get_offers_by_maker_id',
+		{ account_id: bobId }
+	);
+	console.log('bobOffers', bobOffers);
+	t.is(bobOffers[0], 0);
 	
 	const res = await bob.functionCall({
 		contractId,
