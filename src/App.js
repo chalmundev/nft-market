@@ -10,7 +10,7 @@ import {
 import { appStore, fetchContracts, fetchData } from './state/app';
 import { initNear } from './state/near';
 
-import { RouteOffersMaker } from './components/RouteOffersMaker';
+import { RouteOffers } from './components/RouteOffers';
 import { RouteContract } from './components/RouteContract';
 import { RouteToken } from './components/RouteToken';
 
@@ -42,14 +42,13 @@ const App = () => {
 		data: {
 			contracts, marketSummary,
 			contractId, index, tokens, supply,
-			offersMaker, offersTaker,
+			offers,
 		}
 	} = state;
 
+	const showBackHome = /\/(maker|taker)/gi.test(window.location.pathname)
 	const showBackToken = /\/(token)/gi.test(window.location.pathname)
 	const showBackContact = /\/(contract)/gi.test(window.location.pathname)
-
-	console.log(contracts)
 
 	return (
 		<main className="container-fluid">
@@ -65,6 +64,12 @@ const App = () => {
 						<Link to="/">Home</Link>
 					</li>
 					<li>
+						<Link to="/offers/maker">My Offers</Link>
+					</li>
+					<li>
+						<Link to="/offers/taker">Received</Link>
+					</li>
+					<li>
 						{
 							account
 								?
@@ -77,7 +82,7 @@ const App = () => {
 			</nav>
 
 			<div className='crumbs'>
-				{showBackToken || showBackContact ? <div><Link to="/" onClick={(e) => {
+				{showBackHome || showBackToken || showBackContact ? <div><Link to="/" onClick={(e) => {
 					e.preventDefault()
 					if (showBackToken) {
 						return navigate(window.location.pathname.split('/').slice(0, -1).join('/').replace('/token', '/contract'))
@@ -91,8 +96,12 @@ const App = () => {
 			</div>
 
 			<Routes>
-				<Route path="/offers-maker" element={
-					<RouteOffersMaker {...{ dispatch, update, account, index, offersMaker }} />
+				<Route path="/offers/maker" element={
+					<RouteOffers {...{ dispatch, update, account, type: 'maker', offers, index }} />
+				} />
+
+				<Route path="/offers/taker" element={
+					<RouteOffers {...{ dispatch, update, account, type: 'taker', offers, index }} />
 				} />
 
 				<Route path="/contract/:contract_id" element={

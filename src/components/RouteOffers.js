@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { view } from '../state/near';
+import { formatNearAmount, view } from '../state/near';
 
-const PAGE_LIMIT = 3;
+const PAGE_LIMIT = 10;
 
-export const RouteOffersMaker = ({ dispatch, update, account, index, offersMaker }) => {
+export const RouteOffers = ({ dispatch, update, account, type, offers, index }) => {
 	if (!account) return null
 
 	const { account_id } = account
-
-	console.log(account_id)
 
 	const navigate = useNavigate();
 	const params = useParams();
@@ -26,19 +24,25 @@ export const RouteOffersMaker = ({ dispatch, update, account, index, offersMaker
 			update('data.index', _index)
 		}
 		await dispatch(view({
-			methodName: 'get_offers_by_maker_id',
+			methodName: `get_offers_by_${type}_id`,
 			args: {
 				account_id
 			},
-			key: 'data.offersMaker'
+			key: 'data.offers.' + type
 		}))
 	};
 
-	const [supply, offers] = offersMaker
+	const [supply, offerArr] = offers[type]
 
-	const cols = [], numCols = Math.ceil(window.innerWidth / 500)
-	for (let i = 0; i < offers.length; i += numCols) {
-		cols.push(offers.slice(i, i + numCols))
+	const rows = [], numCols = Math.ceil(window.innerWidth / 500)
+	for (let i = 0; i < offerArr.length; i += numCols) {
+		rows.push(offerArr.slice(i, i + numCols))
+	}
+
+	console.log(rows)
+
+	if (rows.length === 0) {
+		return <p>You have not {type === 'maker' ? 'made' : 'received'} any offers yet.</p>
 	}
 
 	return (
@@ -47,11 +51,11 @@ export const RouteOffersMaker = ({ dispatch, update, account, index, offersMaker
 			<p>Page {index + 1}</p>
 
 			{
-				cols.map((col, i) => <div className="grid" key={i}>
+				rows.map((row, i) => <div className="grid" key={i}>
 					{
-						col.map(({ token_id, metadata }) => <div key={token_id} onClick={() => navigate(`/token/${contract_id}/${token_id}`)}>
-							<img src={metadata.media} />
+						row.map(({ token_id, amount }) => <div key={token_id}>
 							<p>{token_id}</p>
+							<p>{formatNearAmount(amount, 4)}</p>
 						</div>)
 					}
 				</div>)

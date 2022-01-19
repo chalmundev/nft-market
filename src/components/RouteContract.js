@@ -31,6 +31,9 @@ export const RouteContract = ({ dispatch, update, data }) => {
 		}
 		await handlePage(_index)
 		update('data.contractId', contract_id)
+		return () => {
+			update('data.index', 0)
+		}
 	};
 	useEffect(onMount, []);
 
@@ -48,9 +51,9 @@ export const RouteContract = ({ dispatch, update, data }) => {
 
 	tokens = tokens.slice().reverse()
 
-	const cols = [], numCols = Math.ceil(window.innerWidth / 500)
+	const rows = [], numCols = Math.ceil(window.innerWidth / 500)
 	for (let i = 0; i < tokens.length; i += numCols) {
-		cols.push(tokens.slice(i, i + numCols))
+		rows.push(tokens.slice(i, i + numCols))
 	}
 
 	return (
@@ -74,9 +77,9 @@ export const RouteContract = ({ dispatch, update, data }) => {
 			</div>
 
 			{
-				cols.map((col, i) => <div className="grid" key={i}>
+				rows.map((row, i) => <div className="grid" key={i}>
 					{
-						col.map(({ token_id, metadata }) => <div key={token_id} onClick={() => navigate(`/token/${contract_id}/${token_id}`)}>
+						row.map(({ token_id, metadata }) => <div key={token_id} onClick={() => navigate(`/token/${contract_id}/${token_id}`)}>
 							<img src={metadata.media} />
 							<p>{token_id}</p>
 						</div>)
