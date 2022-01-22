@@ -164,6 +164,10 @@ impl Contract {
 		let offer_id = self.offer_by_contract_token_id.get(&contract_token_id).unwrap_or_else(|| env::panic_str("no offer ID for contract and token ID"));
 		let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("no offer for offer ID"));
 
+		require!(env::predecessor_account_id() == offer.taker_id, "only owner can accept an offer");
+		if offer.taker_id == offer.maker_id {
+			env::panic_str("cannot accept your own offer");
+		}
 		self.internal_accept_offer(offer_id, &offer);
     }
 }

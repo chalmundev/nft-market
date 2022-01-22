@@ -131,11 +131,9 @@ impl Contract {
     ) -> U128 {
         let mut valid_payout_object = true; 
         let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("No offer associated with the offer ID"));
-        self.internal_remove_offer(offer_id, &offer);
 
         // check promise result
 		let result = promise_result_as_success().unwrap_or_else(|| {
-            self.market_balance.checked_sub(market_amount).unwrap_or_else(|| env::panic_str("Unable to decrement market balance since NFT transfer failed"));
             Promise::new(maker_id).transfer(offer.amount.0);
             env::panic_str("NFT not successfully transferred. Refunding maker.")
         });
@@ -168,7 +166,7 @@ impl Contract {
             });
         }
 
-        //if invalid payout object, send the maker
+        //if invalid payout object, refund the taker.
         if valid_payout_object == false {
             payout = HashMap::from([(taker_id, payout_amount)]);
         }
@@ -190,6 +188,10 @@ impl Contract {
 				updated_at: offer.updated_at,
             }),
         }.to_string());
+
+		//increment market balance if all went well.
+		self.market_balance += market_amount;
+		env::log_str(&format!("NEW MARKET BALANCE: {:?}", self.market_balance));
 
         //return the amount payed out
         payout_amount

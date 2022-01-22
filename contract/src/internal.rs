@@ -180,13 +180,14 @@ impl Contract {
 
         //increment market holding amount
         let market_amount = self.market_royalty as u128 * offer.amount.0 / 10_000u128;
-		self.market_balance += market_amount;
 		let payout_amount = U128(offer.amount.0.checked_sub(market_amount).unwrap_or_else(|| env::panic_str("Market holding amount too high.")));
 
 		let maker_id = offer.maker_id.clone();
 		let taker_id = offer.taker_id.clone();
 		let contract_id = offer.contract_id.clone();
 		let token_id = offer.token_id.clone();
+
+		self.internal_remove_offer(offer_id, &offer);
 		
 		//initiate a cross contract call to the nft contract. This will transfer the token to the buyer and return
 		//a payout object used for the market to distribute funds to the appropriate accounts.
