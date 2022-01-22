@@ -173,7 +173,7 @@ impl Contract {
 	pub(crate) fn internal_accept_offer(
 		&mut self,
 		offer_id: u64,
-		offer: &Offer
+		offer: Offer
 	) {
 		//make sure there's an approval ID.
 		let approval_id = offer.approval_id.unwrap_or_else(|| env::panic_str("Cannot accept an offer that has no approval ID"));
@@ -182,8 +182,6 @@ impl Contract {
         let market_amount = self.market_royalty as u128 * offer.amount.0 / 10_000u128;
 		let payout_amount = U128(offer.amount.0.checked_sub(market_amount).unwrap_or_else(|| env::panic_str("Market holding amount too high.")));
 
-		let maker_id = offer.maker_id.clone();
-		let taker_id = offer.taker_id.clone();
 		let contract_id = offer.contract_id.clone();
 		let token_id = offer.token_id.clone();
 
@@ -209,9 +207,7 @@ impl Contract {
 		//after the transfer payout has been initiated, we resolve the promise by calling our own resolve_offer function. 
 		//resolve offer will take the payout object returned from the nft_transfer_payout and actually pay the accounts
 		.then(ext_self::resolve_offer(
-			offer_id,
-			maker_id,
-			taker_id, //pass the offer_id
+			offer,
 			payout_amount,
 			market_amount,
 			env::current_account_id(), //we are invoking this function on the current contract

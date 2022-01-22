@@ -15,9 +15,7 @@ pub trait SelfContract {
 	);
     fn resolve_offer(
         &mut self,
-        offer_id: u64,
-        maker_id: AccountId,
-        taker_id: AccountId,
+        offer: Offer,
         payout_amount: U128,
 		market_amount: Balance,
     ) -> Promise;
@@ -123,18 +121,15 @@ impl Contract {
     #[private]
     pub fn resolve_offer(
         &mut self,
-        offer_id: u64,
-        maker_id: AccountId,
-        taker_id: AccountId,
+        offer: Offer,
         payout_amount: U128,
 		market_amount: Balance,
     ) -> U128 {
         let mut valid_payout_object = true; 
-        let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("No offer associated with the offer ID"));
 
         // check promise result
 		let result = promise_result_as_success().unwrap_or_else(|| {
-            Promise::new(maker_id).transfer(offer.amount.0);
+            Promise::new(offer.maker_id.clone()).transfer(offer.amount.0);
             env::panic_str("NFT not successfully transferred. Refunding maker.")
         });
 
@@ -168,7 +163,7 @@ impl Contract {
 
         //if invalid payout object, refund the taker.
         if valid_payout_object == false {
-            payout = HashMap::from([(taker_id, payout_amount)]);
+            payout = HashMap::from([(offer.taker_id.clone(), payout_amount)]);
         }
         
         // NEAR payouts
@@ -191,7 +186,6 @@ impl Contract {
 
 		//increment market balance if all went well.
 		self.market_balance += market_amount;
-		env::log_str(&format!("NEW MARKET BALANCE: {:?}", self.market_balance));
 
         //return the amount payed out
         payout_amount
