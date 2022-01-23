@@ -173,7 +173,7 @@ impl Contract {
 	pub(crate) fn internal_accept_offer(
 		&mut self,
 		offer_id: u64,
-		offer: Offer
+		offer: &Offer
 	) {
 		//make sure there's an approval ID.
 		let approval_id = offer.approval_id.unwrap_or_else(|| env::panic_str("Cannot accept an offer that has no approval ID"));

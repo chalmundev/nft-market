@@ -1,6 +1,6 @@
 use crate::*;
 
-#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault, Clone)]
+#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Offer {
@@ -89,7 +89,7 @@ impl Contract {
 					offer.maker_id = maker_id;
 					offer.updated_at = env::block_timestamp();
 					self.offer_by_id.insert(&offer_id, &offer);
-					self.internal_accept_offer(offer_id, offer.clone());
+					self.internal_accept_offer(offer_id, &offer);
 					// DO pay back nft owner storage and decrement storage amount
 					return self.internal_withdraw_one_storage(&offer.taker_id);
 				}
@@ -168,6 +168,6 @@ impl Contract {
 		if offer.taker_id == offer.maker_id {
 			env::panic_str("cannot accept your own offer");
 		}
-		self.internal_accept_offer(offer_id, offer);
+		self.internal_accept_offer(offer_id, &offer);
     }
 }

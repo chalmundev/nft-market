@@ -98,7 +98,7 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 		self.offer_by_id.insert(&offer_id, &offer);
 
         if auto_transfer.unwrap_or(false) == true {
-            self.internal_accept_offer(offer_id, offer);
+            self.internal_accept_offer(offer_id, &offer);
 		}
     }
 }
