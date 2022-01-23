@@ -185,13 +185,18 @@ impl Contract {
 		let contract_id = offer.contract_id.clone();
 		let token_id = offer.token_id.clone();
 
+		let maker_id = offer.maker_id.clone();
+		let taker_id = offer.taker_id.clone();
+		let offer_amount = offer.amount.clone();
+		let updated_at = offer.updated_at.clone();
+
 		self.internal_remove_offer(offer_id, &offer);
 		
 		//initiate a cross contract call to the nft contract. This will transfer the token to the buyer and return
 		//a payout object used for the market to distribute funds to the appropriate accounts.
 		ext_contract::nft_transfer_payout(
 			offer.maker_id.clone(), //maker of the offer (person to transfer the NFT to)
-			token_id, //token ID to transfer
+			token_id.clone(), //token ID to transfer
 			approval_id, //market contract's approval ID in order to transfer the token on behalf of the owner
 			"payout from market".to_string(), //memo (to include some context)
 			/*
@@ -200,14 +205,19 @@ impl Contract {
 			*/
 			payout_amount,
 			10, //the maximum amount of accounts the market can payout at once (this is limited by GAS)
-			contract_id, //contract to initiate the cross contract call to
+			contract_id.clone(), //contract to initiate the cross contract call to
 			1, //yoctoNEAR to attach to the call
 			GAS_FOR_NFT_TRANSFER, //GAS to attach to the call
 		)
 		//after the transfer payout has been initiated, we resolve the promise by calling our own resolve_offer function. 
 		//resolve offer will take the payout object returned from the nft_transfer_payout and actually pay the accounts
 		.then(ext_self::resolve_offer(
-			offer,
+			maker_id,
+			taker_id,
+			token_id,
+			contract_id,
+			offer_amount,
+			updated_at,
 			payout_amount,
 			market_amount,
 			env::current_account_id(), //we are invoking this function on the current contract

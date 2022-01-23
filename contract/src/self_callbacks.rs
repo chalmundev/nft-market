@@ -15,7 +15,12 @@ pub trait SelfContract {
 	);
     fn resolve_offer(
         &mut self,
-        offer: Offer,
+        maker_id: AccountId,
+		taker_id: AccountId,
+		token_id: String,
+		contract_id: AccountId,
+		offer_amount: U128,
+		updated_at: u64,
         payout_amount: U128,
 		market_amount: Balance,
     ) -> Promise;
@@ -121,7 +126,12 @@ impl Contract {
     #[private]
     pub fn resolve_offer(
         &mut self,
-        offer: Offer,
+        maker_id: AccountId,
+		taker_id: AccountId,
+		token_id: String,
+		contract_id: AccountId,
+		offer_amount: U128,
+		updated_at: u64,
         payout_amount: U128,
 		market_amount: Balance,
     ) -> U128 {
@@ -129,7 +139,7 @@ impl Contract {
 
         // check promise result
 		let result = promise_result_as_success().unwrap_or_else(|| {
-            Promise::new(offer.maker_id.clone()).transfer(offer.amount.0);
+            Promise::new(maker_id.clone()).transfer(offer_amount.0);
             env::panic_str("NFT not successfully transferred. Refunding maker.")
         });
 
@@ -163,7 +173,7 @@ impl Contract {
 
         //if invalid payout object, refund the taker.
         if valid_payout_object == false {
-            payout = HashMap::from([(offer.taker_id.clone(), payout_amount)]);
+            payout = HashMap::from([(taker_id.clone(), payout_amount)]);
         }
         
         // NEAR payouts
@@ -175,12 +185,12 @@ impl Contract {
         env::log_str(&EventLog {
             // The data related with the event stored in a vector.
             event: EventLogVariant::ResolveOffer(OfferLog {
-                contract_id: offer.contract_id,	
-				token_id: offer.token_id,
-				maker_id: offer.maker_id,
-				taker_id: offer.taker_id,
-				amount: offer.amount,
-				updated_at: offer.updated_at,
+                contract_id: contract_id,	
+				token_id: token_id,
+				maker_id: maker_id,
+				taker_id: taker_id,
+				amount: offer_amount,
+				updated_at: updated_at,
             }),
         }.to_string());
 
