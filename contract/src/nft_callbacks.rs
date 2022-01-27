@@ -45,7 +45,7 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 			if let Some(amount) = amount {
 				require!(self.offer_storage_available(&owner_id) > 0, "must add offer storage");
 
-				self.internal_add_offer(&Offer{
+				self.internal_add_offer(Offer{
 					maker_id: owner_id.clone(),
 					taker_id: owner_id,
 					contract_id: contract_id,
@@ -70,6 +70,11 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 		// owner made offer of higher amount - replace offer
 		if let Some(amount) = amount {
 			if offer.amount.0 < amount.0 {
+                //refund previous maker if they're not the owner
+                if offer.taker_id != offer.maker_id {
+                    Promise::new(offer.maker_id).transfer(offer.amount.0);
+                }
+
 				offer.maker_id = owner_id;
 				offer.amount = amount;
 				offer.updated_at = env::block_timestamp();
@@ -93,39 +98,7 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 		self.offer_by_id.insert(&offer_id, &offer);
 
         if auto_transfer.unwrap_or(false) == true {
-            let market_amount = self.market_royalty as u128 * offer.amount.0 / 10_000u128;
-            self.market_balance += market_amount; 
-
-            let amount_to_payout = U128(offer.amount.0.checked_sub(market_amount).unwrap_or_else(|| env::panic_str("Market holding amount too high."))); 
-            //initiate a cross contract call to the nft contract. This will transfer the token to the buyer and return
-            //a payout object used for the market to distribute funds to the appropriate accounts.
-            ext_contract::nft_transfer_payout(
-                offer.maker_id.clone(), //maker of the offer (person to transfer the NFT to)
-                offer.token_id, //token ID to transfer
-                approval_id, //market contract's approval ID in order to transfer the token on behalf of the owner
-                "payout from market".to_string(), //memo (to include some context)
-                /*
-                    the price that the token was offered for. This will be used in conjunction with the royalty percentages
-                    for the token in order to determine how much money should go to which account. 
-                */
-                amount_to_payout,
-                10, //the maximum amount of accounts the market can payout at once (this is limited by GAS)
-                offer.contract_id, //contract to initiate the cross contract call to
-                1, //yoctoNEAR to attach to the call
-                GAS_FOR_NFT_TRANSFER, //GAS to attach to the call
-            )
-            //after the transfer payout has been initiated, we resolve the promise by calling our own resolve_offer function. 
-            //resolve offer will take the payout object returned from the nft_transfer_payout and actually pay the accounts
-            .then(ext_self::resolve_offer(
-                offer_id,
-                offer.maker_id,
-                offer.taker_id, //pass the offer_id
-                amount_to_payout,
-                market_amount,
-                env::current_account_id(), //we are invoking this function on the current contract
-                NO_DEPOSIT, //don't attach any deposit
-                GAS_FOR_ROYALTIES, //GAS attached to the call to payout royalties
-            ));
+            self.internal_accept_offer(offer_id, offer);
 		}
     }
 }

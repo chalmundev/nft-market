@@ -15,9 +15,12 @@ pub trait SelfContract {
 	);
     fn resolve_offer(
         &mut self,
-        offer_id: u64,
         maker_id: AccountId,
-        taker_id: AccountId,
+		taker_id: AccountId,
+		token_id: String,
+		contract_id: AccountId,
+		offer_amount: U128,
+		updated_at: u64,
         payout_amount: U128,
 		market_amount: Balance,
     ) -> Promise;
@@ -51,7 +54,7 @@ impl Contract {
 		let amount = U128(env::attached_deposit());
 		let updated_at = env::block_timestamp();
 		
-		self.internal_add_offer(&Offer{
+		self.internal_add_offer(Offer{
 			maker_id: maker_id.clone(),
 			taker_id: taker_id.clone(),
 			contract_id: contract_id.clone(),
@@ -123,29 +126,29 @@ impl Contract {
     #[private]
     pub fn resolve_offer(
         &mut self,
-        offer_id: u64,
         maker_id: AccountId,
-        taker_id: AccountId,
+		taker_id: AccountId,
+		token_id: String,
+		contract_id: AccountId,
+		offer_amount: U128,
+		updated_at: u64,
         payout_amount: U128,
 		market_amount: Balance,
     ) -> U128 {
         let mut valid_payout_object = true; 
-        let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("No offer associated with the offer ID"));
-        self.internal_remove_offer(offer_id, &offer);
 
         // check promise result
 		let result = promise_result_as_success().unwrap_or_else(|| {
-            self.market_balance.checked_sub(market_amount).unwrap_or_else(|| env::panic_str("Unable to decrement market balance since NFT transfer failed"));
-            Promise::new(maker_id).transfer(offer.amount.0);
+            Promise::new(maker_id.clone()).transfer(offer_amount.0);
             env::panic_str("NFT not successfully transferred. Refunding maker.")
         });
 
+		// get standard payout data from nft_transfer payout promise
 		let Payout{ mut payout } = near_sdk::serde_json::from_slice::<Payout>(&result).unwrap_or_else(|_| {
             valid_payout_object = false;
             env::log_str("not a valid payout object. Sending taker full offer amount.");
             Payout{payout: HashMap::new()}
         });
-		
 
         //we'll check if length of the payout object is > 10 or it's empty. In either case, we return None
         if payout.len() > 10 || payout.is_empty() {
@@ -168,9 +171,9 @@ impl Contract {
             });
         }
 
-        //if invalid payout object, send the maker
+        //if invalid payout object, refund the taker.
         if valid_payout_object == false {
-            payout = HashMap::from([(taker_id, payout_amount)]);
+            payout = HashMap::from([(taker_id.clone(), payout_amount)]);
         }
         
         // NEAR payouts
@@ -182,14 +185,17 @@ impl Contract {
         env::log_str(&EventLog {
             // The data related with the event stored in a vector.
             event: EventLogVariant::ResolveOffer(OfferLog {
-                contract_id: offer.contract_id,	
-				token_id: offer.token_id,
-				maker_id: offer.maker_id,
-				taker_id: offer.taker_id,
-				amount: offer.amount,
-				updated_at: offer.updated_at,
+                contract_id,	
+				token_id,
+				maker_id,
+				taker_id,
+				amount: offer_amount,
+				updated_at,
             }),
         }.to_string());
+
+		//increment market balance if all went well.
+		self.market_balance += market_amount;
 
         //return the amount payed out
         payout_amount

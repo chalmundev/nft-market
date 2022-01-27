@@ -431,9 +431,9 @@ test('check if marketplace balance increased 2', async (t) => {
 		{}
 	);
 
-	console.log(balance);
+	console.log("market balance: ", balance);
 
-	t.true(balance > 1);
+	t.true(parseFloat(balance) > 1);
 });
 
 test('withdrawing market balance 2', async (t) => {

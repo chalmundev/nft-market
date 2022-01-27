@@ -1,0 +1,10 @@
+Frontend: 
+
+For each NFT contract: 
+- list all NFT tokens (in some sort of infinite scrolling page). 
+    - NFTs with offers are at the top by default.
+    - NFTs with no offers are after. 
+    - You can sort by filter offers (maker = taker), default offers, and no offers.
+    - You can sort by price high - low and also sort by updated_at. 
+    - You can search for NFTs by token ID, title, or description.
+
