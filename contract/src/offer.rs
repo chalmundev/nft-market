@@ -89,9 +89,10 @@ impl Contract {
 					offer.maker_id = maker_id;
 					offer.updated_at = env::block_timestamp();
 					self.offer_by_id.insert(&offer_id, &offer);
-					self.internal_accept_offer(offer_id, &offer);
+					let taker_id = offer.taker_id.clone();
+					self.internal_accept_offer(offer_id, offer);
 					// DO pay back nft owner storage and decrement storage amount
-					return self.internal_withdraw_one_storage(&offer.taker_id);
+					return self.internal_withdraw_one_storage(&taker_id);
 				}
 				// continue execution below - (open for bids) alice outbids token owner because offer.amount == OPEN_OFFER_AMOUNT
 			}
@@ -165,9 +166,6 @@ impl Contract {
 		let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("no offer for offer ID"));
 
 		require!(env::predecessor_account_id() == offer.taker_id, "only owner can accept an offer");
-		if offer.taker_id == offer.maker_id {
-			env::panic_str("cannot accept your own offer");
-		}
-		self.internal_accept_offer(offer_id, &offer);
+		self.internal_accept_offer(offer_id, offer);
     }
 }

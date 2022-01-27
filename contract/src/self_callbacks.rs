@@ -54,7 +54,7 @@ impl Contract {
 		let amount = U128(env::attached_deposit());
 		let updated_at = env::block_timestamp();
 		
-		self.internal_add_offer(&Offer{
+		self.internal_add_offer(Offer{
 			maker_id: maker_id.clone(),
 			taker_id: taker_id.clone(),
 			contract_id: contract_id.clone(),
@@ -143,12 +143,12 @@ impl Contract {
             env::panic_str("NFT not successfully transferred. Refunding maker.")
         });
 
+		// get standard payout data from nft_transfer payout promise
 		let Payout{ mut payout } = near_sdk::serde_json::from_slice::<Payout>(&result).unwrap_or_else(|_| {
             valid_payout_object = false;
             env::log_str("not a valid payout object. Sending taker full offer amount.");
             Payout{payout: HashMap::new()}
         });
-		
 
         //we'll check if length of the payout object is > 10 or it's empty. In either case, we return None
         if payout.len() > 10 || payout.is_empty() {
@@ -185,12 +185,12 @@ impl Contract {
         env::log_str(&EventLog {
             // The data related with the event stored in a vector.
             event: EventLogVariant::ResolveOffer(OfferLog {
-                contract_id: contract_id,	
-				token_id: token_id,
-				maker_id: maker_id,
-				taker_id: taker_id,
+                contract_id,	
+				token_id,
+				maker_id,
+				taker_id,
 				amount: offer_amount,
-				updated_at: updated_at,
+				updated_at,
             }),
         }.to_string());
 

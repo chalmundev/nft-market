@@ -45,7 +45,7 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 			if let Some(amount) = amount {
 				require!(self.offer_storage_available(&owner_id) > 0, "must add offer storage");
 
-				self.internal_add_offer(&Offer{
+				self.internal_add_offer(Offer{
 					maker_id: owner_id.clone(),
 					taker_id: owner_id,
 					contract_id: contract_id,
@@ -98,7 +98,7 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 		self.offer_by_id.insert(&offer_id, &offer);
 
         if auto_transfer.unwrap_or(false) == true {
-            self.internal_accept_offer(offer_id, &offer);
+            self.internal_accept_offer(offer_id, offer);
 		}
     }
 }
