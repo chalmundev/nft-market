@@ -5,6 +5,7 @@ const BN = require('bn.js');
 
 const getConfig = require("../utils/config");
 const {
+	networkId,
 	contractId: marketId,
 } = getConfig();
 
@@ -27,6 +28,29 @@ async function getTransactionInformation(provider, transactionHash) {
 		transactionHash,
 		"foo",
 	]);
+}
+
+function logEvents(receipts_outcome, eventsPerContract) {
+	//loop through each receipt
+	for(let i = 0; i < receipts_outcome.length; i++) {
+		const { logs } = receipts_outcome[i].outcome;
+		//loop through each log in the receipt
+		for(let j = 0; j < logs.length; j++) {
+			//check if the logs start with MARKET_EVENT
+			if(/MARKET_EVENT/.test(logs[j])) {
+				//get the current log object
+				const log = JSON.parse(logs[j].replace('MARKET_EVENT:', ''));
+
+				//if market event was logged
+				if(/update_offer|resolve_offer/.test(log.event)) {
+					eventsPerContract[log.data.contract_id] = eventsPerContract[log.data.contract_id] || [];
+					eventsPerContract[log.data.contract_id].push(log);
+				} else {
+					console.log("Log of non recognizable market event --> ", log);
+				}
+			}
+		}
+	}
 }
 
 function appendEventToContractAndUpdateSummary(contracts, log) {
@@ -93,7 +117,8 @@ function updateSummary(contracts, log) {
 
 module.exports = {
 	market: (db, startTimestamp) => new Promise((res, rej) => {
-		const provider = new providers.JsonRpcProvider("https://rpc.testnet.near.org");
+		const provider = new providers.JsonRpcProvider(`https://rpc.${networkId}.near.org`);
+		const archivalProvider = new providers.JsonRpcProvider(`https://archival-rpc.${networkId}.near.org`);
 
 		db.connect(onConnect = async (err, client, release) => {
 			if (err) {
@@ -121,7 +146,7 @@ module.exports = {
 					AND included_in_block_timestamp > $2::bigint
 					AND receipt_kind = 'ACTION'
 					ORDER BY included_in_block_timestamp
-				limit 1000
+				limit 5000
 				`, [marketId, currentHighestBlockTimestamp],
 				onResult = async (err, result) => {
 					release();
@@ -153,33 +178,23 @@ module.exports = {
 								
 							//get the list of receipts including logs
 							const { receipts_outcome } = await getTransactionInformation(provider, result.rows[rowNum].originated_from_transaction_hash);
-
-							//loop through each receipt
-							for(let i = 0; i < receipts_outcome.length; i++) {
-								const { logs } = receipts_outcome[i].outcome;
-								
-								//loop through each log in the receipt
-								for(let j = 0; j < logs.length; j++) {
-									//check if the logs start with MARKET_EVENT
-									if(/MARKET_EVENT/.test(logs[j])) {
-										//get the current log object
-										const log = JSON.parse(logs[j].replace('MARKET_EVENT:', ''));
-
-										//if market event was logged
-										if(/update_offer|resolve_offer/.test(log.event)) {
-											eventsPerContract[log.data.contract_id] = eventsPerContract[log.data.contract_id] || [];
-											eventsPerContract[log.data.contract_id].push(log);
-										} else {
-											console.log("Log of non recognizable market event --> ", log);
-										}
-									}
-								}
-							}		
-
+							logEvents(receipts_outcome, eventsPerContract)
 							txDone[hash] = true;	
 
 						} catch(e) {
-							console.log("SKIPPING: ", e, result.rows[rowNum].originated_from_transaction_hash);
+							// if it's some error besides a tx doesn't exist
+							if (!/doesn't exist/.test(e)) {
+								return console.log("SKIPPING: ", e, result.rows[rowNum].originated_from_transaction_hash);
+							}
+
+							// try archival provider
+							try {
+								const { receipts_outcome } = await getTransactionInformation(archivalProvider, result.rows[rowNum].originated_from_transaction_hash);
+								logEvents(receipts_outcome, eventsPerContract)
+								txDone[hash] = true;	
+							} catch(e) {
+								console.log("SKIPPING: ", e, result.rows[rowNum].originated_from_transaction_hash);
+							}
 						}
 						console.log("Receipt ", rowNum+1, " of ", result.rows.length, " done.");
 					}
