@@ -30,18 +30,26 @@ mod nft_callbacks;
 mod offer;
 mod self_callbacks;
 
-//GAS constants to attach to calls
-const GAS_FOR_ROYALTIES: Gas = Gas(115_000_000_000_000);
-const GAS_FOR_NFT_TRANSFER: Gas = Gas(15_000_000_000_000);
+/// TODO verify gas amounts for cases like auto_transfer (unlikely to be able to use 115 Tgas, so what's the max royalties we can handle???)
+pub const GAS_FOR_ROYALTIES: Gas = Gas(115_000_000_000_000);
+pub const GAS_FOR_NFT_TRANSFER: Gas = Gas(15_000_000_000_000);
 
-pub const DEFAULT_OFFER_TOKEN: &str = "near";
+/// TODO where is this used and how can we measure and optimize?
+pub const CALLBACK_GAS: Gas = Gas(30_000_000_000_000);
+
 pub const OPEN_OFFER_AMOUNT: u128 = u128::MAX;
-pub const MIN_OUTBID_AMOUNT: Balance = 99_000_000_000_000_000_000_000; // 5kb (bid > 0.1N)
+
+/// TODO add branching logic to handle tokens
+pub const DEFAULT_OFFER_TOKEN: &str = "near";
+
+/// TODO make this dynamic and settable by market owner
+pub const MIN_OUTBID_AMOUNT: Balance = 99_000_000_000_000_000_000_000;
+
+/// TODO make this dynamic based on env::storage_cost_per_byte???
 pub const DEFAULT_OFFER_STORAGE_AMOUNT: Balance = 50_000_000_000_000_000_000_000; // 5kb (0.05N)
-pub const CALLBACK_GAS: Gas = Gas(30_000_000_000_000); // 30 Tgas
+
 pub const DELIMETER: char = '|';
-//constant used to attach 0 NEAR to a call
-const NO_DEPOSIT: Balance = 0;
+pub const NO_DEPOSIT: Balance = 0;
 
 //Creating custom types to use within the contract. This makes things more readable. 
 pub type TokenId = String;
