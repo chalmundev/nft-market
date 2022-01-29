@@ -38,6 +38,7 @@ export const fetchContracts = () => async ({ update }) => {
 
 export const fetchData = (fn = 'marketSummary') => async ({ update }) => {
 	const res = await fetchJson(`https://${DATA_HOST}/${marketId}/${fn}.json`);
+	console.log(res)
 	update('data', { [fn]: res });
 };
 

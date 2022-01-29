@@ -130,13 +130,13 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	return (
 		<div>
 
-			<div className="button-row">
+			{/* <div className="button-row">
 				<button onClick={async () => {
 					await fetch('http://107.152.39.196:3000/market', { mode: 'no-cors' }).then(r => r.json());
 					alert('fetched. reloading page');
 					window.location.reload();
 				}}>Update Market Data</button>
-			</div>
+			</div> */}
 
 			<img src={token.metadata.media} />
 
@@ -168,22 +168,6 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				<button onClick={handleAcceptOffer}>Accept Offer</button>
 			</div>}
 
-			<h3>Previous Offers</h3>
-			<div className="offers">
-				{
-					displayOffers.map(({ event, amount, maker_id, taker_id, updated_at }, i) => <div className="offer" key={i}>
-						<div>
-							<div>{event === 1 ? 'SOLD TO' : 'From'}: {maker_id}</div>
-							<div>Owner: {taker_id}</div>
-						</div>
-						<div>
-							<div>Amount: {formatNearAmount(amount, 4)}</div>
-							<div>{howLongAgo({ ts: updated_at / (1000 * 1000), detail: 'minute' })} ago</div>
-						</div>
-					</div>)
-				}
-			</div>
-
 			{
 				!isOwner && <>
 
@@ -199,6 +183,22 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 				</>
 			}
+
+			<h3>Previous Offers</h3>
+			<div className="offers">
+				{
+					displayOffers.map(({ event, amount, maker_id, taker_id, updated_at }, i) => <div className="offer" key={i}>
+						<div>
+							<div>{event === 1 ? 'SOLD TO' : 'From'}: {maker_id}</div>
+							<div>Owner: {taker_id}</div>
+						</div>
+						<div>
+							<div>Amount: {formatNearAmount(amount, 4)}</div>
+							<div>{howLongAgo({ ts: updated_at / (1000 * 1000), detail: 'minute' })} ago</div>
+						</div>
+					</div>)
+				}
+			</div>
 
 		</div>
 	);

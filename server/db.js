@@ -67,6 +67,40 @@ function appendEventToContractAndUpdateSummary(contracts, log) {
 }
 
 function updateSummary(contracts, log) {
+
+	/*
+
+	/// TODO
+
+	/// for contracts and tokens
+	/// track all events as "events" and track resolved only as "sales"
+
+	/// for tokens
+	/// add highest/lowest for token with { amount, updated_at }
+
+	/// rename summary.highest_offer_sold to summary.highest/lowest
+
+	/// MARKET SUMMARY
+
+	Front page (market summary)
+
+	5 Editor's Choice (we choose)
+	
+	5 Contracts with New Events (first 5 unique events in a market update) shift and push
+	5 Contracts with Top # Events (check contract summary against this array in market summary)
+	5 Contracts with Highest Sale (check contract summary against this array in market summary)
+	5 Contracts with Lowest Sale (check contract summary against this array in market summary)
+
+	Inside Contract Page (contract summary)
+
+	5 Tokens with most new events (already have offers array so done)
+	5 Tokens with most # events (already have offers array so done)
+	5 Tokens with highest sale
+	5 Tokens with lowest sale
+
+	*/
+
+
 	//remove unnecessary info by creating new item to store object
 	const contractSummaryInfo = { amount: log.data.amount, updated_at: log.data.updated_at };
 	
@@ -254,6 +288,26 @@ module.exports = {
 			if (err) {
 				return rej(err);
 			}
+
+			/// TODO rewrite formattedRows as a map : { [contract_id]: { nft_metadata } }
+
+			/// TODO check existing updated_at timestamp in contracts.json
+			/// read file in and parse as json, store in memory for final step
+			/// get ts
+			/// multiply by 1000000 (postgres has ns timestamps)
+			/// add where clause searching after timestamp
+
+			// where emitted_at_block_timestamp > $1::bigint (postgres has ns timestamps)
+
+			/// FINAL update file and concat new contracts
+
+			/*
+
+			For each contract call nft_tokens with limit: 10 and try to find metadata with valid media and store this token as an "example"
+
+
+			
+			*/
 	
 			client.query(
 				`
@@ -262,6 +316,7 @@ module.exports = {
 						min(emitted_at_block_timestamp) as ts
 					from
 						assets__non_fungible_token_events
+					
 					group by
 						emitted_by_contract_account_id
 					order by
