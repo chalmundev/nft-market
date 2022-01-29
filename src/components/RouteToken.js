@@ -6,7 +6,7 @@ import { providers, networkId, contractId, parseNearAmount, formatNearAmount } f
 import { howLongAgo } from '../utils/date';
 
 function getEvents(receipts_outcome) {
-	const events = []
+	const events = [];
 	//loop through each receipt
 	for(let i = 0; i < receipts_outcome.length; i++) {
 		const { logs } = receipts_outcome[i].outcome;
@@ -23,14 +23,14 @@ function getEvents(receipts_outcome) {
 			}
 		}
 	}
-	return events
+	return events;
 }
 
 export const RouteToken = ({ dispatch, account, data }) => {
 	const params = useParams();
 	const { contract_id, token_id } = params;
 
-	const { tokens } = data
+	const { tokens } = data;
 
 	const [token, setToken] = useState();
 	const [offer, setOffer] = useState();
@@ -65,16 +65,16 @@ export const RouteToken = ({ dispatch, account, data }) => {
 			console.warn(e);
 		}
 
-		const txHashes = window.location.href.split('?transactionHashes=')[1]
+		const txHashes = window.location.href.split('?transactionHashes=')[1];
 		if (txHashes) {
-			const [hash] = txHashes.split()
+			const [hash] = txHashes.split();
 			const { receipts_outcome } = await new providers.JsonRpcProvider(`https://rpc.${networkId}.near.org`).sendJsonRpc("EXPERIMENTAL_tx_status", [
 				hash,
 				"foo",
 			]);
-			const [log] = getEvents(receipts_outcome)
+			const [log] = getEvents(receipts_outcome);
 			const offer = { event: log.event == "update_offer" ? 0 : 1,  maker_id: log.data.maker_id, taker_id: log.data.taker_id, amount: log.data.amount, updated_at: log.data.updated_at};
-			setLastOffer(offer)
+			setLastOffer(offer);
 		}
 
 		setToken(token);
@@ -117,12 +117,12 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	const displayOffers = offers.slice(0, offer ? -1 : undefined).reverse();
 
 	if (lastOffer && !displayOffers.find(({ updated_at }) => lastOffer.updated_at === updated_at)) {
-		displayOffers.unshift(lastOffer)
+		displayOffers.unshift(lastOffer);
 	}
 
-	console.log(displayOffers)
+	console.log(displayOffers);
 
-	const isOwner = token.owner_id === account.account_id
+	const isOwner = token.owner_id === account.account_id;
 
 	return (
 		<div>

@@ -15,7 +15,7 @@ export const RouteOffers = ({ dispatch, update, account, offers, supply, index }
 
 	const onMount = async () => {
 		if (offers[type].length > 0) {
-			return
+			return;
 		}
 		update('loading', true);
 		const [_supply] = await dispatch(view({
