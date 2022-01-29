@@ -117,6 +117,9 @@ function updateSummary(contracts, log) {
 
 module.exports = {
 	market: (db, startTimestamp) => new Promise((res, rej) => {
+
+		console.log(`\nMARKET UPDATE: ${new Date()}\n`)
+
 		const provider = new providers.JsonRpcProvider(`https://rpc.${networkId}.near.org`);
 		const archivalProvider = new providers.JsonRpcProvider(`https://archival-rpc.${networkId}.near.org`);
 
@@ -159,7 +162,7 @@ module.exports = {
 					let futureHighestBlockTimestamp = currentHighestBlockTimestamp;
 					
 					if(result.rows.length == 0) {
-						console.log("No extra receipts found for the current timestamp: ", currentHighestBlockTimestamp);
+						console.log("No receipts found since timestamp: ", currentHighestBlockTimestamp);
 						return res(marketSummary);
 					}
 

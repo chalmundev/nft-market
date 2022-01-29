@@ -41,5 +41,7 @@ const start = async () => {
 		fastify.log.error(err);
 		process.exit(1);
 	}
+	/// hit /market every minute
+	setInterval(market(fastify.pg.testnet), 60000)
 };
 start();

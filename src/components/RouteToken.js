@@ -4,6 +4,7 @@ import { view, action } from '../state/near';
 import { fetchData } from '../state/app';
 import { providers, networkId, contractId, parseNearAmount, formatNearAmount } from '../../utils/near-utils';
 import { howLongAgo } from '../utils/date';
+import { parseToken } from '../utils/token';
 
 function getEvents(receipts_outcome) {
 	const events = [];
@@ -40,13 +41,13 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	const onMount = async () => {
 		let token = tokens.find((token) => token.token_id === token_id);
 		if (!token) {
-			token = await dispatch(view({
+			token = parseToken(await dispatch(view({
 				contract_id,
 				methodName: 'nft_token',
 				args: {
 					token_id,
 				}
-			}));
+			})));
 		}
 
 		if (!data[contract_id]) {
@@ -120,9 +121,8 @@ export const RouteToken = ({ dispatch, account, data }) => {
 		displayOffers.unshift(lastOffer);
 	}
 
-	console.log(displayOffers);
-
-	const isOwner = token.owner_id === account.account_id;
+	const isOwner = token.owner_id === account?.account_id;
+	const ifOfferOwner = offer?.maker_id === account?.account_id;
 
 	return (
 		<div>
@@ -161,7 +161,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				}
 			</div>
 
-			{isOwner && <div className="button-row">
+			{isOwner && !ifOfferOwner && <div className="button-row">
 				<button onClick={handleAcceptOffer}>Accept Offer</button>
 			</div>}
 
