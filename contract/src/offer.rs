@@ -84,11 +84,15 @@ impl Contract {
 					if offer_amount.0 < offer.amount.0 {
 						env::panic_str("bid not equal or greater than to offer amount");
 					}
+					let prev_maker_id = offer.maker_id.clone();
 					// maker offer is acceptable by taker, don't log update_offer
 					offer.amount = offer_amount;
 					offer.maker_id = maker_id;
 					offer.updated_at = env::block_timestamp();
 					self.offer_by_id.insert(&offer_id, &offer);
+					// swap the offers_by_maker_id
+					self.internal_swap_offer_maker(offer_id, &prev_maker_id, &offer.maker_id);
+					// accept offer
 					let taker_id = offer.taker_id.clone();
 					self.internal_accept_offer(offer_id, offer);
 					// DO pay back nft owner storage and decrement storage amount

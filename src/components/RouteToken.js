@@ -74,8 +74,11 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				"foo",
 			]);
 			const [log] = getEvents(receipts_outcome);
-			const offer = { event: log.event == "update_offer" ? 0 : 1,  maker_id: log.data.maker_id, taker_id: log.data.taker_id, amount: log.data.amount, updated_at: log.data.updated_at};
-			setLastOffer(offer);
+			console.log(receipts_outcome)
+			if (log) {
+				const offer = { event: log.event === 'update_offer' ? 0 : 1,  maker_id: log.data.maker_id, taker_id: log.data.taker_id, amount: log.data.amount, updated_at: log.data.updated_at};
+				setLastOffer(offer);
+			}
 		}
 
 		setToken(token);

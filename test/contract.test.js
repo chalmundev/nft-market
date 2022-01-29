@@ -711,3 +711,39 @@ test('Alice approves token with larger offer and replaces Bob (check bob has bee
 
 	t.is(offers[0].maker_id, aliceId);
 });
+
+
+test('Bob makes exact offer', async (t) => {
+	const res = await bob.functionCall({
+		contractId,
+		methodName: 'make_offer',
+		args: {
+			...tokens[1],
+		},
+		gas,
+		attachedDeposit: parseNearAmount('0.25'),
+	});
+
+	t.is(res?.status?.SuccessValue, '');
+
+	[offerIds, offers] = await contractAccount.viewFunction(
+		contractId,
+		'get_offers',
+		{}
+	);
+
+	t.is(offers.length, 0);
+
+	const res2 = await alice.viewFunction(
+		nftContractId,
+		'nft_token',
+		{
+			token_id: tokens[1].token_id,
+		},
+	);
+
+	console.log(res2)
+
+	t.is(res2.owner_id, bobId);
+
+});
