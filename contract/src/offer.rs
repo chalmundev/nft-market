@@ -108,6 +108,9 @@ impl Contract {
 		offer.updated_at = env::block_timestamp();
 		self.offer_by_id.insert(&offer_id, &offer);
 
+		// this is an outbid scenario so we need to swap the offer makers
+		self.internal_swap_offer_maker(offer_id, &prev_maker_id, &offer.maker_id);
+
 		// first non-owner bid, DO NOT pay back nft owner because we DO NOT have the funds
 		// DO pay back nft owner storage and decrement storage amount
 		if prev_offer_amount.0 == OPEN_OFFER_AMOUNT {
@@ -115,9 +118,7 @@ impl Contract {
 			return self.internal_withdraw_one_storage(&prev_maker_id);
 		}
 
-		self.internal_swap_offer_maker(offer_id, &prev_maker_id, &offer.maker_id);
-
-		// pay back prev offer maker + storage
+		// pay back prev offer maker + storage, if promise fails we'll revert state in outbid_callback
 		Promise::new(prev_maker_id.clone())
 			.transfer(prev_offer_amount.0 + DEFAULT_OFFER_STORAGE_AMOUNT)
 			.then(ext_self::outbid_callback(

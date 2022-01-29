@@ -6,7 +6,7 @@ const bounds = [
 	{ div: 1000, sing: 'second', plur: 'seconds' },
 ];
 
-export const whenFormatted = (ts) => new Date(ts).toString().substr(0, 24)
+export const whenFormatted = (ts) => new Date(ts).toString().substr(0, 24);
 
 export const howLongAgo = ({
 	ts,
@@ -22,11 +22,11 @@ export const howLongAgo = ({
 		const { div, sing, plur } = bounds[i];
 		const v = Math.floor(t / div);
 		if (t > div) {
-			let res = v
+			let res = v;
 			if (!onlyNumbers) {
-				let label = (t > div * 2 ? plur : sing)
-				if (abbv) label = label.substr(0, 1)
-				res += label
+				let label = (t > div * 2 ? plur : sing);
+				if (abbv) label = label.substr(0, 1);
+				res += label;
 			}
 			matches.push(res);
 			if (!detail) break;

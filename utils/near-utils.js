@@ -4,6 +4,7 @@ const getConfig = require("./config");
 const { nodeUrl, walletUrl, networkId, contractId, isBrowser } = getConfig();
 
 const {
+	providers,
 	keyStores: { InMemoryKeyStore, BrowserLocalStorageKeyStore },
 	Near,
 	Account,
@@ -54,9 +55,11 @@ const contractAccount = new Account(connection, contractId);
 
 module.exports = {
 	near,
+	providers,
 	credentials,
 	keyStore,
 	connection,
+	networkId,
 	contractId,
 	contractAccount,
 	parseNearAmount,

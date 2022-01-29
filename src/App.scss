@@ -57,10 +57,23 @@ body {
 	}
 }
 
+.offers {
+	margin-bottom: 16px;
+}
+
+.offer:nth-child(odd), .current-offer > .offer {
+	background: #eef;
+}
+
+.offer.sale {
+	background: #fee;
+}
+
 .offer {
+	padding: 8px;
 	> div {
 		display: flex;
-		justify-content: space-evenly;
+		justify-content: space-between;
 		align-items: center;
 	}
 }

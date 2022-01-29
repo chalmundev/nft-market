@@ -1,18 +1,17 @@
 {
 	"name": "nft-market",
 	"version": "1.0.0",
-	"main": "index.js",
 	"author": "chalmundev, flourishingsentries",
 	"license": "MIT",
 	"dependencies": {
 		"near-api-js": "^0.44.2",
-		"parcel": "^2.0.1",
+		"parcel": "^2.2.1",
 		"react": "^17.0.2",
 		"react-dom": "^17.0.2",
 		"react-router-dom": "^6.2.1"
 	},
 	"devDependencies": {
-		"@parcel/transformer-sass": "^2.1.1",
+		"@parcel/transformer-sass": "^2.2.1",
 		"ava": "^3.15.0",
 		"eslint": "^8.6.0",
 		"rimraf": "^3.0.2"
@@ -29,7 +28,8 @@
 		"build": "parcel build src/index.html --no-source-maps",
 		"clean": "rimraf ./dist",
 		"start": "parcel src/index.html --open",
-
+		"test-v1-mini": "node ./utils/patch-v1.js && ava test/mini.test.js -vs --timeout=5m",
+		"test-v1-reset": "node ./utils/patch-v1.js && ava test/reset.test.js -vs --timeout=5m",
 		"test-v1": "node ./utils/patch-v1.js && DEPLOY_NFT_CONTRACT=false yarn test",
 		"test-v1-deploy": "yarn build-contract && near deploy --accountId v1.nft-market.testnet --wasmFile out/main.wasm && yarn test-v1",
 		"test-v1-nft": "node ./utils/patch-v1.js && DEPLOY_NFT_CONTRACT=true yarn test",

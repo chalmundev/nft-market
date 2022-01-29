@@ -28,27 +28,27 @@ const App = () => {
 			dispatch(initNear()),
 			dispatch(fetchData()),
 			dispatch(fetchContracts()),
-		])
-		update('loading', false)
+		]);
+		update('loading', false);
 	};
 	useEffect(onMount, []);
 
-	if (state.loading) return <p>Loading</p>
+	if (state.loading) return <p>Loading</p>;
 
 	/// let's go!
 
 	const {
 		wallet, account, data,
 		data: {
-			contracts, marketSummary,
-			contractId, index, tokens, supply,
-			offers,
+			contracts, 
+			index, tokens,
+			offers, supply,
 		}
 	} = state;
 
-	const showBackHome = /\/(maker|taker)/gi.test(window.location.pathname)
-	const showBackToken = /\/(token)/gi.test(window.location.pathname)
-	const showBackContact = /\/(contract)/gi.test(window.location.pathname)
+	const showBackHome = /\/(maker|taker)/gi.test(window.location.pathname);
+	const showBackToken = /\/(token)/gi.test(window.location.pathname);
+	const showBackContact = /\/(contract)/gi.test(window.location.pathname);
 
 	return (
 		<main className="container-fluid">
@@ -83,33 +83,33 @@ const App = () => {
 
 			<div className='crumbs'>
 				{showBackHome || showBackToken || showBackContact ? <div><Link to="/" onClick={(e) => {
-					e.preventDefault()
+					e.preventDefault();
 					if (showBackToken) {
-						return navigate(window.location.pathname.split('/').slice(0, -1).join('/').replace('/token', '/contract'))
+						return navigate(window.location.pathname.split('/').slice(0, -1).join('/').replace('/token', '/contract'));
 					}
 					if (showBackContact) {
-						update('data.index', 0)
+						update('data.index', 0);
 					}
-					navigate('/')
+					navigate('/');
 				}}>Back</Link></div> : <div></div>}
 				{account && <div>{account.accountId}</div>}
 			</div>
 
 			<Routes>
 				<Route path="/offers/maker" element={
-					<RouteOffers {...{ dispatch, update, account, type: 'maker', offers, index }} />
+					<RouteOffers {...{ dispatch, update, account, offers, index, supply }} />
 				} />
 
 				<Route path="/offers/taker" element={
-					<RouteOffers {...{ dispatch, update, account, type: 'taker', offers, index }} />
+					<RouteOffers {...{ dispatch, update, account, offers, index, supply }} />
 				} />
 
 				<Route path="/contract/:contract_id" element={
-					<RouteContract {...{ dispatch, update, data }} />
+					<RouteContract {...{ dispatch, update, account, data }} />
 				} />
 
 				<Route path="/token/:contract_id/:token_id" element={
-					<RouteToken {...{ dispatch, update, tokens, data }} />
+					<RouteToken {...{ dispatch, update, account, data }} />
 				} />
 
 				<Route path="/" element={

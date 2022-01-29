@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { fetchData } from '../state/app';
 import { view, fetchTokens } from '../state/near';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 30;
 
 export const RouteContract = ({ dispatch, update, data }) => {
 
@@ -12,48 +12,52 @@ export const RouteContract = ({ dispatch, update, data }) => {
 	const params = useParams();
 	const { contract_id } = params;
 
-	let { contractId, index, supply, tokens } = data
+	let { contractId, index, tokens, supply } = data;
 	const summary = data?.[contract_id]?.summary;
 
 	const onMount = async () => {
 		if (contractId === contract_id) {
-			return
+			return;
 		}
-		update('loading', true)
+		update('loading', true);
 		dispatch(fetchData(contract_id));
 		const supply = await dispatch(view({
 			contract_id,
 			methodName: 'nft_total_supply',
-		}))
-		let _index = index
-		while ((_index + 1) * PAGE_SIZE < supply) {
-			_index++;
-		}
-		await handlePage(_index)
-		update('data.contractId', contract_id)
+		}));
+		await handlePage(index, supply);
+		update('data.contractId', contract_id);
 		return () => {
-			update('data.index', 0)
-		}
+			update('data.index', 0);
+		};
 	};
 	useEffect(onMount, []);
 
-	const handlePage = async (_index) => {
-		console.log(index, _index)
+	const handlePage = async (_index = 0, _supply = supply) => {
 		if (index !== _index) {
-			update('data.index', _index)
+			update('data.index', _index);
 		}
+
+		let from_index = (_supply - PAGE_SIZE * (_index+1));
+		let limit = PAGE_SIZE;
+		if (from_index < 0) {
+			from_index = 0;
+			limit = _supply % PAGE_SIZE;
+		}
+		from_index = from_index.toString();
+		
 		await dispatch(fetchTokens(contract_id, {
-			from_index: (parseInt(_index, 10) * PAGE_SIZE).toString(),
-			limit: PAGE_SIZE,
-		}))
-		update('loading', false)
+			from_index,
+			limit,
+		}));
+		update('loading', false);
 	};
 
-	tokens = tokens.slice().reverse()
+	tokens = tokens.slice().reverse();
 
-	const rows = [], numCols = Math.ceil(window.innerWidth / 500)
+	const rows = [], numCols = Math.ceil(window.innerWidth / 500);
 	for (let i = 0; i < tokens.length; i += numCols) {
-		rows.push(tokens.slice(i, i + numCols))
+		rows.push(tokens.slice(i, i + numCols));
 	}
 
 	return (
@@ -69,11 +73,11 @@ export const RouteContract = ({ dispatch, update, data }) => {
 				<p>Offers (all time): {summary.offers_len}</p>
 			</>}
 
-			<p>Page {Math.ceil(supply / PAGE_SIZE) - index}</p>
+			<p>Page {index+1} / {Math.ceil(supply / PAGE_SIZE)}</p>
 
 			<div className='button-row'>
-				{(index + 1) * PAGE_SIZE < supply ? <button onClick={() => handlePage(index + 1)}>Prev</button> : <button style={{ visibility: 'hidden' }}></button>}
-				{index !== 0 && <button onClick={() => handlePage(index - 1)}>Next</button>}
+				{index !== 0 ? <button onClick={() => handlePage(index - 1)}>Prev</button> : <button style={{ visibility: 'hidden' }}></button>}
+				{(index + 1) * PAGE_SIZE < supply && <button onClick={() => handlePage(index + 1)}>Next</button>}
 			</div>
 
 			{

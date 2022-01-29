@@ -481,14 +481,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "near-cbp"
-version = "0.1.0"
-dependencies = [
- "near-contract-standards",
- "near-sdk",
-]
-
-[[package]]
 name = "near-contract-standards"
 version = "4.0.0-pre.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -522,6 +514,14 @@ dependencies = [
  "serde_json",
  "subtle",
  "thiserror",
+]
+
+[[package]]
+name = "near-nft-market"
+version = "0.1.0"
+dependencies = [
+ "near-contract-standards",
+ "near-sdk",
 ]
 
 [[package]]

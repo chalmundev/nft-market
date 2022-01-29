@@ -27,7 +27,7 @@ impl Contract {
         self.assert_owner();
 		let mut set = self.offers_by_taker_id.get(&account_id).unwrap_or_else(|| env::panic_str("no set"));
 		set.clear();
-		self.offers_by_maker_id.remove(&account_id);
+		self.offers_by_taker_id.remove(&account_id);
     }
 
 	//change the royalty percentage that the market receives.

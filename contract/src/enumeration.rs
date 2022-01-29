@@ -38,4 +38,22 @@ impl Contract {
         let offer_id = self.offer_by_contract_token_id.get(&contract_and_token_id).expect("No offer for the token and contract ID");
         self.offer_by_id.get(&offer_id).unwrap()
     }
+
+	// debugging
+    // pub fn get_offer_ids_by_maker_id(&self, account_id: AccountId, from_index: Option<U128>, limit: Option<u64>) -> Vec<u64> {
+	// 	let set_option = self.offers_by_maker_id.get(&account_id);
+	// 	if set_option.is_none() {
+	// 		return vec![];
+	// 	}
+	// 	paginate(set_option.unwrap().as_vector(), from_index, limit)
+    // }
+	
+	// // get offers by maker_id
+    // pub fn get_offer_ids_by_taker_id(&self, account_id: AccountId, from_index: Option<U128>, limit: Option<u64>) -> Vec<u64> {
+	// 	let set_option = self.offers_by_taker_id.get(&account_id);
+	// 	if set_option.is_none() {
+	// 		return vec![];
+	// 	}
+	// 	paginate(set_option.unwrap().as_vector(), from_index, limit)
+    // }
 }

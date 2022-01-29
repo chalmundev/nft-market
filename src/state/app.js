@@ -2,6 +2,8 @@ import { State } from '../utils/state';
 
 import { initNear, marketId } from './near';
 
+const DATA_HOST = 'data.secondx.app';
+
 // example
 const initialState = {
 	loading: true,
@@ -12,8 +14,9 @@ const initialState = {
 		token: {},
 		index: 0,
 		offers: {
-			maker: [0, []],
-			taker: [0, []],
+			type: 'maker',
+			maker: [],
+			taker: [],
 		},
 		marketSummary: {},
 		contracts: [],
@@ -28,24 +31,24 @@ export const onAppMount = (message) => async ({ update, getState, dispatch }) =>
 };
 
 export const fetchContracts = () => async ({ update }) => {
-	const res = await fetchJson(`https://raw.githubusercontent.com/chalmundev/nft-market-data/main/contracts.json`)
-	const contracts = res.contracts || res
-	update('data', { contracts })
-}
+	const res = await fetchJson(`https://${DATA_HOST}/contracts.json`);
+	const contracts = res.contracts || res;
+	update('data', { contracts });
+};
 
 export const fetchData = (fn = 'marketSummary') => async ({ update }) => {
-	const res = await fetchJson(`https://raw.githubusercontent.com/chalmundev/nft-market-data/main/${marketId}/${fn}.json`)
-	update('data', { [fn]: res })
-}
+	const res = await fetchJson(`https://${DATA_HOST}/${marketId}/${fn}.json`);
+	update('data', { [fn]: res });
+};
 
 /// helper
 export const fetchJson = async (url) => {
-	let res
+	let res;
 	try {
-		res = await fetch(url).then((r) => r.json())
+		res = await fetch(url).then((r) => r.json());
 	} catch(e) {
-		console.warn('ERROR: fetching data', fn, e)
-		res = {}
+		console.warn('ERROR: fetching data', fn, e);
+		res = {};
 	}
-	return res
-}
+	return res;
+};

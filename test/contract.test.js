@@ -73,18 +73,6 @@ test('users initialized', async (t) => {
 	alice = await getAccount(aliceId);
 	bob = await getAccount(bobId);
 
-	await alice.functionCall({
-		contractId,
-		methodName: 'withdraw_offer_storage',
-		gas,
-	});
-
-	await bob.functionCall({
-		contractId,
-		methodName: 'withdraw_offer_storage',
-		gas,
-	});
-
 	//royalty accounts for NFT payouts
 	royaltyIdOne = '10-percent.' + contractId;
 	royaltyIdTwo = '5-percent.' + contractId;
@@ -457,7 +445,7 @@ test('withdrawing market balance 2', async (t) => {
 });
 
 
-/// alice owner
+/// alice owner offer Id 4
 
 
 test('Alice opens token for bidding by calling nft_approve with U128_MAX', async (t) => {
