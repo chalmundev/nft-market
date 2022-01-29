@@ -129,7 +129,7 @@ module.exports = {
 			}
 
 			await mkdir(`../../nft-market-data/${marketId}`).catch((e) => {
-				console.log("Unable to create directory for contract ", marketId);
+				// console.log("Unable to create directory for contract ", marketId);
 			});
 
 			let currentHighestBlockTimestamp = 0;
