@@ -1,0 +1,230 @@
+
+Site architecture:
+
+Main Page - PIM
+Contract Page - PIM
+Token Page - PIM
+
+My offers (that I made on NFTs I do not own)
+Received Offers (on NFTs I own)
+
+NOTE: for the amounts like 50, this is the max if we don't have the numbers, it will obviously be lower or we just won't show the section / metric at all
+
+
+
+Main Page:
+
+- 5 Editor's Choice
+- 50 Newest sales
+- 50 Newest offers
+- 50 Contracts trending up (highest positive avg change)
+- 50 Contracts trending down (highest negative avg change)
+- 50 Most highest sale contracts (highest amount avg sale amounts)
+- 50 Most lowest sale contracts (lowest amount avg sale amounts)
+- 50 Most volume contracts (most # sales)
+- 50 Most active contracts of all time (most # of offers and sales aka "events")
+- 50 Highest token sales of all time
+- 50 Lowest token sales of all time
+
+For each token (or a random token chosen for a contract):
+
+- Owner
+- Token ID
+- Media (image)
+- Title (optional)
+- Description (optional)
+
+
+
+Contract Page:
+
+- Average price
+- Average change (did the last price make avg go up or down, by how much?)
+
+- 50 Tokens with most volume sales
+- 50 Tokens with most # events
+- 50 Tokens with highest sale
+- 50 Tokens with lowest sale
+
+For each token:
+
+- Owner
+- Token ID
+- Media (image)
+- Title (optional)
+- Description (optional)
+
+
+
+Token Page:
+
+- Owner
+- Token ID
+- Media (image)
+- Title (optional)
+- Description (optional)
+
+- Highest price
+- Lowest price
+- Average price
+- Average change (did the last price make avg go up or down, by how much?)
+- Volume (sales)
+- Events (offers and sales)
+- Current offer (if there is one)
+- All offers (history of offers and sales)
+
+
+
+Below are some internal notes of the indexer we're building for context:
+
+- MARKET summary that contains the following information:
+
+{
+	blockstamp,
+	updated_at,
+	new_sales: [{
+		event, // 0, 1 where 0 is offer and 1 is sale
+		contract_id,
+		token_id,
+		updated_at, // when it happened
+		amount,
+		maker_id,
+		taker_id,
+	}],
+	new_offers: [{
+		event, // 0, 1 where 0 is offer and 1 is sale
+		contract_id,
+		token_id,
+		updated_at, // when it happened
+		amount,
+		maker_id,
+		taker_id,
+	}],
+	// all time
+	high_change: [{
+		change, // avg percentage change 
+		contract_id,
+		updated_at, // when it last had an event
+	}],
+	// all time
+	low_change: [{
+		change, // avg percentage change 
+		contract_id,
+		updated_at, // when it last had an event
+	}],
+	// all time
+	high_sales: [{
+		avg, // avg sale price for this contract
+		contract_id,
+		updated_at, // when it last had an event
+	}],
+	// all time
+	low_sales: [{
+		avg, // avg sale price for this contract
+		contract_id,
+		updated_at, // when it last had an event
+	}],
+	// all time
+	top_volume: [{
+		total, // number of sales
+		contract_id,
+		updated_at, // when it last had an event
+	}],
+	// all time
+	top_events: [{
+		total, // number of all market events for contract
+		contract_id,
+		updated_at, // when it last had an event
+	}],
+	// all time
+	high_sales: [{
+		contract_id,
+		token_id,
+		updated_at, // when it happened
+		amount,
+		maker_id,
+		taker_id,
+	}],
+	// all time
+	low_sales: [{
+		contract_id,
+		token_id,
+		updated_at, // when it happened
+		amount,
+		maker_id,
+		taker_id,
+	}],
+}
+
+- CONTRACT summary that contains the following information:
+
+{
+	blockstamp,
+	updated_at,
+
+	avg: {
+		amount,
+		updated_at,
+	},
+	change: {
+		amount,
+		updated_at,
+	},
+
+	volume,
+	events,
+	offers,
+
+	// all time
+	top_volume: [{
+		total, // number of sales
+		token_id,
+		updated_at, // when it last had an event
+	}],
+	// all time
+	top_events: [{
+		total, // number of all market events for contract
+		token_id,
+		updated_at, // when it last had an event
+	}],
+	// all time
+	high_sales: [{
+		token_id,
+		updated_at, // when it happened
+		amount,
+		maker_id,
+		taker_id,
+	}],
+	// all time
+	low_sales: [{
+		token_id,
+		updated_at, // when it happened
+		amount,
+		maker_id,
+		taker_id,
+	}],
+}
+
+- TOKEN summary that contains the following information:
+
+{
+	high: {
+		amount,
+		updated_at,
+	},
+	low: {
+		amount,
+		updated_at,
+	},
+	avg: {
+		amount,
+		updated_at,
+	},
+	change: {
+		amount,
+		updated_at,
+	},
+	volume,
+	events,
+	offers,
+}
