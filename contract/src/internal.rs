@@ -162,7 +162,8 @@ impl Contract {
 			return self.internal_withdraw_one_storage(&offer.maker_id);
 		}
 		
-		Promise::new(offer.maker_id.clone()).transfer(DEFAULT_OFFER_STORAGE_AMOUNT);
+		// refund the offer maker the offer amount + the amount they added for storage
+		Promise::new(offer.maker_id.clone()).transfer(offer.amount.0 + DEFAULT_OFFER_STORAGE_AMOUNT);
     }
 
 	pub(crate) fn internal_accept_offer(

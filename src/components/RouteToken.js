@@ -35,13 +35,14 @@ export const RouteToken = ({ dispatch, account, data }) => {
 		}
 
 		try {
-			setOffer(await dispatch(view({
+			const [, offer] = await dispatch(view({
 				methodName: 'get_offer',
 				args: {
 					contract_id,
 					token_id,
 				}
-			})));
+			}))
+			setOffer(offer);
 		} catch (e) {
 			console.warn(e);
 		}
@@ -70,7 +71,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				contract_id,
 				token_id,
 			},
-			attachedDeposit: parseNearAmount((parseFloat(amount, 10) + 0.05).toString())
+			attachedDeposit: 1
 		}));
 	};
 
@@ -104,6 +105,8 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 	const isOwner = token.owner_id === account?.account_id;
 	const ifOfferOwner = offer?.maker_id === account?.account_id;
+
+	console.log(offer)
 
 	return (
 		<div>
