@@ -45,8 +45,8 @@ pub const DEFAULT_OFFER_TOKEN: &str = "near";
 /// TODO make this dynamic and settable by market owner
 pub const MIN_OUTBID_AMOUNT: Balance = 99_000_000_000_000_000_000_000;
 
-/// TODO make this dynamic based on env::storage_cost_per_byte???
-pub const DEFAULT_OFFER_STORAGE_AMOUNT: Balance = 50_000_000_000_000_000_000_000; // 5kb (0.05N)
+/// TODO make this settable by owner
+pub const DEFAULT_OFFER_STORAGE_AMOUNT: Balance = 20_000_000_000_000_000_000_000; // 2kb (0.02N)
 
 pub const DELIMETER: char = '|';
 pub const NO_DEPOSIT: Balance = 0;

@@ -21,7 +21,7 @@ const {
 // This ensures all tests will have unique token IDs minted to the same NFT contract.
 let runningTokenId = new Date().getTime();
 
-const nftContractId = process.env.DEPLOY_NFT_CONTRACT == "true" ? runningTokenId + "." + contractId : "tests.nft-market.testnet";
+const nftContractId = process.env.DEPLOY_NFT_CONTRACT == "true" ? runningTokenId + "." + contractId : (process.env.NFT_CONTRACT || "tests.nft-market.testnet");
 
 const tokens = [
 	{
@@ -83,61 +83,53 @@ test('users initialized', async (t) => {
 });
 
 test('owner remove offers', async (t) => {
-	try {
-		await Promise.all([
-			contractAccount.functionCall({
-				contractId,
-				methodName: 'remove_offers',
-				gas
-			}),
-			contractAccount.functionCall({
-				contractId,
-				methodName: 'remove_offers_by_maker_id',
-				args: { account_id: aliceId },
-				gas
-			}),
-			contractAccount.functionCall({
-				contractId,
-				methodName: 'remove_offers_by_taker_id',
-				args: { account_id: aliceId },
-				gas
-			}),
-			contractAccount.functionCall({
-				contractId,
-				methodName: 'remove_offers_by_maker_id',
-				args: { account_id: bobId },
-				gas
-			}),
-			contractAccount.functionCall({
-				contractId,
-				methodName: 'remove_offers_by_taker_id',
-				args: { account_id: bobId },
-				gas
-			})
-		]);
-	} catch(e) {
-		console.warn(e);
-	}
+	await Promise.all([
+		contractAccount.functionCall({
+			contractId,
+			methodName: 'remove_offers',
+			gas
+		}).catch((e) => { console.warn(e) }),
+		contractAccount.functionCall({
+			contractId,
+			methodName: 'remove_offers_by_maker_id',
+			args: { account_id: aliceId },
+			gas
+		}).catch((e) => { console.warn(e) }),
+		contractAccount.functionCall({
+			contractId,
+			methodName: 'remove_offers_by_taker_id',
+			args: { account_id: aliceId },
+			gas
+		}).catch((e) => { console.warn(e) }),
+		contractAccount.functionCall({
+			contractId,
+			methodName: 'remove_offers_by_maker_id',
+			args: { account_id: bobId },
+			gas
+		}).catch((e) => { console.warn(e) }),
+		contractAccount.functionCall({
+			contractId,
+			methodName: 'remove_offers_by_taker_id',
+			args: { account_id: bobId },
+			gas
+		}).catch((e) => { console.warn(e) })
+	]);
 	t.true(true);
 });
 
 test('alice and bob withdraw storage', async (t) => {
-	try {
-		await Promise.all([
-			alice.functionCall({
-				contractId,
-				methodName: 'withdraw_offer_storage',
-				gas
-			}),
-			bob.functionCall({
-				contractId,
-				methodName: 'withdraw_offer_storage',
-				gas
-			}),
-		]);
-	} catch(e) {
-		console.warn(e);
-	}
+	await Promise.all([
+		alice.functionCall({
+			contractId,
+			methodName: 'withdraw_offer_storage',
+			gas
+		}).catch((e) => { console.warn(e) }),
+		bob.functionCall({
+			contractId,
+			methodName: 'withdraw_offer_storage',
+			gas
+		}).catch((e) => { console.warn(e) }),
+	]);
 	t.true(true);
 });
 
@@ -187,6 +179,8 @@ test('tokens minted', async (t) => {
 
 test('alice make_offer on token 1', async (t) => {
 
+	await recordStart(contractId)
+
 	const res = await alice.functionCall({
 		contractId,
 		methodName: 'make_offer',
@@ -196,6 +190,8 @@ test('alice make_offer on token 1', async (t) => {
 		gas,
 		attachedDeposit: parseNearAmount('0.2'),
 	});
+
+	await recordStop(contractId)
 
 	t.is(res?.status?.SuccessValue, '');
 });
