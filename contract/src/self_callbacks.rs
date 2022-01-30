@@ -62,7 +62,6 @@ impl Contract {
 			amount,
 			updated_at,
 			approval_id: None,
-			has_failed_promise: false,
 		});
 
 		env::log_str(&EventLog {
@@ -113,7 +112,6 @@ impl Contract {
 		offer.maker_id = prev_maker_id;
 		offer.amount = prev_offer_amount;
 		offer.updated_at = prev_updated_at;
-		offer.has_failed_promise = true;
 		self.offer_by_id.insert(&offer_id, &offer);
 
 	}

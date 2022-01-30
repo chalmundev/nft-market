@@ -53,7 +53,6 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 					amount,
 					updated_at: env::block_timestamp(),
 					approval_id: Some(approval_id),
-					has_failed_promise: false,
 				});
 				return;
 			}

@@ -34,11 +34,7 @@ const tokens = [
 	},
 ];
 
-const royaltyAccounts = [
-
-];
-
-let contractAccount, offerIds, offers, aliceId, bobId, tokenOwnerId, tokenOwner, alice, bob, royaltyIdOne, royaltyIdTwo;
+let contractAccount, offerIds, offers, storageAmount, aliceId, bobId, tokenOwnerId, tokenOwner, alice, bob, royaltyIdOne, royaltyIdTwo;
 
 test('contract is deployed', async (t) => {
 	//env variable
@@ -53,6 +49,13 @@ test('contract is deployed', async (t) => {
 	}
 
 	contractAccount = await init();
+
+	storageAmount = await contractAccount.viewFunction(
+		contractId,
+		'offer_storage_amount',
+	)
+
+	console.log('offer_storage_amount', storageAmount)
 
 	t.is(contractId, contractAccount.accountId);
 });
@@ -114,6 +117,23 @@ test('owner remove offers', async (t) => {
 			gas
 		}).catch((e) => { console.warn(e) })
 	]);
+
+	const aliceOffers = await contractAccount.viewFunction(
+		contractId,
+		'get_offers_by_maker_id',
+		{ account_id: aliceId }
+	);
+	console.log('aliceOffers', aliceOffers);
+	t.is(aliceOffers[0], 0);
+
+	const bobOffers = await contractAccount.viewFunction(
+		contractId,
+		'get_offers_by_maker_id',
+		{ account_id: bobId }
+	);
+	console.log('bobOffers', bobOffers);
+	t.is(bobOffers[0], 0);
+
 	t.true(true);
 });
 
@@ -188,7 +208,7 @@ test('alice make_offer on token 1', async (t) => {
 			...tokens[0],
 		},
 		gas,
-		attachedDeposit: parseNearAmount('0.2'),
+		attachedDeposit: parseNearAmount('0.22'),
 	});
 
 	await recordStop(contractId)
@@ -205,7 +225,7 @@ test('bob make_offer on token 2', async (t) => {
 			...tokens[1],
 		},
 		gas,
-		attachedDeposit: parseNearAmount('0.2'),
+		attachedDeposit: parseNearAmount('0.22'),
 	});
 
 	t.is(res?.status?.SuccessValue, '');
@@ -222,8 +242,8 @@ test('bob outbid alice on token 1 (CHECK alice + 0.2 N)', async (t) => {
 			...tokens[0],
 		},
 		gas,
-		// outbid alice original 0.2 - 0.05 = 0.15 N bid by 0.26 N (0.05 for storage)
-		attachedDeposit: parseNearAmount('0.31'),
+		// outbid alice original 0.22 - 0.02 = 0.2 N bid which needs to be outbid by 0.09999 N
+		attachedDeposit: parseNearAmount('0.32'),
 	});
 
 	await recordStop(aliceId);
@@ -245,13 +265,11 @@ test('get offers', async (t) => {
 
 test('bob remove_offer from token 2', async (t) => {
 
-	const offer_id = offerIds[offers.findIndex(({ maker_id }) => maker_id === bobId)];
-
 	const res = await bob.functionCall({
 		contractId,
 		methodName: 'remove_offer',
 		args: {
-			offer_id
+			...tokens[0],
 		},
 		gas,
 		attachedDeposit: 1,
@@ -336,7 +354,7 @@ test('Alice offers on the token Bob just bought', async (t) => {
 			...tokens[1],
 		},
 		gas,
-		attachedDeposit: parseNearAmount('0.2'),
+		attachedDeposit: parseNearAmount('0.22'),
 	});
 
 	t.is(res?.status?.SuccessValue, '');
@@ -446,21 +464,12 @@ test('withdrawing market balance 2', async (t) => {
 
 test('Alice opens token for bidding by calling nft_approve with U128_MAX', async (t) => {
 
-	const aliceOffers = await contractAccount.viewFunction(
-		contractId,
-		'get_offers_by_maker_id',
-		{ account_id: aliceId }
-	);
-	console.log('aliceOffers', aliceOffers);
-	t.is(aliceOffers[0], 0);
-
-
 	const res = await alice.functionCall({
 		contractId,
 		methodName: 'pay_offer_storage',
 		args: {},
 		gas,
-		attachedDeposit: parseNearAmount('0.05'),
+		attachedDeposit: storageAmount,
 	});
 
 	t.is(res?.status?.SuccessValue, '');
@@ -500,7 +509,7 @@ test('Bob can make offer on token open for bidding', async (t) => {
 			...tokens[1],
 		},
 		gas,
-		attachedDeposit: parseNearAmount('0.2'),
+		attachedDeposit: parseNearAmount('0.22'),
 	});
 
 	t.is(res?.status?.SuccessValue, '');
@@ -541,21 +550,13 @@ test('Alice accepts Bob offer', async (t) => {
 
 
 test('Bob opens token for bidding by calling nft_approve with fixed price', async (t) => {
-
-	const bobOffers = await contractAccount.viewFunction(
-		contractId,
-		'get_offers_by_maker_id',
-		{ account_id: bobId }
-	);
-	console.log('bobOffers', bobOffers);
-	t.is(bobOffers[0], 0);
 	
 	const res = await bob.functionCall({
 		contractId,
 		methodName: 'pay_offer_storage',
 		args: {},
 		gas,
-		attachedDeposit: parseNearAmount('0.05'),
+		attachedDeposit: storageAmount,
 	});
 
 	const msg = JSON.stringify({
@@ -601,7 +602,7 @@ test('Alice makes lower offer and panics', async (t) => {
 				...tokens[1],
 			},
 			gas,
-			attachedDeposit: parseNearAmount('0.15'),
+			attachedDeposit: parseNearAmount('0.12'),
 		});
 		t.true(false);
 	} catch (e) {
@@ -617,7 +618,7 @@ test('Alice can make offer of exact amount and purchase AND bob has no more stor
 			...tokens[1],
 		},
 		gas,
-		attachedDeposit: parseNearAmount('0.25'), // parseNearAmount('0.2') + 0.05 N for storage
+		attachedDeposit: parseNearAmount('0.22'), // parseNearAmount('0.2') + 0.02 N for storage
 	});
 
 	t.is(res?.status?.SuccessValue, '');
@@ -653,7 +654,7 @@ test('Bob makes an offer', async (t) => {
 			...tokens[1],
 		},
 		gas,
-		attachedDeposit: parseNearAmount('0.2'),
+		attachedDeposit: parseNearAmount('0.12'),
 	});
 
 	t.is(res?.status?.SuccessValue, '');
@@ -674,7 +675,7 @@ test('Alice approves token with larger offer and replaces Bob (check bob has bee
 		methodName: 'pay_offer_storage',
 		args: {},
 		gas,
-		attachedDeposit: parseNearAmount('0.05'),
+		attachedDeposit: storageAmount,
 	});
 
 	const msg = JSON.stringify({
@@ -717,7 +718,7 @@ test('Bob makes exact offer', async (t) => {
 			...tokens[1],
 		},
 		gas,
-		attachedDeposit: parseNearAmount('0.25'),
+		attachedDeposit: parseNearAmount('0.22'),
 	});
 
 	t.is(res?.status?.SuccessValue, '');

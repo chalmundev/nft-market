@@ -11,7 +11,6 @@ pub struct Offer {
     pub amount: U128,
     pub updated_at: u64,
 	pub approval_id: Option<u64>,
-	pub has_failed_promise: bool,
 }
 
 #[near_bindgen]

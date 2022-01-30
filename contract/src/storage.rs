@@ -59,4 +59,8 @@ impl Contract {
 		let offer_storage_count = self.offer_storage_by_owner_id.get(owner_id).unwrap_or_else(|| 0);
 		offer_storage_count.checked_sub(offer_count).unwrap_or_else(|| 0)
     }
+
+	pub fn offer_storage_amount(&self) -> U128 {
+		U128(DEFAULT_OFFER_STORAGE_AMOUNT)
+	}
 }
