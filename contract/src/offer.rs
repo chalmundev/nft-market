@@ -137,20 +137,20 @@ impl Contract {
 			));
     }
 
+	/// TODO - insert some owner settable time period where the offer cannot be removed so we don't have "bid griefing"
+	
 	#[payable]
     pub fn remove_offer(
 		&mut self,
-		offer_id: u64
+		contract_id: AccountId,
+		token_id: String,
 	) {
         //assert one yocto for security reasons
 		assert_one_yocto();
-
         //get the supposed maker and double check that they are the actual offer's maker
         let maker_id = env::predecessor_account_id();
-		let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("no offer"));
-
+		let (offer_id, offer) = self.get_offer(&contract_id, &token_id);
 		require!(offer.maker_id == maker_id, "not maker");
-
         //remove the offer based on its ID and offer object.
         self.internal_remove_offer(offer_id, &offer);
     }
@@ -160,15 +160,13 @@ impl Contract {
     pub fn accept_offer(
 		&mut self,
 		contract_id: AccountId,
-		token_id: String
+		token_id: String,
 	) {
         //assert one yocto for security reasons
 		assert_one_yocto();
 
-		//get offer object
-		let contract_token_id = get_contract_token_id(&contract_id, &token_id);
-		let offer_id = self.offer_by_contract_token_id.get(&contract_token_id).unwrap_or_else(|| env::panic_str("no offer ID for contract and token ID"));
-		let offer = self.offer_by_id.get(&offer_id).unwrap_or_else(|| env::panic_str("no offer for offer ID"));
+		//get offer id and object
+		let (offer_id, offer) = self.get_offer(&contract_id, &token_id);
 
 		require!(env::predecessor_account_id() == offer.taker_id, "only owner can accept an offer");
 		self.internal_accept_offer(offer_id, offer);

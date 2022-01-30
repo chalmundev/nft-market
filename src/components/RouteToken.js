@@ -5,27 +5,7 @@ import { fetchData } from '../state/app';
 import { providers, networkId, contractId, parseNearAmount, formatNearAmount } from '../../utils/near-utils';
 import { howLongAgo } from '../utils/date';
 import { parseToken } from '../utils/token';
-
-function getEvents(receipts_outcome) {
-	const events = [];
-	//loop through each receipt
-	for(let i = 0; i < receipts_outcome.length; i++) {
-		const { logs } = receipts_outcome[i].outcome;
-		//loop through each log in the receipt
-		for(let j = 0; j < logs.length; j++) {
-			//check if the logs start with MARKET_EVENT
-			if(/MARKET_EVENT/.test(logs[j])) {
-				//get the current log object
-				const log = JSON.parse(logs[j].replace('MARKET_EVENT:', ''));
-				//if market event was logged
-				if(/update_offer|resolve_offer/.test(log.event)) {
-					events.push(log);
-				}
-			}
-		}
-	}
-	return events;
-}
+import { getOfferFromHashes } from '../utils/receipts';
 
 export const RouteToken = ({ dispatch, account, data }) => {
 	const params = useParams();
@@ -66,20 +46,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 			console.warn(e);
 		}
 
-		const txHashes = window.location.href.split('?transactionHashes=')[1];
-		if (txHashes) {
-			const [hash] = txHashes.split();
-			const { receipts_outcome } = await new providers.JsonRpcProvider(`https://rpc.${networkId}.near.org`).sendJsonRpc("EXPERIMENTAL_tx_status", [
-				hash,
-				"foo",
-			]);
-			const [log] = getEvents(receipts_outcome);
-			console.log(receipts_outcome)
-			if (log) {
-				const offer = { event: log.event === 'update_offer' ? 0 : 1,  maker_id: log.data.maker_id, taker_id: log.data.taker_id, amount: log.data.amount, updated_at: log.data.updated_at};
-				setLastOffer(offer);
-			}
-		}
+		setLastOffer(await getOfferFromHashes())
 
 		setToken(token);
 	};
@@ -88,6 +55,17 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	const handleMakeOffer = () => {
 		dispatch(action({
 			methodName: 'make_offer',
+			args: {
+				contract_id,
+				token_id,
+			},
+			attachedDeposit: parseNearAmount((parseFloat(amount, 10) + 0.05).toString())
+		}));
+	};
+
+	const handleRemoveOffer = () => {
+		dispatch(action({
+			methodName: 'remove_offer',
 			args: {
 				contract_id,
 				token_id,
@@ -149,24 +127,27 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				<p>Volume: {summary.vol_traded}</p>
 				<p>Offers (all time): {summary.offers_len}</p>
 			</>}
-			<div className="offers current-offer">
-				{
-					offer && <>
+
+			{
+				offer && <>
+					<div className="offers current-offer">
 						<h3>Current Offer</h3>
 						<div className="offer">
-							<div>Offer Maker: {offer.maker_id}</div>
+							<div>From: {ifOfferOwner ? 'You' : offer.maker_id}</div>
 							<div>
 								<div>Amount: {formatNearAmount(offer.amount, 4)}</div>
 								<div>{howLongAgo({ ts: offer.updated_at / (1000 * 1000), detail: 'minute' })} ago</div>
 							</div>
 						</div>
-					</>
-				}
-			</div>
-
-			{isOwner && !ifOfferOwner && <div className="button-row">
-				<button onClick={handleAcceptOffer}>Accept Offer</button>
-			</div>}
+					</div>
+					{ifOfferOwner && <div className="button-row">
+						<button onClick={handleRemoveOffer}>Remove Offer</button>
+					</div>}
+					{isOwner && !ifOfferOwner && <div className="button-row">
+						<button onClick={handleAcceptOffer}>Accept Offer</button>
+					</div>}
+				</>
+			}
 
 			{
 				!isOwner && <>
