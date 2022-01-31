@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { formatNearAmount, view } from '../state/near';
+import { formatNearAmount, view, fetchBatchTokens } from '../state/near';
 
 const PAGE_SIZE = 30;
 
-export const RouteOffers = ({ dispatch, update, account, offers, supply, index }) => {
+export const RouteOffers = ({ dispatch, update, account, offers, supply, index, cache }) => {
 	if (!account) return null;
 
 	const { account_id } = account;
@@ -47,7 +47,7 @@ export const RouteOffers = ({ dispatch, update, account, offers, supply, index }
 		}
 		from_index = from_index.toString();
 
-		await dispatch(view({
+		const [, offers] = await dispatch(view({
 			methodName: `get_offers_by_${type}_id`,
 			args: {
 				account_id,
@@ -56,6 +56,9 @@ export const RouteOffers = ({ dispatch, update, account, offers, supply, index }
 			},
 			key: 'data.offers.' + type
 		}));
+
+		await dispatch(fetchBatchTokens(offers.map(({ contract_id, token_id}) => ({ contract_id, token_id}))))
+
 		update('loading', false);
 	};
 
@@ -78,7 +81,15 @@ export const RouteOffers = ({ dispatch, update, account, offers, supply, index }
 			{
 				rows.map((row, i) => <div className="grid" key={i}>
 					{
-						row.map(({ token_id, amount }) => <div key={token_id}>
+						row.map(({ contract_id, token_id, amount }) => <div key={token_id}>
+
+
+							{
+								cache[contract_id]?.[token_id] && <>
+								<img src={cache[contract_id][token_id].metadata.media} />
+								</>
+							}
+
 							<p>{token_id}</p>
 							<p>{formatNearAmount(amount, 4)}</p>
 						</div>)

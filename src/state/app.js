@@ -12,6 +12,7 @@ const initialState = {
 		supply: 0,
 		tokens: [],
 		token: {},
+		cache: {},
 		index: 0,
 		offers: {
 			type: 'maker',

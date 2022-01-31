@@ -41,7 +41,7 @@ const App = () => {
 		wallet, account, data,
 		data: {
 			contracts, 
-			index, tokens,
+			index, cache,
 			offers, supply,
 		}
 	} = state;
@@ -97,11 +97,11 @@ const App = () => {
 
 			<Routes>
 				<Route path="/offers/maker" element={
-					<RouteOffers {...{ dispatch, update, account, offers, index, supply }} />
+					<RouteOffers {...{ dispatch, update, account, offers, index, supply, cache }} />
 				} />
 
 				<Route path="/offers/taker" element={
-					<RouteOffers {...{ dispatch, update, account, offers, index, supply }} />
+					<RouteOffers {...{ dispatch, update, account, offers, index, supply, cache }} />
 				} />
 
 				<Route path="/contract/:contract_id" element={

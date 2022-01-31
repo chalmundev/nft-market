@@ -94,6 +94,23 @@ export const view = ({
 	}
 };
 
+export const fetchBatchTokens = (contractAndTokenIds = []) => async ({ getState, update }) => {
+	const { cache } = getState()?.data || {};
+	contractAndTokenIds = contractAndTokenIds.filter(({ contract_id, token_id }) => !cache[contract_id]?.[token_id])
+	// console.log('fetching new tokens', contractAndTokenIds)
+	await Promise.all(contractAndTokenIds.map(({ contract_id, token_id }) => contractAccount.viewFunction(
+		contract_id,
+		'nft_token',
+		{ token_id }
+	).then((token) => {
+		if (!cache[contract_id]) {
+			cache[contract_id] = {}
+		}
+		cache[contract_id][token_id] = parseToken(token)
+	})))
+	update('data.cache', cache)
+};
+
 export const fetchTokens = (contract_id, args) => async ({ getState, dispatch }) => {
 	const { contractId } = getState()?.data || {};
 	dispatch(view({
