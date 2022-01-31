@@ -282,12 +282,11 @@ test('bob CANNOT remove_offer from token 1 but owner can', async (t) => {
 
 	const res = await contractAccount.functionCall({
 		contractId,
-		methodName: 'remove_offer',
+		methodName: 'remove_offer_owner',
 		args: {
 			...tokens[0],
 		},
 		gas,
-		attachedDeposit: 1,
 	});
 	t.is(res?.status?.SuccessValue, '');
 

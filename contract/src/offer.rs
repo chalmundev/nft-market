@@ -25,6 +25,7 @@ impl Contract {
 		let contract_token_id = get_contract_token_id(&contract_id, &token_id);
 		let offer_amount = U128(env::attached_deposit() - self.offer_storage_amount);
 		require!(offer_amount.0 > self.min_bid_amount, format!("{}{}", "must be higher than ", self.min_bid_amount));
+		self.internal_increment_storage(&maker_id, Some(1));
 
 		let offer_id_option = self.offer_by_contract_token_id.get(&contract_token_id);
 
@@ -64,10 +65,8 @@ impl Contract {
 			// swap the offers_by_maker_id
 			self.internal_swap_offer_maker(offer_id, &prev_maker_id, &offer.maker_id);
 			// accept offer
-			let taker_id = offer.taker_id.clone();
 			self.internal_accept_offer(offer_id, offer);
-			// DO pay back nft owner storage and decrement storage amount
-			return self.internal_withdraw_one_storage(&taker_id);
+			return;
 		}
 
 		// outbid a non-token owner scenario
@@ -113,18 +112,22 @@ impl Contract {
 	) {
         //assert one yocto for security reasons
 		assert_one_yocto();
+		
         //get the supposed maker and double check that they are the actual offer's maker
         let maker_id = env::predecessor_account_id();
 		let (offer_id, offer) = self.get_offer(&contract_id, &token_id);
-		// market owner can remove offers
-		if maker_id != self.owner_id {
-			require!(offer.maker_id == maker_id, "not offer maker");
-			if offer.maker_id != offer.taker_id {
-				require!(offer.updated_at < env::block_timestamp() - self.outbid_timeout, "Cannot remove new offers for 24hrs");
-			}
+
+		require!(offer.maker_id == maker_id, "not offer maker");
+		
+		// token owner can remove offers anytime
+		if offer.maker_id != offer.taker_id {
+			require!(offer.updated_at < env::block_timestamp() - self.outbid_timeout, "Cannot remove new offers for 24hrs");
+			// remove and pay back offer maker
+			self.internal_remove_offer(offer_id, &offer, true);
+			return;
 		}
-		//remove the offer based on its ID and offer object.
-        self.internal_remove_offer(offer_id, &offer, true);
+		// token owner does not get refund (no money was locked)
+        self.internal_remove_offer(offer_id, &offer, false);
     }
 
 	//accepts an offer. Only the taker ID can call this. Offer must have approval ID.
@@ -140,7 +143,9 @@ impl Contract {
 		//get offer id and object
 		let (offer_id, offer) = self.get_offer(&contract_id, &token_id);
 
-		require!(env::predecessor_account_id() == offer.taker_id, "only owner can accept an offer");
+		require!(env::predecessor_account_id() == offer.taker_id, "Only token owner can accept offer");
+		require!(offer.maker_id != offer.taker_id, "Token owner cannot accept their own offer");
+
 		self.internal_accept_offer(offer_id, offer);
     }
 }

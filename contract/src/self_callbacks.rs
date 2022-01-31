@@ -102,13 +102,18 @@ impl Contract {
 			return;
 		}
 
+		// highly unlikely but would be bad scenario
+
 		let mut offer = self.offer_by_id.get(&offer_id).unwrap();
 		// pay back the new offer maker (if not owner) if we couldn't pay back the prev offer maker
 		if maker_id != offer.taker_id {
 			Promise::new(maker_id).transfer(env::attached_deposit() + self.offer_storage_amount);
 		}
-		// revert state
+		// revert state (will decrement new offer maker storage as well)
 		self.internal_swap_offer_maker(offer_id, &offer.maker_id, &prev_maker_id);
+		// add back the storage we took because we couldn't transfer back
+		self.internal_increment_storage(&offer.maker_id, Some(1));
+		// update state
 		offer.maker_id = prev_maker_id;
 		offer.amount = prev_offer_amount;
 		offer.updated_at = prev_updated_at;

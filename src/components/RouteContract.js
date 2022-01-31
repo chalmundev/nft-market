@@ -60,6 +60,8 @@ export const RouteContract = ({ dispatch, update, data }) => {
 		rows.push(tokens.slice(i, i + numCols));
 	}
 
+	console.log(summary)
+
 	return (
 		<div>
 
@@ -67,8 +69,8 @@ export const RouteContract = ({ dispatch, update, data }) => {
 			{summary && <>
 				<h3>Market Summary</h3>
 				<p>Average: {formatNearAmount(summary.avg_sale, 4)}</p>
-				<p>Highest: {formatNearAmount(summary.highest_offer_sold.amount, 4)}</p>
-				<p>Lowest: {formatNearAmount(summary.lowest_offer_sold.amount, 4)}</p>
+				{summary.highest_offer_sold && <p>Highest: {formatNearAmount(summary.highest_offer_sold.amount, 4)}</p>}
+				{summary.lowest_offer_sold && <p>Lowest: {formatNearAmount(summary.lowest_offer_sold.amount, 4)}</p>}
 				<p>Volume: {summary.vol_traded}</p>
 				<p>Offers (all time): {summary.offers_len}</p>
 			</>}

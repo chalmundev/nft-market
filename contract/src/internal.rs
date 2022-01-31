@@ -126,6 +126,8 @@ impl Contract {
 			&prev_maker_id,
 			offer_id,
 		);
+
+		self.internal_decrement_storage(prev_maker_id, Some(1));
 		
         map_set_insert(
 			&mut self.offers_by_maker_id, 
@@ -136,32 +138,34 @@ impl Contract {
     }
 
     // Removes the offer from the contract state
-    pub(crate) fn internal_remove_offer(&mut self, offer_id: u64, offer: &Offer, refund: bool) {
-        //remove the offer from its ID
-        self.offer_by_id.remove(&offer_id);
-    
-        //remove the offer ID from the maker
-        map_set_remove(
+    pub(crate) fn internal_remove_offer_state(&mut self, offer_id: u64, offer: &Offer) {
+		//remove the offer from its ID
+		self.offer_by_id.remove(&offer_id);
+			
+		//remove the offer ID from the maker
+		map_set_remove(
 			&mut self.offers_by_maker_id,
 			&offer.maker_id,
 			offer_id,
 		);
-		
-        //remove the offer ID from the taker
-        map_set_remove(
+
+		//remove the offer ID from the taker
+		map_set_remove(
 			&mut self.offers_by_taker_id,
 			&offer.taker_id,
 			offer_id,
 		);
-    
-        //remove the offer from the contract and token ID
-        let contract_token_id = get_contract_token_id(&offer.contract_id, &offer.token_id);
-        self.offer_by_contract_token_id.remove(&contract_token_id);
 
-		// token owners only paid for storage of offer
-		if offer.maker_id == offer.taker_id {
-			return self.internal_withdraw_one_storage(&offer.maker_id);
-		}
+		//remove the offer from the contract and token ID
+		let contract_token_id = get_contract_token_id(&offer.contract_id, &offer.token_id);
+		self.offer_by_contract_token_id.remove(&contract_token_id);
+	}
+
+	// Removes an offer and handles a storage payback with or without a refund of the offer amount
+    pub(crate) fn internal_remove_offer(&mut self, offer_id: u64, offer: &Offer, refund: bool) {
+        self.internal_remove_offer_state(offer_id, offer);
+
+		self.internal_decrement_storage(&offer.maker_id, Some(1));
 
 		let mut payout = self.offer_storage_amount;
 		if refund {
@@ -183,11 +187,12 @@ impl Contract {
 		// make sure there's an approval ID.
 		let approval_id = offer.approval_id.unwrap_or_else(|| env::panic_str("Cannot accept an offer that has no approval ID"));
 
-		// get market holding amount
+		// get market amount
         let market_amount = self.market_royalty as u128 * offer.amount.0 / 10_000u128;
 		// subtract from payout amount
-		let payout_amount = U128(offer.amount.0.checked_sub(market_amount).unwrap_or_else(|| env::panic_str("Market holding amount too high.")));
+		let payout_amount = U128(offer.amount.0.checked_sub(market_amount).unwrap_or_else(|| env::panic_str("Market amount too high.")));
 
+		// remove the offer from state and do not refund funds
 		self.internal_remove_offer(offer_id, &offer, false);
 		
 		//initiate a cross contract call to the nft contract. This will transfer the token to the buyer and return

@@ -66,59 +66,64 @@ impl NonFungibleTokenApprovalReceiver for Contract {
         //takes the approval ID from the offer to use in nft_transfer_payout.
 		offer.approval_id = Some(approval_id);
 
-		// owner made offer of higher amount - replace offer
-		if let Some(amount) = amount {
-			// owner can counter and set a higher offer
-			require!(amount.0 > offer.amount.0 + self.min_bid_amount, format!("{}{}", "Bid must be higher than ", offer.amount.0 + self.min_bid_amount));
-
-			// save values in case we need to revert state in outbid_callback
-			let prev_maker_id = offer.maker_id;
-			let prev_offer_amount = offer.amount;
-			let prev_updated_at = offer.updated_at;
-			// valid offer, money in contract, update state
-			offer.maker_id = owner_id;
-			offer.amount = amount;
-			offer.updated_at = env::block_timestamp();
+		// accept offer case
+		if amount.is_none() {
 			self.offer_by_id.insert(&offer_id, &offer);
 
-			// this is an outbid scenario so we need to swap the offer makers
-			self.internal_swap_offer_maker(offer_id, &prev_maker_id, &offer.maker_id);
-
-			//refund previous maker if they're not the owner
-			if offer.taker_id != offer.maker_id {
-				// pay back prev offer maker + storage, if promise fails we'll revert state in outbid_callback
-				Promise::new(prev_maker_id.clone())
-				.transfer(prev_offer_amount.0 + self.offer_storage_amount)
-				.then(ext_self::outbid_callback(
-					offer_id,
-					offer.maker_id,
-					prev_maker_id,
-					prev_offer_amount,
-					prev_updated_at,
-					env::current_account_id(),
-					NO_DEPOSIT,
-					CALLBACK_GAS,
-				));
-				return;
+			if auto_transfer.unwrap_or(false) == true {
+				self.internal_accept_offer(offer_id, offer);
 			}
-
-			env::log_str(&EventLog {
-				event: EventLogVariant::UpdateOffer(OfferLog {
-					contract_id: offer.contract_id,	
-					token_id: offer.token_id,
-					maker_id: offer.maker_id,
-					taker_id: offer.taker_id,
-					amount: offer.amount,
-					updated_at: offer.updated_at,
-				})
-			}.to_string());
 			return;
 		}
 
+		// owner outbid case
+
+		let amount = amount.unwrap();
+		// owner can counter and set a higher offer
+		require!(amount.0 > offer.amount.0 + self.min_bid_amount, format!("{}{}", "Bid must be higher than ", offer.amount.0 + self.min_bid_amount));
+
+		// save values in case we need to revert state in outbid_callback
+		let prev_maker_id = offer.maker_id;
+		let prev_offer_amount = offer.amount;
+		let prev_updated_at = offer.updated_at;
+		// valid offer, money in contract, update state
+		offer.maker_id = owner_id;
+		offer.amount = amount;
+		offer.updated_at = env::block_timestamp();
 		self.offer_by_id.insert(&offer_id, &offer);
 
-        if auto_transfer.unwrap_or(false) == true {
-            self.internal_accept_offer(offer_id, offer);
+		// this is an outbid scenario so we need to swap the offer makers
+		self.internal_swap_offer_maker(offer_id, &prev_maker_id, &offer.maker_id);
+
+		// refund previous maker if they're not the owner
+		// this fires UpdateOffer so returning is ok after promise
+		if offer.taker_id != offer.maker_id {
+			// pay back prev offer maker + storage, if promise fails we'll revert state in outbid_callback
+			Promise::new(prev_maker_id.clone())
+			.transfer(prev_offer_amount.0 + self.offer_storage_amount)
+			.then(ext_self::outbid_callback(
+				offer_id,
+				offer.maker_id,
+				prev_maker_id,
+				prev_offer_amount,
+				prev_updated_at,
+				env::current_account_id(),
+				NO_DEPOSIT,
+				CALLBACK_GAS,
+			));
+			return;
 		}
+
+		env::log_str(&EventLog {
+			event: EventLogVariant::UpdateOffer(OfferLog {
+				contract_id: offer.contract_id,	
+				token_id: offer.token_id,
+				maker_id: offer.maker_id,
+				taker_id: offer.taker_id,
+				amount: offer.amount,
+				updated_at: offer.updated_at,
+			})
+		}.to_string());
+
     }
 }

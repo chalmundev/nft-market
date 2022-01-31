@@ -16,7 +16,7 @@ Goal: add autocomplete for name/contract_id
 
 Indexer Market summary
 
-- 
+- screens.txt
 
 Flow Charts
 
@@ -43,6 +43,7 @@ Offer Notifications
 RouteToken
 
 - Fix maker underbid owner
-- Remove set price if offer exists
-- Previous offer should not show be in previous offers
 - Double check "lion token" after 7.30am Feb 1
+- Owner can remove immediately DONE
+- Remove set price if offer exists for owner DONE
+- Current offer should not show be in previous offers DONE

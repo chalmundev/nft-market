@@ -7,18 +7,21 @@ impl Contract {
 		let num = num.unwrap_or_else(|| 1);
 		require!(env::attached_deposit() == num as u128 * self.offer_storage_amount, "attach deposit to pay for storage");
 		let owner_id = owner_id.unwrap_or_else(|| env::predecessor_account_id());
+		self.internal_increment_storage(&owner_id, Some(num));
+    }
+
+	pub(crate) fn internal_increment_storage(&mut self, owner_id: &AccountId, num: Option<u64>) {
+		let num = num.unwrap_or_else(|| 1);
 		self.offer_storage_by_owner_id.insert(&owner_id, &(
 			self.offer_storage_by_owner_id.get(&owner_id).unwrap_or_else(|| 0) + num
 		));
-    }
+	}
 
-	pub(crate) fn internal_withdraw_one_storage(&mut self, owner_id: &AccountId) {
-		let offer_storage_count = self.offer_storage_by_owner_id.get(&owner_id).unwrap_or_else(|| 0);
-		if offer_storage_count == 0 {
-			return;
-		}
-		self.offer_storage_by_owner_id.insert(&owner_id, &(offer_storage_count - 1));
-		Promise::new(owner_id.clone()).transfer(self.offer_storage_amount);
+	pub(crate) fn internal_decrement_storage(&mut self, owner_id: &AccountId, num: Option<u64>) {
+		let num = num.unwrap_or_else(|| 1);
+		self.offer_storage_by_owner_id.insert(&owner_id, &(
+			self.offer_storage_by_owner_id.get(&owner_id).unwrap_or_else(|| 0).checked_sub(num).unwrap_or_else(|| 0)
+		));
 	}
 
 	pub fn withdraw_offer_storage(&mut self) {

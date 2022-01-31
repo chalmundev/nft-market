@@ -9,6 +9,7 @@ import {
 
 import { appStore, fetchContracts, fetchData } from './state/app';
 import { initNear } from './state/near';
+import { networkId } from './../utils/near-utils';
 
 import { RouteMain } from './components/RouteMain';
 import { RouteOffers } from './components/RouteOffers';
@@ -93,7 +94,7 @@ const App = () => {
 					}
 					navigate('/');
 				}}>Back</Link></div> : <div></div>}
-				{account && <div>{account.accountId}</div>}
+				{account && <div><a href={`https://explorer.${networkId}.near.org/accounts/${account.accountId}`} target="_blank">{account.accountId}</a></div>}
 			</div>
 
 			<Routes>

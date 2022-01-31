@@ -9,7 +9,7 @@ import { parseToken } from '../utils/token';
 import { getOfferFromHashes } from '../utils/receipts';
 
 const OUTBID_AMOUNT = '99999999999999999999999'
-const OUTBID_TIMEOUT = 0//86400000
+const OUTBID_TIMEOUT = 86400000
 
 export const RouteToken = ({ dispatch, account, data }) => {
 	const params = useParams();
@@ -53,6 +53,12 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 		setLastOffer(await getOfferFromHashes())
 
+		const storageAvailable = await dispatch(view({
+			methodName: 'offer_storage_available',
+			args: { owner_id: account.account_id }
+		}));
+		console.log(storageAvailable)
+
 		setToken(token);
 	};
 	useEffect(onMount, []);
@@ -90,7 +96,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 		: JSON.stringify({ amount: parseNearAmount(amount) })
 
 		if (offer) {
-			if (new BN(parseNearAmount(amount)).sub(new BN(OUTBID_AMOUNT)).lt(new BN(offer.amount))) {
+			if (amount.length > 0 && new BN(parseNearAmount(amount)).sub(new BN(OUTBID_AMOUNT)).lt(new BN(offer.amount))) {
 				return alert('Counter offer is too small')
 			}
 		} else {
@@ -104,7 +110,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				const attachedDeposit = await dispatch(view({
 					methodName: 'offer_storage_amount',
 				}))
-				dispatch(action({
+				return dispatch(action({
 					methodName: 'pay_offer_storage',
 					args: {},
 					attachedDeposit
@@ -175,7 +181,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 							</div>
 						</div>
 					</div>
-					{ifOfferOwner && offer.updated_at < (Date.now() - OUTBID_TIMEOUT) * 1000000 && <div className="button-row">
+					{ifOfferOwner && (isOwner || offer.updated_at < (Date.now() - OUTBID_TIMEOUT) * 1000000) && <div className="button-row">
 						<button onClick={handleRemoveOffer}>Remove Offer</button>
 					</div>}
 					{isOwner && !ifOfferOwner && <>
@@ -193,7 +199,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 			}
 
 			{
-				!ifOfferOwner && <>
+				(!ifOfferOwner ||!offer) && <>
 
 					<h3>{ offerLabel }</h3>
 					<input

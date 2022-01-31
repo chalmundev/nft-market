@@ -2,6 +2,16 @@ use crate::*;
 
 #[near_bindgen]
 impl Contract {
+
+	pub fn remove_offer_owner(
+		&mut self,
+		contract_id: AccountId,
+		token_id: String,
+	) {
+        self.assert_owner();
+		let (offer_id, offer) = self.get_offer(&contract_id, &token_id);
+        self.internal_remove_offer_state(offer_id, &offer);
+    }
 	
 	// TODO add from_index and limit, iter.skip.take.collect then loop
 	// TODO need to have one for offers_by_maker/taker_id ...
