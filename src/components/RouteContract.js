@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { fetchData } from '../state/app';
 import { view, fetchTokens } from '../state/near';
+import { Rows } from './Rows';
 
 const PAGE_SIZE = 30;
 
@@ -55,11 +56,6 @@ export const RouteContract = ({ dispatch, update, data }) => {
 
 	tokens = tokens.slice().reverse();
 
-	const rows = [], numCols = Math.ceil(window.innerWidth / 500);
-	for (let i = 0; i < tokens.length; i += numCols) {
-		rows.push(tokens.slice(i, i + numCols));
-	}
-
 	console.log(summary)
 
 	return (
@@ -82,16 +78,13 @@ export const RouteContract = ({ dispatch, update, data }) => {
 				{(index + 1) * PAGE_SIZE < supply && <button onClick={() => handlePage(index + 1)}>Next</button>}
 			</div>
 
-			{
-				rows.map((row, i) => <div className="grid" key={i}>
-					{
-						row.map(({ token_id, metadata }) => <div key={token_id} onClick={() => navigate(`/token/${contract_id}/${token_id}`)}>
-							<img src={metadata.media} />
-							<p>{token_id}</p>
-						</div>)
-					}
-				</div>)
-			}
+			<Rows {...{
+				arr: tokens,
+				Item: ({ token_id, metadata }) => <div onClick={() => navigate(`/token/${contract_id}/${token_id}`)}>
+					<img src={metadata.media} />
+					<p>{token_id}</p>
+				</div>
+			}} />
 
 		</div>
 	);

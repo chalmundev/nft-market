@@ -4,6 +4,7 @@
 	"author": "chalmundev, flourishingsentries",
 	"license": "MIT",
 	"dependencies": {
+		"is-mobile": "^3.0.0",
 		"near-api-js": "^0.44.2",
 		"parcel": "^2.2.1",
 		"react": "^17.0.2",

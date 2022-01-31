@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useStore } from '../utils/store';
 
 export const RouteMain = ({ contracts }) => {
 	const navigate = useNavigate();
 
-	return <>
-	
-	{
-		contracts.filter(({ contract_id, name }) => /fayyr|loot|luna/gi.test(name) || contract_id === 'tests.nft-market.testnet')
-		.map(({ contract_id, ts, name }) => {
-			return <div key={contract_id} onClick={() => navigate('/contract/' + contract_id)}>
-				{name} - {contract_id} - {ts}
-			</div>;
-		})
-	
+	const [filter, setFilter] = useStore('__FILTER')
 
-	}
-	
+	return <>
+
+		<input value={filter} onChange={(e) => setFilter(e.target.value)} />
+
+		{
+			contracts
+				.filter(({ contract_id, name }) => new RegExp(filter, 'gi').test(name))
+				.map(({ contract_id, ts, name }) => {
+					return <div key={contract_id} onClick={() => navigate('/contract/' + contract_id)}>
+						{name} - {contract_id} - {ts}
+					</div>;
+				})
+		}
+
 	</>
 }

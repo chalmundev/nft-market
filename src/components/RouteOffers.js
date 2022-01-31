@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { formatNearAmount, view, fetchBatchTokens } from '../state/near';
+import { Rows } from './Rows';
 
 const PAGE_SIZE = 30;
 
@@ -11,7 +12,9 @@ export const RouteOffers = ({ dispatch, update, account, offers, supply, index, 
 
 	const navigate = useNavigate();
 
-	const type = /maker/.test(window.location.href) ? 'maker' : 'taker';
+	const isMaker = /maker/.test(window.location.href);
+	const isTaker = !isMaker;
+	const type = isMaker ? 'maker' : 'taker'
 
 	const onMount = async () => {
 		if (offers[type].length > 0) {
@@ -64,43 +67,34 @@ export const RouteOffers = ({ dispatch, update, account, offers, supply, index, 
 
 	const [, offerArr = []] = offers[type];
 
-	const rows = [], numCols = Math.ceil(window.innerWidth / 500);
-	for (let i = 0; i < offerArr.length; i += numCols) {
-		rows.push(offerArr.slice(i, i + numCols));
-	}
-
-	if (rows.length === 0) {
-		return <p>You have not {type === 'maker' ? 'made' : 'received'} any offers yet.</p>;
+	if (offerArr.length === 0) {
+		return <p>You have not {isMaker ? 'made' : 'received'} offers yet.</p>;
 	}
 
 	return (
 		<div>
+			<h3>{isMaker ? 'My Offers' : 'My Tokens'}</h3>
 
 			<p>Page {index + 1}</p>
-
-			{
-				rows.map((row, i) => <div className="grid" key={i}>
-					{
-						row.map(({ contract_id, token_id, amount }) => <div key={token_id}>
-
-
-							{
-								cache[contract_id]?.[token_id] && <>
-								<img src={cache[contract_id][token_id].metadata.media} />
-								</>
-							}
-
-							<p>{token_id}</p>
-							<p>{formatNearAmount(amount, 4)}</p>
-						</div>)
-					}
-				</div>)
-			}
 
 			<div className='button-row'>
 				{index !== 0 ? <button onClick={() => handlePage(index - 1)}>Prev</button> : <button style={{ visibility: 'hidden' }}></button>}
 				{(index + 1) * PAGE_SIZE < supply && <button onClick={() => handlePage(index + 1)}>Next</button>}
 			</div>
+
+			<Rows {...{
+				arr: offerArr,
+				Item: ({ contract_id, token_id, amount, maker_id }) => <div>
+					{
+						cache[contract_id]?.[token_id] && <>
+						<img src={cache[contract_id][token_id].metadata.media} />
+						</>
+					}
+					{ isTaker && <p>From: { maker_id === account?.account_id ? 'You' : maker_id}</p>}
+					<p>{token_id}</p>
+					<p>{formatNearAmount(amount, 4)}</p>
+				</div>
+			}} />
 
 		</div>
 	);
