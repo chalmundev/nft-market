@@ -136,7 +136,7 @@ impl Contract {
     }
 
     // Removes the offer from the contract state
-    pub(crate) fn internal_remove_offer(&mut self, offer_id: u64, offer: &Offer) {
+    pub(crate) fn internal_remove_offer(&mut self, offer_id: u64, offer: &Offer, refund: bool) {
         //remove the offer from its ID
         self.offer_by_id.remove(&offer_id);
     
@@ -161,9 +161,14 @@ impl Contract {
 		if offer.maker_id == offer.taker_id {
 			return self.internal_withdraw_one_storage(&offer.maker_id);
 		}
+
+		let mut payout = self.offer_storage_amount;
+		if refund {
+			payout += offer.amount.0;
+		}
 		
 		// refund the offer maker the offer amount + the amount they added for storage
-		Promise::new(offer.maker_id.clone()).transfer(offer.amount.0 + self.offer_storage_amount);
+		Promise::new(offer.maker_id.clone()).transfer(payout);
     }
 
 	pub(crate) fn internal_accept_offer(
@@ -182,7 +187,7 @@ impl Contract {
 		// subtract from payout amount
 		let payout_amount = U128(offer.amount.0.checked_sub(market_amount).unwrap_or_else(|| env::panic_str("Market holding amount too high.")));
 
-		self.internal_remove_offer(offer_id, &offer);
+		self.internal_remove_offer(offer_id, &offer, false);
 		
 		//initiate a cross contract call to the nft contract. This will transfer the token to the buyer and return
 		//a payout object used for the market to distribute funds to the appropriate accounts.

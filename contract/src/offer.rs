@@ -49,12 +49,8 @@ impl Contract {
 		let offer_id = offer_id_option.unwrap();
 		let mut offer = self.offer_by_id.get(&offer_id).unwrap();
 
-		// existing offer is not by the token owner
-		if offer.maker_id != offer.taker_id {
-			require!(offer.maker_id != maker_id, "Can't outbid self");
-			require!(offer_amount.0 > offer.amount.0 + self.min_bid_amount, format!("{}{}", "Bid must be higher than ", offer.amount.0 + self.min_bid_amount));
-			// continue execution below - alice outbids bob
-		} else {
+		// existing offer is by the token owner
+		if offer.maker_id == offer.taker_id {
 			require!(maker_id != offer.taker_id, "Can't bid on your token");
 			require!(offer_amount.0 >= offer.amount.0, "Must be equal or greater than the owner's offer amount");
 			
@@ -72,6 +68,9 @@ impl Contract {
 			// DO pay back nft owner storage and decrement storage amount
 			return self.internal_withdraw_one_storage(&taker_id);
 		}
+		
+		require!(offer.maker_id != maker_id, "Can't outbid self");
+		require!(offer_amount.0 > offer.amount.0 + self.min_bid_amount, format!("{}{}", "Bid must be higher than ", offer.amount.0 + self.min_bid_amount));
 
 		// save values in case we need to revert state in outbid_callback
 		let prev_maker_id = offer.maker_id;
@@ -120,7 +119,7 @@ impl Contract {
 			require!(offer.updated_at < env::block_timestamp() - self.outbid_timeout, "Cannot remove new offers for 24hrs");
 		}
 		//remove the offer based on its ID and offer object.
-        self.internal_remove_offer(offer_id, &offer);
+        self.internal_remove_offer(offer_id, &offer, true);
     }
 
 	//accepts an offer. Only the taker ID can call this. Offer must have approval ID.

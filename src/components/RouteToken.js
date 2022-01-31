@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import BN from 'bn.js';
 import { useParams } from 'react-router-dom';
 import { view, action } from '../state/near';
 import { fetchData } from '../state/app';
@@ -6,6 +7,8 @@ import { providers, networkId, contractId, parseNearAmount, formatNearAmount } f
 import { howLongAgo } from '../utils/date';
 import { parseToken } from '../utils/token';
 import { getOfferFromHashes } from '../utils/receipts';
+
+const OUTBID_AMOUNT = '99999999999999999999999'
 
 export const RouteToken = ({ dispatch, account, data }) => {
 	const params = useParams();
@@ -54,13 +57,18 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	useEffect(onMount, []);
 
 	const handleMakeOffer = () => {
+
+		if (offer && offer.maker_id !== offer.taker_id && new BN(parseNearAmount(amount)).sub(new BN(OUTBID_AMOUNT)).lt(new BN(offer.amount))) {
+			return alert('Counter offer is too small')
+		}
+
 		dispatch(action({
 			methodName: 'make_offer',
 			args: {
 				contract_id,
 				token_id,
 			},
-			attachedDeposit: parseNearAmount((parseFloat(amount, 10) + 0.02).toString())
+			attachedDeposit: parseNearAmount((parseFloat(amount) + 0.02).toString())
 		}));
 	};
 
@@ -75,11 +83,34 @@ export const RouteToken = ({ dispatch, account, data }) => {
 		}));
 	};
 
-	const handleAcceptOffer = () => {
+	const handleAcceptOffer = async () => {
 		let msg = amount.length === 0
 		? JSON.stringify({ auto_transfer: true })
 		: JSON.stringify({ amount: parseNearAmount(amount) })
-		
+
+		if (offer) {
+			if (new BN(parseNearAmount(amount)).sub(new BN(OUTBID_AMOUNT)).lt(new BN(offer.amount))) {
+				return alert('Counter offer is too small')
+			}
+		} else {
+			const storageAvailable = await dispatch(view({
+				methodName: 'offer_storage_available',
+				args: { owner_id: account.account_id }
+			}));
+			console.log(storageAvailable)
+			if (storageAvailable === 0) {
+				alert('must pre-pay offer storage')
+				const attachedDeposit = await dispatch(view({
+					methodName: 'offer_storage_amount',
+				}))
+				dispatch(action({
+					methodName: 'pay_offer_storage',
+					args: {},
+					attachedDeposit
+				}));
+			}
+		}
+
 		dispatch(action({
 			contractId: contract_id,
 			methodName: 'nft_approve',
@@ -105,7 +136,8 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	}
 
 	const isOwner = token.owner_id === account?.account_id;
-	const ifOfferOwner = offer?.maker_id === account?.account_id; 
+	const ifOfferOwner = offer?.maker_id === account?.account_id;
+	const offerLabel = isOwner ? 'Set Price' : 'Make Offer'
 
 	return (
 		<div>
@@ -160,17 +192,17 @@ export const RouteToken = ({ dispatch, account, data }) => {
 			}
 
 			{
-				!isOwner && !ifOfferOwner && <>
+				!ifOfferOwner && <>
 
-					<h3>Make Offer</h3>
+					<h3>{ offerLabel }</h3>
 					<input
 						type="number"
-						placeholder='Offer Amount (N)'
+						placeholder='Amount (N)'
 						value={amount}
 						onChange={({ target: { value } }) => setAmount(value)}
 
 					/>
-					<button onClick={handleMakeOffer}>Make Offer</button>
+					<button onClick={isOwner ? handleAcceptOffer : handleMakeOffer}>{ offerLabel }</button>
 
 				</>
 			}

@@ -27,12 +27,16 @@ export const getOfferFromHashes = async () => {
 		return
 	}
 	const [hash] = txHashes.split();
-	const { receipts_outcome } = await new providers.JsonRpcProvider(`https://rpc.${networkId}.near.org`).sendJsonRpc("EXPERIMENTAL_tx_status", [
-		hash,
-		"foo",
-	]);
-	const [log] = getEvents(receipts_outcome);
-	if (log) {
-		return { event: log.event === 'update_offer' ? 0 : 1, maker_id: log.data.maker_id, taker_id: log.data.taker_id, amount: log.data.amount, updated_at: log.data.updated_at };
+	try {
+		const { receipts_outcome } = await new providers.JsonRpcProvider(`https://rpc.${networkId}.near.org`).sendJsonRpc("EXPERIMENTAL_tx_status", [
+			hash,
+			"foo",
+		]);
+		const [log] = getEvents(receipts_outcome);
+		if (log) {
+			return { event: log.event === 'update_offer' ? 0 : 1, maker_id: log.data.maker_id, taker_id: log.data.taker_id, amount: log.data.amount, updated_at: log.data.updated_at };
+		}
+	} catch(e) {
+		console.warn(e)
 	}
 }

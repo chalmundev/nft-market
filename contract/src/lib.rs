@@ -85,7 +85,7 @@ impl Contract {
 			owner_id,
 			outbid_timeout: 86_400_000_000_000, // 24hr
 			offer_storage_amount: 20_000_000_000_000_000_000_000, // 2kb 0.02 N
-			min_bid_amount: 99_000_000_000_000_000_000_000, // bids > 0.1 N
+			min_bid_amount: 99_999_999_999_999_999_999_999, // bids > 0.1 N
 			market_balance: 0,
 			market_royalty,
 			offer_id: 0,
