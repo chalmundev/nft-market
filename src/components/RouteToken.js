@@ -60,7 +60,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				contract_id,
 				token_id,
 			},
-			attachedDeposit: parseNearAmount((parseFloat(amount, 10) + 0.05).toString())
+			attachedDeposit: parseNearAmount((parseFloat(amount, 10) + 0.02).toString())
 		}));
 	};
 
@@ -76,9 +76,10 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	};
 
 	const handleAcceptOffer = () => {
-		const msg = JSON.stringify({
-			auto_transfer: true,
-		});
+		let msg = amount.length === 0
+		? JSON.stringify({ auto_transfer: true })
+		: JSON.stringify({ amount: parseNearAmount(amount) })
+		
 		dispatch(action({
 			contractId: contract_id,
 			methodName: 'nft_approve',
@@ -104,9 +105,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	}
 
 	const isOwner = token.owner_id === account?.account_id;
-	const ifOfferOwner = offer?.maker_id === account?.account_id;
-
-	console.log(offer)
+	const ifOfferOwner = offer?.maker_id === account?.account_id; 
 
 	return (
 		<div>
@@ -143,22 +142,30 @@ export const RouteToken = ({ dispatch, account, data }) => {
 							</div>
 						</div>
 					</div>
-					{ifOfferOwner && <div className="button-row">
+					{ifOfferOwner && offer.updated_at < (Date.now() - 86400000) * 1000000 && <div className="button-row">
 						<button onClick={handleRemoveOffer}>Remove Offer</button>
 					</div>}
-					{isOwner && !ifOfferOwner && <div className="button-row">
-						<button onClick={handleAcceptOffer}>Accept Offer</button>
-					</div>}
+					{isOwner && !ifOfferOwner && <>
+						<input
+							type="number"
+							placeholder='Counter Offer Amount (N) (optional)'
+							value={amount}
+							onChange={({ target: { value } }) => setAmount(value)}
+						/>
+						<div className="button-row">
+							<button onClick={handleAcceptOffer}>{amount.length > 0 ? 'Counter' : 'Accept'} Offer</button>
+						</div>
+					</>}
 				</>
 			}
 
 			{
-				!isOwner && <>
+				!isOwner && !ifOfferOwner && <>
 
 					<h3>Make Offer</h3>
 					<input
 						type="number"
-						placeholder=''
+						placeholder='Offer Amount (N)'
 						value={amount}
 						onChange={({ target: { value } }) => setAmount(value)}
 

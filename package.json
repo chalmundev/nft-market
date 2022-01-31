@@ -35,8 +35,6 @@
 		"test-v1-deploy": "yarn build-contract && near deploy --accountId v1.nft-market.testnet --wasmFile out/main.wasm && yarn test-v1",
 		"test-v1-nft": "node ./utils/patch-v1.js && DEPLOY_NFT_CONTRACT=true yarn test",
 		"test-v1-nft-deploy": "yarn build-contract && near deploy --accountId v1.nft-market.testnet --wasmFile out/main.wasm && yarn test-v1-nft",
-		"test-v1-delete": "near delete v1.nft-market.testnet nft-market.testnet",
-
-		"publish-app": "yarn clean && git checkout pages && git merge main && yarn build && mkdir -p docs && cp -a dist/* docs && git add --all && git commit -am 'update' && git push -f && git checkout main"
+		"test-v1-delete": "near delete v1.nft-market.testnet nft-market.testnet"
 	}
 }

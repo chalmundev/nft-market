@@ -37,17 +37,6 @@ pub const GAS_FOR_NFT_TRANSFER: Gas = Gas(15_000_000_000_000);
 /// TODO where is this used and how can we measure and optimize?
 pub const CALLBACK_GAS: Gas = Gas(30_000_000_000_000);
 
-pub const OPEN_OFFER_AMOUNT: u128 = u128::MAX;
-
-/// TODO add branching logic to handle tokens
-pub const DEFAULT_OFFER_TOKEN: &str = "near";
-
-/// TODO make this dynamic and settable by market owner
-pub const MIN_OUTBID_AMOUNT: Balance = 99_000_000_000_000_000_000_000;
-
-/// TODO make this settable by owner
-pub const DEFAULT_OFFER_STORAGE_AMOUNT: Balance = 20_000_000_000_000_000_000_000; // 2kb (0.02N)
-
 pub const DELIMETER: char = '|';
 pub const NO_DEPOSIT: Balance = 0;
 
@@ -75,7 +64,10 @@ enum StorageKey {
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct Contract {
 	owner_id: AccountId,
-	market_balance: u128,
+	outbid_timeout: u64,
+	offer_storage_amount: Balance,
+	min_bid_amount: Balance,
+	market_balance: Balance,
 	market_royalty: u32,
 	offer_id: u64,
 	offer_by_id: UnorderedMap<u64, Offer>,
@@ -91,6 +83,9 @@ impl Contract {
     pub fn new(owner_id: AccountId, market_royalty: u32) -> Self {
         Self {
 			owner_id,
+			outbid_timeout: 86_400_000_000_000, // 24hr
+			offer_storage_amount: 20_000_000_000_000_000_000_000, // 2kb 0.02 N
+			min_bid_amount: 99_000_000_000_000_000_000_000, // bids > 0.1 N
 			market_balance: 0,
 			market_royalty,
 			offer_id: 0,

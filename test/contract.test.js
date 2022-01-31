@@ -263,9 +263,24 @@ test('get offers', async (t) => {
 	t.is(offers.length, 2);
 });
 
-test('bob remove_offer from token 2', async (t) => {
+test('bob CANNOT remove_offer from token 1 but owner can', async (t) => {
 
-	const res = await bob.functionCall({
+	try {
+		const res = await bob.functionCall({
+			contractId,
+			methodName: 'remove_offer',
+			args: {
+				...tokens[0],
+			},
+			gas,
+			attachedDeposit: 1,
+		});
+		t.true(false)
+	} catch(e) {
+		t.true(true)
+	}
+
+	const res = await contractAccount.functionCall({
 		contractId,
 		methodName: 'remove_offer',
 		args: {
@@ -274,7 +289,6 @@ test('bob remove_offer from token 2', async (t) => {
 		gas,
 		attachedDeposit: 1,
 	});
-
 	t.is(res?.status?.SuccessValue, '');
 
 	[offerIds, offers] = await contractAccount.viewFunction(
@@ -290,8 +304,6 @@ test('bob remove_offer from token 2', async (t) => {
 
 test('token owner approves the marketplace with auto transfer true', async (t) => {
 	const msg = JSON.stringify({
-		// original offer was 0.2 so this should just get accepted and auto transferred
-		amount: parseNearAmount('0.1'),
 		auto_transfer: true,
 	});
 
@@ -459,99 +471,12 @@ test('withdrawing market balance 2', async (t) => {
 });
 
 
-/// alice owner offer Id 4
+/// alice owner
 
 
-test('Alice opens token for bidding by calling nft_approve with U128_MAX', async (t) => {
-
-	const res = await alice.functionCall({
-		contractId,
-		methodName: 'pay_offer_storage',
-		args: {},
-		gas,
-		attachedDeposit: storageAmount,
-	});
-
-	t.is(res?.status?.SuccessValue, '');
-
-	const msg = JSON.stringify({
-		amount: U128_MAX
-	});
-
-	const res3 = await alice.functionCall({
-		contractId: nftContractId,
-		methodName: 'nft_approve',
-		args: {
-			token_id: tokens[1].token_id,
-			account_id: contractId,
-			msg,
-		},
-		gas,
-		attachedDeposit: parseNearAmount('0.01'),
-	});
-
-	[offerIds, offers] = await contractAccount.viewFunction(
-		contractId,
-		'get_offers',
-		{}
-	);
-
-	console.log(offers);
-
-	t.is(offers.length, 1);
-});
-
-test('Bob can make offer on token open for bidding', async (t) => {
-	const res = await bob.functionCall({
-		contractId,
-		methodName: 'make_offer',
-		args: {
-			...tokens[1],
-		},
-		gas,
-		attachedDeposit: parseNearAmount('0.22'),
-	});
-
-	t.is(res?.status?.SuccessValue, '');
-
-	[offerIds, offers] = await contractAccount.viewFunction(
-		contractId,
-		'get_offers',
-		{}
-	);
-
-	/// TODO - check actual offer data in more tests
-	t.is(offers[0].maker_id, bobId);
-});
-
-test('Alice accepts Bob offer', async (t) => {
-	const res = await alice.functionCall({
-		contractId,
-		methodName: 'accept_offer',
-		args: {
-			...tokens[1],
-		},
-		gas,
-		attachedDeposit: 1,
-	});
-
-	[offerIds, offers] = await contractAccount.viewFunction(
-		contractId,
-		'get_offers',
-		{}
-	);
-
-	t.is(offers.length, 0);
-});
-
-
-
-/// bob owner
-
-
-test('Bob opens token for bidding by calling nft_approve with fixed price', async (t) => {
+test('Alice opens token for bidding by calling nft_approve with fixed price', async (t) => {
 	
-	const res = await bob.functionCall({
+	const res = await alice.functionCall({
 		contractId,
 		methodName: 'pay_offer_storage',
 		args: {},
@@ -563,7 +488,7 @@ test('Bob opens token for bidding by calling nft_approve with fixed price', asyn
 		amount: parseNearAmount('0.2')
 	});
 
-	const res2 = await bob.functionCall({
+	const res2 = await alice.functionCall({
 		contractId: nftContractId,
 		methodName: 'nft_approve',
 		args: {
@@ -583,19 +508,19 @@ test('Bob opens token for bidding by calling nft_approve with fixed price', asyn
 
 	t.is(offers.length, 1);
 
-	const bobStorageAvailable = await contractAccount.viewFunction(
+	const aliceStorageAvailable = await contractAccount.viewFunction(
 		contractId,
 		'offer_storage_available',
-		{ owner_id: bobId }
+		{ owner_id: aliceId }
 	);
 
-	t.is(bobStorageAvailable, 0);
+	t.is(aliceStorageAvailable, 0);
 
 });
 
-test('Alice makes lower offer and panics', async (t) => {
+test('Bob makes lower offer and panics', async (t) => {
 	try {
-		const res = await alice.functionCall({
+		const res = await bob.functionCall({
 			contractId,
 			methodName: 'make_offer',
 			args: {
@@ -610,8 +535,8 @@ test('Alice makes lower offer and panics', async (t) => {
 	}
 });
 
-test('Alice can make offer of exact amount and purchase AND bob has no more storage available', async (t) => {
-	const res = await alice.functionCall({
+test('Bob can make offer of exact amount and purchase AND alice has no more storage available', async (t) => {
+	const res = await bob.functionCall({
 		contractId,
 		methodName: 'make_offer',
 		args: {
@@ -631,23 +556,23 @@ test('Alice can make offer of exact amount and purchase AND bob has no more stor
 
 	t.is(offers.length, 0);
 
-	const bobStorageAvailable = await contractAccount.viewFunction(
+	const aliceStorageAvailable = await contractAccount.viewFunction(
 		contractId,
 		'offer_storage_available',
-		{ owner_id: bobId }
+		{ owner_id: aliceId }
 	);
 
-	console.log('bobStorageAvailable', bobStorageAvailable);
+	console.log('aliceStorageAvailable', aliceStorageAvailable);
 
-	t.is(bobStorageAvailable, 0);
+	t.is(aliceStorageAvailable, 0);
 });
 
 
-/// Bob offer, alice owner counters
+/// Alice offers, bob counters
 
 
-test('Bob makes an offer', async (t) => {
-	const res = await bob.functionCall({
+test('Alice makes an offer', async (t) => {
+	const res = await alice.functionCall({
 		contractId,
 		methodName: 'make_offer',
 		args: {
@@ -669,8 +594,8 @@ test('Bob makes an offer', async (t) => {
 });
 
 
-test('Alice approves token with larger offer and replaces Bob (check bob has been refunded 1.5 N)', async (t) => {
-	const res = await alice.functionCall({
+test('Bob approves token with larger offer and replaces Alice offer (check alice has been refunded 1.2 N)', async (t) => {
+	const res = await bob.functionCall({
 		contractId,
 		methodName: 'pay_offer_storage',
 		args: {},
@@ -682,9 +607,9 @@ test('Alice approves token with larger offer and replaces Bob (check bob has bee
 		amount: parseNearAmount('0.2')
 	});
 
-	await recordStart(bobId);
+	await recordStart(aliceId);
 
-	const res2 = await alice.functionCall({
+	const res2 = await bob.functionCall({
 		contractId: nftContractId,
 		methodName: 'nft_approve',
 		args: {
@@ -696,7 +621,7 @@ test('Alice approves token with larger offer and replaces Bob (check bob has bee
 		attachedDeposit: parseNearAmount('0.01'),
 	});
 
-	await recordStop(bobId);
+	await recordStop(aliceId);
 
 	[offerIds, offers] = await contractAccount.viewFunction(
 		contractId,
@@ -706,12 +631,11 @@ test('Alice approves token with larger offer and replaces Bob (check bob has bee
 
 	console.log(offers);
 
-	t.is(offers[0].maker_id, aliceId);
+	t.is(offers[0].maker_id, bobId);
 });
 
-
-test('Bob makes exact offer', async (t) => {
-	const res = await bob.functionCall({
+test('Alice makes exact offer', async (t) => {
+	const res = await alice.functionCall({
 		contractId,
 		methodName: 'make_offer',
 		args: {
@@ -741,6 +665,6 @@ test('Bob makes exact offer', async (t) => {
 
 	console.log(res2)
 
-	t.is(res2.owner_id, bobId);
+	t.is(res2.owner_id, aliceId);
 
 });

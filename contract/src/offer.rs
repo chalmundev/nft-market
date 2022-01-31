@@ -20,12 +20,11 @@ impl Contract {
 		&mut self,
 		contract_id: AccountId,
 		token_id: String,
-		amount: Option<U128>,
 	) {
 		let maker_id = env::predecessor_account_id();
 		let contract_token_id = get_contract_token_id(&contract_id, &token_id);
-		let offer_amount = U128(env::attached_deposit() - DEFAULT_OFFER_STORAGE_AMOUNT);
-		require!(offer_amount.0 > MIN_OUTBID_AMOUNT, "must be higher than min bid ???");
+		let offer_amount = U128(env::attached_deposit() - self.offer_storage_amount);
+		require!(offer_amount.0 > self.min_bid_amount, format!("{}{}", "must be higher than ", self.min_bid_amount));
 
 		let offer_id_option = self.offer_by_contract_token_id.get(&contract_token_id);
 
@@ -50,61 +49,34 @@ impl Contract {
 		let offer_id = offer_id_option.unwrap();
 		let mut offer = self.offer_by_id.get(&offer_id).unwrap();
 
-		let update_offer_event = |offer: Offer| {
-			env::log_str(&EventLog {
-				event: EventLogVariant::UpdateOffer(OfferLog {
-					contract_id: offer.contract_id,	
-					token_id: offer.token_id,
-					maker_id: offer.maker_id,
-					taker_id: offer.taker_id,
-					amount: offer.amount,
-					updated_at: offer.updated_at,
-				})
-			}.to_string());
-		};
-
-		// existing offer is not by the token owner - check offer reqs
+		// existing offer is not by the token owner
 		if offer.maker_id != offer.taker_id {
-			require!(offer.maker_id != maker_id, "can't outbid self");
-			require!(offer.taker_id != maker_id, "owner can't outbid");
-			require!(offer_amount.0 > offer.amount.0 + MIN_OUTBID_AMOUNT, "must bid higher by ???");
+			require!(offer.maker_id != maker_id, "Can't outbid self");
+			require!(offer_amount.0 > offer.amount.0 + self.min_bid_amount, format!("{}{}", "Bid must be higher than ", offer.amount.0 + self.min_bid_amount));
 			// continue execution below - alice outbids bob
 		} else {
-			// offer made by token owner on offer created by token owner (price adjustment)
-			if maker_id == offer.maker_id {
-				// make_offer caller is offer maker
-				offer.amount = amount.unwrap_or_else(|| env::panic_str("must specify offer amount"));
-				offer.updated_at = env::block_timestamp();
-				self.offer_by_id.insert(&offer_id, &offer);
-				update_offer_event(offer);
-				return;
-			} else {
-				if offer.amount.0 != OPEN_OFFER_AMOUNT { 
-					if offer_amount.0 < offer.amount.0 {
-						env::panic_str("bid not equal or greater than to offer amount");
-					}
-					let prev_maker_id = offer.maker_id.clone();
-					// maker offer is acceptable by taker, don't log update_offer
-					offer.amount = offer_amount;
-					offer.maker_id = maker_id;
-					offer.updated_at = env::block_timestamp();
-					self.offer_by_id.insert(&offer_id, &offer);
-					// swap the offers_by_maker_id
-					self.internal_swap_offer_maker(offer_id, &prev_maker_id, &offer.maker_id);
-					// accept offer
-					let taker_id = offer.taker_id.clone();
-					self.internal_accept_offer(offer_id, offer);
-					// DO pay back nft owner storage and decrement storage amount
-					return self.internal_withdraw_one_storage(&taker_id);
-				}
-				// continue execution below - (open for bids) alice outbids token owner because offer.amount == OPEN_OFFER_AMOUNT
-			}
+			require!(maker_id != offer.taker_id, "Can't bid on your token");
+			require!(offer_amount.0 >= offer.amount.0, "Must be equal or greater than the owner's offer amount");
+			
+			let prev_maker_id = offer.maker_id.clone();
+			// maker offer is acceptable by taker, don't log update_offer
+			offer.amount = offer_amount;
+			offer.maker_id = maker_id;
+			offer.updated_at = env::block_timestamp();
+			self.offer_by_id.insert(&offer_id, &offer);
+			// swap the offers_by_maker_id
+			self.internal_swap_offer_maker(offer_id, &prev_maker_id, &offer.maker_id);
+			// accept offer
+			let taker_id = offer.taker_id.clone();
+			self.internal_accept_offer(offer_id, offer);
+			// DO pay back nft owner storage and decrement storage amount
+			return self.internal_withdraw_one_storage(&taker_id);
 		}
 
 		// save values in case we need to revert state in outbid_callback
-		let prev_maker_id = offer.maker_id.clone();
-		let prev_offer_amount = offer.amount.clone();
-		let prev_updated_at = offer.updated_at.clone();
+		let prev_maker_id = offer.maker_id;
+		let prev_offer_amount = offer.amount;
+		let prev_updated_at = offer.updated_at;
 		// valid offer, money in contract, update state
 		offer.maker_id = maker_id.clone();
 		offer.amount = offer_amount;
@@ -114,16 +86,9 @@ impl Contract {
 		// this is an outbid scenario so we need to swap the offer makers
 		self.internal_swap_offer_maker(offer_id, &prev_maker_id, &offer.maker_id);
 
-		// first non-owner bid, DO NOT pay back nft owner because we DO NOT have the funds
-		// DO pay back nft owner storage and decrement storage amount
-		if prev_offer_amount.0 == OPEN_OFFER_AMOUNT {
-			update_offer_event(offer);
-			return self.internal_withdraw_one_storage(&prev_maker_id);
-		}
-
 		// pay back prev offer maker + storage, if promise fails we'll revert state in outbid_callback
 		Promise::new(prev_maker_id.clone())
-			.transfer(prev_offer_amount.0 + DEFAULT_OFFER_STORAGE_AMOUNT)
+			.transfer(prev_offer_amount.0 + self.offer_storage_amount)
 			.then(ext_self::outbid_callback(
 				offer_id,
 				maker_id,
@@ -149,8 +114,12 @@ impl Contract {
         //get the supposed maker and double check that they are the actual offer's maker
         let maker_id = env::predecessor_account_id();
 		let (offer_id, offer) = self.get_offer(&contract_id, &token_id);
-		require!(offer.maker_id == maker_id, "not maker");
-        //remove the offer based on its ID and offer object.
+		// owner can remove offers
+		if maker_id != self.owner_id {
+			require!(offer.maker_id == maker_id, "not maker");
+			require!(offer.updated_at < env::block_timestamp() - self.outbid_timeout, "Cannot remove new offers for 24hrs");
+		}
+		//remove the offer based on its ID and offer object.
         self.internal_remove_offer(offer_id, &offer);
     }
 

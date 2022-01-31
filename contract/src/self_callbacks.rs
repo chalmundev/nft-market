@@ -99,21 +99,20 @@ impl Contract {
 				})
 			}.to_string());
 
-			return
+			return;
 		}
-		// pay back promise failed, pay back the new offer maker
-		Promise::new(maker_id).transfer(env::attached_deposit() + DEFAULT_OFFER_STORAGE_AMOUNT);
 
-		// revert state
 		let mut offer = self.offer_by_id.get(&offer_id).unwrap();
-		
+		// pay back the new offer maker (if not owner) if we couldn't pay back the prev offer maker
+		if maker_id != offer.taker_id {
+			Promise::new(maker_id).transfer(env::attached_deposit() + self.offer_storage_amount);
+		}
+		// revert state
 		self.internal_swap_offer_maker(offer_id, &offer.maker_id, &prev_maker_id);
-
 		offer.maker_id = prev_maker_id;
 		offer.amount = prev_offer_amount;
 		offer.updated_at = prev_updated_at;
 		self.offer_by_id.insert(&offer_id, &offer);
-
 	}
 
 	/*

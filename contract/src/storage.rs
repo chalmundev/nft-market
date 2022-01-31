@@ -5,7 +5,7 @@ impl Contract {
 	#[payable]
 	pub fn pay_offer_storage(&mut self, owner_id: Option<AccountId>, num: Option<u64>) {
 		let num = num.unwrap_or_else(|| 1);
-		require!(env::attached_deposit() == num as u128 * DEFAULT_OFFER_STORAGE_AMOUNT, "attach deposit to pay for storage");
+		require!(env::attached_deposit() == num as u128 * self.offer_storage_amount, "attach deposit to pay for storage");
 		let owner_id = owner_id.unwrap_or_else(|| env::predecessor_account_id());
 		self.offer_storage_by_owner_id.insert(&owner_id, &(
 			self.offer_storage_by_owner_id.get(&owner_id).unwrap_or_else(|| 0) + num
@@ -18,7 +18,7 @@ impl Contract {
 			return;
 		}
 		self.offer_storage_by_owner_id.insert(&owner_id, &(offer_storage_count - 1));
-		Promise::new(owner_id.clone()).transfer(DEFAULT_OFFER_STORAGE_AMOUNT);
+		Promise::new(owner_id.clone()).transfer(self.offer_storage_amount);
 	}
 
 	pub fn withdraw_offer_storage(&mut self) {
@@ -37,7 +37,7 @@ impl Contract {
 				self.offer_storage_by_owner_id.insert(&owner_id, &offer_count);
 			}
 			// TODO add callback to revert self.offer_storage_by_owner_id if refund fails
-			Promise::new(owner_id.clone()).transfer(diff as u128 * DEFAULT_OFFER_STORAGE_AMOUNT)
+			Promise::new(owner_id.clone()).transfer(diff as u128 * self.offer_storage_amount)
 			.then(ext_self::on_withdraw_offer_storage(
 				owner_id,
 				offer_storage_count,
@@ -61,6 +61,6 @@ impl Contract {
     }
 
 	pub fn offer_storage_amount(&self) -> U128 {
-		U128(DEFAULT_OFFER_STORAGE_AMOUNT)
+		U128(self.offer_storage_amount)
 	}
 }

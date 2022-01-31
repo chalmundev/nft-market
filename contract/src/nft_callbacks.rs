@@ -68,30 +68,51 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 
 		// owner made offer of higher amount - replace offer
 		if let Some(amount) = amount {
-			if offer.amount.0 < amount.0 {
-                //refund previous maker if they're not the owner
-                if offer.taker_id != offer.maker_id {
-                    Promise::new(offer.maker_id).transfer(offer.amount.0);
-                }
+			// owner can counter and set a higher offer
+			require!(amount.0 > offer.amount.0 + self.min_bid_amount, format!("{}{}", "Bid must be higher than ", offer.amount.0 + self.min_bid_amount));
 
-				offer.maker_id = owner_id;
-				offer.amount = amount;
-				offer.updated_at = env::block_timestamp();
-				self.offer_by_id.insert(&offer_id, &offer);
+			// save values in case we need to revert state in outbid_callback
+			let prev_maker_id = offer.maker_id;
+			let prev_offer_amount = offer.amount;
+			let prev_updated_at = offer.updated_at;
+			// valid offer, money in contract, update state
+			offer.maker_id = owner_id;
+			offer.amount = amount;
+			offer.updated_at = env::block_timestamp();
+			self.offer_by_id.insert(&offer_id, &offer);
 
-                env::log_str(&EventLog {
-                    event: EventLogVariant::UpdateOffer(OfferLog {
-                        contract_id: offer.contract_id,	
-                        token_id: offer.token_id,
-                        maker_id: offer.maker_id,
-                        taker_id: offer.taker_id,
-                        amount: offer.amount,
-                        updated_at: offer.updated_at,
-                    })
-                }.to_string());
+			// this is an outbid scenario so we need to swap the offer makers
+			self.internal_swap_offer_maker(offer_id, &prev_maker_id, &offer.maker_id);
 
+			//refund previous maker if they're not the owner
+			if offer.taker_id != offer.maker_id {
+				// pay back prev offer maker + storage, if promise fails we'll revert state in outbid_callback
+				Promise::new(prev_maker_id.clone())
+				.transfer(prev_offer_amount.0 + self.offer_storage_amount)
+				.then(ext_self::outbid_callback(
+					offer_id,
+					offer.maker_id,
+					prev_maker_id,
+					prev_offer_amount,
+					prev_updated_at,
+					env::current_account_id(),
+					NO_DEPOSIT,
+					CALLBACK_GAS,
+				));
 				return;
 			}
+
+			env::log_str(&EventLog {
+				event: EventLogVariant::UpdateOffer(OfferLog {
+					contract_id: offer.contract_id,	
+					token_id: offer.token_id,
+					maker_id: offer.maker_id,
+					taker_id: offer.taker_id,
+					amount: offer.amount,
+					updated_at: offer.updated_at,
+				})
+			}.to_string());
+			return;
 		}
 
 		self.offer_by_id.insert(&offer_id, &offer);
