@@ -1,0 +1,48 @@
+
+
+Contracts list updates (RouteAllContracts)
+
+Goal: add autocomplete for name/contract_id
+
+- only fetch new contracts
+- grab 1 token example media for contract
+- final data for each contract
+{
+	title, symbol, contract_id, media (in mintbase this will be json, it's fine I'll deal with it frontend)
+}
+- if you can't find media, leave it null or undefined (I'll deal frontend)
+
+- ETA tonight
+
+Indexer Market summary
+
+- 
+
+Flow Charts
+
+- Update to simplified flow
+
+we now only really have these cases:
+
+(1) Owner sets price by nft_approve (new offer)
+- makers cannot under bid
+- maker bids equal or more and transfer happens
+- owner can re-approve for a higher amount
+- owner can remove their own offer at any time
+
+(2) Maker sets price (new offer)
+- makers cannot under bid
+- owner can approve for a higher amount (go to 1)
+- owner can accept offer
+
+
+Offer Notifications
+
+- What to say when localstorage != offers by maker / taker
+
+RouteToken
+
+- Fix maker underbid owner
+- Remove set price if offer exists
+- Previous offer should not show be in previous offers
+- Double check "lion token" after 7.30am Feb 1

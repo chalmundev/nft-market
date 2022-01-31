@@ -158,6 +158,7 @@ impl Contract {
         let contract_token_id = get_contract_token_id(&offer.contract_id, &offer.token_id);
         self.offer_by_contract_token_id.remove(&contract_token_id);
 
+		// token owners only paid for storage of offer
 		if offer.maker_id == offer.taker_id {
 			return self.internal_withdraw_one_storage(&offer.maker_id);
 		}

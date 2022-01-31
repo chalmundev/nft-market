@@ -49,7 +49,8 @@ impl Contract {
 		let offer_id = offer_id_option.unwrap();
 		let mut offer = self.offer_by_id.get(&offer_id).unwrap();
 
-		// existing offer is by the token owner
+		// existing offer is by the token owner, cannot underbid, token must sell or panic
+
 		if offer.maker_id == offer.taker_id {
 			require!(maker_id != offer.taker_id, "Can't bid on your token");
 			require!(offer_amount.0 >= offer.amount.0, "Must be equal or greater than the owner's offer amount");
@@ -68,6 +69,8 @@ impl Contract {
 			// DO pay back nft owner storage and decrement storage amount
 			return self.internal_withdraw_one_storage(&taker_id);
 		}
+
+		// outbid a non-token owner scenario
 		
 		require!(offer.maker_id != maker_id, "Can't outbid self");
 		require!(offer_amount.0 > offer.amount.0 + self.min_bid_amount, format!("{}{}", "Bid must be higher than ", offer.amount.0 + self.min_bid_amount));
@@ -113,10 +116,12 @@ impl Contract {
         //get the supposed maker and double check that they are the actual offer's maker
         let maker_id = env::predecessor_account_id();
 		let (offer_id, offer) = self.get_offer(&contract_id, &token_id);
-		// owner can remove offers
+		// market owner can remove offers
 		if maker_id != self.owner_id {
-			require!(offer.maker_id == maker_id, "not maker");
-			require!(offer.updated_at < env::block_timestamp() - self.outbid_timeout, "Cannot remove new offers for 24hrs");
+			require!(offer.maker_id == maker_id, "not offer maker");
+			if offer.maker_id != offer.taker_id {
+				require!(offer.updated_at < env::block_timestamp() - self.outbid_timeout, "Cannot remove new offers for 24hrs");
+			}
 		}
 		//remove the offer based on its ID and offer object.
         self.internal_remove_offer(offer_id, &offer, true);

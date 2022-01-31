@@ -10,6 +10,7 @@ import {
 import { appStore, fetchContracts, fetchData } from './state/app';
 import { initNear } from './state/near';
 
+import { RouteMain } from './components/RouteMain';
 import { RouteOffers } from './components/RouteOffers';
 import { RouteContract } from './components/RouteContract';
 import { RouteToken } from './components/RouteToken';
@@ -113,12 +114,7 @@ const App = () => {
 				} />
 
 				<Route path="/" element={
-					contracts.filter(({ contract_id, name }) => /loot|Luna/gi.test(name) || contract_id === 'tests.nft-market.testnet')
-						.map(({ contract_id, ts, name }) => {
-							return <div key={contract_id} onClick={() => navigate('/contract/' + contract_id)}>
-								{name} - {contract_id} - {ts}
-							</div>;
-						})
+					<RouteMain {...{ contracts }} /> 
 				} />
 			</Routes>
 

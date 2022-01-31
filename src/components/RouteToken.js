@@ -9,6 +9,7 @@ import { parseToken } from '../utils/token';
 import { getOfferFromHashes } from '../utils/receipts';
 
 const OUTBID_AMOUNT = '99999999999999999999999'
+const OUTBID_TIMEOUT = 0//86400000
 
 export const RouteToken = ({ dispatch, account, data }) => {
 	const params = useParams();
@@ -131,9 +132,9 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 	const displayOffers = offers.slice(0, offer ? -1 : undefined).reverse();
 
-	if (lastOffer && !displayOffers.find(({ updated_at }) => lastOffer.updated_at === updated_at)) {
-		displayOffers.unshift(lastOffer);
-	}
+	// if (lastOffer && !displayOffers.find(({ updated_at }) => lastOffer.updated_at === updated_at)) {
+	// 	displayOffers.unshift(lastOffer);
+	// }
 
 	const isOwner = token.owner_id === account?.account_id;
 	const ifOfferOwner = offer?.maker_id === account?.account_id;
@@ -174,7 +175,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 							</div>
 						</div>
 					</div>
-					{ifOfferOwner && offer.updated_at < (Date.now() - 86400000) * 1000000 && <div className="button-row">
+					{ifOfferOwner && offer.updated_at < (Date.now() - OUTBID_TIMEOUT) * 1000000 && <div className="button-row">
 						<button onClick={handleRemoveOffer}>Remove Offer</button>
 					</div>}
 					{isOwner && !ifOfferOwner && <>

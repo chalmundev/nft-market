@@ -96,6 +96,7 @@ export const view = ({
 
 export const fetchBatchTokens = (contractAndTokenIds = []) => async ({ getState, update }) => {
 	const { cache } = getState()?.data || {};
+	// check cache and filter out tokens we have seen already
 	contractAndTokenIds = contractAndTokenIds.filter(({ contract_id, token_id }) => !cache[contract_id]?.[token_id])
 	// console.log('fetching new tokens', contractAndTokenIds)
 	await Promise.all(contractAndTokenIds.map(({ contract_id, token_id }) => contractAccount.viewFunction(
