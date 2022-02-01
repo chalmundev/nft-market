@@ -9,6 +9,7 @@ const {
 	contractId: marketId,
 } = getConfig();
 
+const MAX_LEN_MARKET_SUMMARIES = 5;
 const PATH = process.env.NODE_ENV === 'prod' ? '../../nft-market-data' : '../dist/out';
 
 async function getContractMedia(provider, accountId) {
@@ -97,7 +98,7 @@ function logEvents(receipts_outcome, eventsPerContract, marketSummaryData) {
 }
 
 function AddToQueue(queue, element) {
-	if (queue.length < 50) {
+	if (queue.length < MAX_LEN_MARKET_SUMMARIES) {
 		queue.push(element);
 	} else {
 		queue.shift();
@@ -120,8 +121,8 @@ function appendEventToContractAndUpdateSummary(contracts, log, marketSummaryData
 
 function updateChangeInAverageSummary(marketSummaryData, log, changeInAverageSummary, updateHighest) {
 	let changeArray = updateHighest == true ? marketSummaryData.high_change : marketSummaryData.low_change;
-	//We need to populate the change array with unique contracts (less than 50 so far)
-	if (changeArray.length < 50) {
+	//We need to populate the change array with unique contracts (less than MAX_LEN_MARKET_SUMMARIES so far)
+	if (changeArray.length < MAX_LEN_MARKET_SUMMARIES) {
 		//check if the contract exists in the set yet
 		var foundIndex = -1;
 		for (var i = 0; i < changeArray.length; i++) {
@@ -198,8 +199,8 @@ function updateChangeInAverageSummary(marketSummaryData, log, changeInAverageSum
 			*/
 			if(updateHighest == true ? changeInAverageSummary.change > changeArray[0].change : changeInAverageSummary.change < changeArray[0].change) {
 				//loop through and try and find the appropriate spot to insert the change log.
-				//default to index 49 in case we don't find anywhere.
-				var foundSpot = 49;
+				//default to index MAX_LEN_MARKET_SUMMARIES - 1 in case we don't find anywhere.
+				var foundSpot = MAX_LEN_MARKET_SUMMARIES - 1;
 				for (var i = 0; i < changeArray.length; i++) {
 					/*
 						example: we have change of 4
@@ -235,6 +236,15 @@ function updateChangeInAverageSummary(marketSummaryData, log, changeInAverageSum
 				changeArray.splice(foundSpot, 0, changeInAverageSummary);
 				//shift the array over by 1
 				changeArray.shift();
+
+				//sort the array
+				if (updateHighest == true) {
+					//if we're updating the highest, check if the change is greater
+					changeArray.sort((a,b) => (a.change > b.change) ? 1 : ((b.change > a.change) ? -1 : 0));
+				} else {
+					//if we're updating the lowest, check if the change is less than
+					changeArray.sort((a,b) => (a.change < b.change) ? 1 : ((b.change < a.change) ? -1 : 0));
+				}
 			}
 		}
 	}
@@ -249,8 +259,8 @@ function updateChangeInAverageSummary(marketSummaryData, log, changeInAverageSum
 
 function updateAveragePriceSummary(marketSummaryData, log, averagePriceSummary, updateHighest) {
 	let existingArray = updateHighest == true ? marketSummaryData.high_sales : marketSummaryData.low_sales;
-	//We need to populate the array with unique contracts (less than 50 so far)
-	if(existingArray.length < 50) {
+	//We need to populate the array with unique contracts (less than MAX_LEN_MARKET_SUMMARIES so far)
+	if(existingArray.length < MAX_LEN_MARKET_SUMMARIES) {
 		//check if the contract exists in the set yet
 		var foundIndex = -1;
 		for(var i = 0; i < existingArray.length; i++) {
@@ -328,8 +338,8 @@ function updateAveragePriceSummary(marketSummaryData, log, averagePriceSummary, 
 			*/
 			if(updateHighest == true ? averagePriceSummary.avg > existingArray[0].avg : averagePriceSummary.avg < existingArray[0].avg) {
 				//loop through and try and find the appropriate spot to insert the avg price log.
-				//default to index 49 in case we don't find anywhere.
-				var foundSpot = 49;
+				//default to index MAX_LEN_MARKET_SUMMARIES - 1 in case we don't find anywhere.
+				var foundSpot = MAX_LEN_MARKET_SUMMARIES - 1;
 				for(var i = 0; i < existingArray.length; i++) {
 					/*
 						example: we have avg of 4
@@ -365,6 +375,13 @@ function updateAveragePriceSummary(marketSummaryData, log, averagePriceSummary, 
 				existingArray.splice(foundSpot, 0, averagePriceSummary);
 				//shift the array over by 1
 				existingArray.shift();
+
+				//sort the array
+				if (updateHighest == true) {
+					existingArray.sort((a,b) => (a.avg > b.avg) ? 1 : ((b.avg > a.avg) ? -1 : 0));
+				} else {
+					existingArray.sort((a,b) => (a.avg < b.avg) ? 1 : ((b.avg < a.avg) ? -1 : 0));
+				}
 			}
 		}
 	}
@@ -379,8 +396,8 @@ function updateAveragePriceSummary(marketSummaryData, log, averagePriceSummary, 
 
 function updatedVolumeOrEventsSummary(marketSummaryData, log, volumeOrEventSummary, updateVolume) {
 	let existingArray = updateVolume == true ? marketSummaryData.top_volume : marketSummaryData.top_events;
-	//We need to populate the array with unique contracts (less than 50 so far)
-	if(existingArray.length < 50) {
+	//We need to populate the array with unique contracts (less than MAX_LEN_MARKET_SUMMARIES so far)
+	if(existingArray.length < MAX_LEN_MARKET_SUMMARIES) {
 		//check if the contract exists in the set yet
 		var foundIndex = -1;
 		for(var i = 0; i < existingArray.length; i++) {
@@ -432,8 +449,8 @@ function updatedVolumeOrEventsSummary(marketSummaryData, log, volumeOrEventSumma
 			*/
 			if(volumeOrEventSummary.total > existingArray[0].total) {
 				//loop through and try and find the appropriate spot to insert the avg price log.
-				//default to index 49 in case we don't find anywhere.
-				var foundSpot = 49;
+				//default to index MAX_LEN_MARKET_SUMMARIES - 1 in case we don't find anywhere.
+				var foundSpot = MAX_LEN_MARKET_SUMMARIES - 1;
 				for(var i = 0; i < existingArray.length; i++) {
 					/*
 						example: we have total of 4
@@ -450,6 +467,9 @@ function updatedVolumeOrEventsSummary(marketSummaryData, log, volumeOrEventSumma
 				existingArray.splice(foundSpot, 0, volumeOrEventSummary);
 				//shift the array over by 1
 				existingArray.shift();
+
+				//sort the array
+				existingArray.sort((a,b) => (a.total > b.total) ? 1 : ((b.total > a.total) ? -1 : 0));
 			}
 		}
 	}
