@@ -7,6 +7,14 @@ export const RouteMain = ({ contracts }) => {
 
 	const [filter, setFilter] = useStore('__FILTER')
 
+	/// TODO rows view for contracts
+
+	/// TODO new market summary data to main page here
+
+	/// TODO new contract summary data
+
+	/// TODO new token summary data
+
 	return <>
 
 		<input value={filter} onChange={(e) => setFilter(e.target.value)} />
