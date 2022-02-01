@@ -56,8 +56,6 @@ export const RouteContract = ({ dispatch, update, data }) => {
 
 	tokens = tokens.slice().reverse();
 
-	console.log(summary)
-
 	return (
 		<div>
 

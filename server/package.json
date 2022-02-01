@@ -12,8 +12,8 @@
     "pm2": "^5.1.2"
   },
   "scripts": {
-    "start": "yarn stop && pm2 start index.js -f --watch && pm2 logs",
-    "start-prod": "yarn stop && ENV=prod pm2 start index.js -f --watch",
+    "start": "yarn stop && pm2 start ecosystem.config.js -f --watch && pm2 logs",
+    "start-prod": "yarn stop && pm2 start ecosystem.config.js --env prod -f",
     "stop": "(pm2 delete default) || true"
   }
 }
