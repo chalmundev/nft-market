@@ -2,7 +2,7 @@ import { State } from '../utils/state';
 
 import { initNear, marketId } from './near';
 
-const DATA_HOST = 'data.secondx.app';
+const DATA_HOST = process.env.REACT_APP_ENV === 'prod' ? 'https://data.secondx.app' : 'http://localhost:1234/out';
 
 // example
 const initialState = {
@@ -32,13 +32,16 @@ export const onAppMount = (message) => async ({ update, getState, dispatch }) =>
 };
 
 export const fetchContracts = () => async ({ update }) => {
-	const res = await fetchJson(`https://${DATA_HOST}/contracts.json`);
-	const contracts = res.contracts || res;
+	const res = await fetchJson(`${DATA_HOST}/contracts.json`);
+	const contracts = Object.entries(res.contracts).map(([contract_id, data]) => ({
+		contract_id,
+		...data,
+	}))
 	update('data', { contracts });
 };
 
 export const fetchData = (fn = 'marketSummary') => async ({ update }) => {
-	const res = await fetchJson(`https://${DATA_HOST}/${marketId}/${fn}.json`);
+	const res = await fetchJson(`${DATA_HOST}/${marketId}/${fn}.json`);
 	update('data', { [fn]: res });
 };
 
@@ -48,7 +51,7 @@ export const fetchJson = async (url) => {
 	try {
 		res = await fetch(url).then((r) => r.json());
 	} catch(e) {
-		console.warn('ERROR: fetching data', fn, e);
+		console.warn('ERROR: fetching data', url, e);
 		res = {};
 	}
 	return res;

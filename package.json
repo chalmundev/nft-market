@@ -26,7 +26,7 @@
 		"test": "ava test/contract.test.js -vs --timeout=5m",
 		"fix": "eslint test/ './src/**/*.js' --fix",
 		"prebuild": "yarn clean",
-		"build": "parcel build src/index.html --no-source-maps",
+		"build": "REACT_APP_ENV=prod parcel build src/index.html --no-source-maps",
 		"clean": "rimraf ./dist",
 		"start": "parcel src/index.html --open",
 		"test-v1-mini": "node ./utils/patch-v1.js && ava test/mini.test.js -vs --timeout=5m",

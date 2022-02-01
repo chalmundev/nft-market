@@ -33,8 +33,8 @@ export const Nav = ({ wallet, mobile }) => {
 	const [active, setActive] = useState(false)
 
 	const handleClose = () => {
-		setActive(false)
 		window.scrollTo(0, 0)
+		setActive(false)
 	}
 
 	return <>

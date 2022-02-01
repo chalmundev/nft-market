@@ -9,6 +9,38 @@ const {
 	contractId: marketId,
 } = getConfig();
 
+const PATH = process.env.NODE_ENV === 'prod' ? '../../nft-market-data' : '../dist/out'
+
+async function getContractMedia(provider, accountId) {
+	let args = {from_index: "0", limit: 10};
+	let base64 = btoa(JSON.stringify(args));
+
+	const rawResult = await provider.query({
+	  request_type: "call_function",
+	  account_id: accountId,
+	  method_name: "nft_tokens",
+	  args_base64: base64,
+	  finality: "optimistic",
+	});
+
+	// format result
+	const res = JSON.parse(Buffer.from(rawResult.result).toString());
+	let exampleMedia = null;
+
+	for(var i = 0; i < res.length; i++) {
+		let metadata = res[i].metadata;
+		if(metadata.media && metadata.media.length != 0) {
+			if(metadata.media.length < 2048) {
+				exampleMedia = metadata.media;
+				console.log('exampleMedia: ', exampleMedia);
+				break;
+			}
+		}
+	}
+
+	return exampleMedia;
+}
+
 async function getContractMetadata(provider, accountId) {
 	const rawResult = await provider.query({
 	  request_type: "call_function",
@@ -322,7 +354,7 @@ module.exports = {
 				return rej(err);
 			}
 
-			await mkdir(`../../nft-market-data/${marketId}`).catch((e) => {
+			await mkdir(`${PATH}/${marketId}`).catch((e) => {
 				// console.log("Unable to create directory for contract ", marketId);
 			});
 
@@ -346,7 +378,7 @@ module.exports = {
 			let marketSummary = {};
 
 			try {
-				marketSummary = JSON.parse(await readFile(`../../nft-market-data/${marketId}/marketSummary.json`));
+				marketSummary = JSON.parse(await readFile(`${PATH}/${marketId}/marketSummary.json`));
 				currentHighestBlockTimestamp = startTimestamp ? startTimestamp : marketSummary.blockstamp; 
 			} catch(e) {
 				console.log("Cannot read market summary for contract ", marketId);
@@ -438,7 +470,7 @@ module.exports = {
 						if (eventsPerContract.hasOwnProperty(contractId)) {
 							let currentContractData = {};
 							try {
-								let rawContractData = await readFile(`../../nft-market-data/${marketId}/${contractId}.json`);
+								let rawContractData = await readFile(`${PATH}/${marketId}/${contractId}.json`);
 								currentContractData = startTimestamp ? {} : JSON.parse(rawContractData);
 							} catch(e) {
 								console.log("WARNING: unable to read contract file: ", contractId, " creating new file.");
@@ -450,7 +482,7 @@ module.exports = {
 								appendEventToContractAndUpdateSummary(currentContractData, eventsPerContract[contractId][i], marketSummaryData);
 							}
 							console.log("WRITING CONTRACT FILE");
-							await writeFile(`../../nft-market-data/${marketId}/${contractId}.json`, JSON.stringify(currentContractData));
+							await writeFile(`${PATH}/${marketId}/${contractId}.json`, JSON.stringify(currentContractData));
 						}
 					}
 
@@ -473,25 +505,38 @@ module.exports = {
 						high_sales: marketSummaryData.high_sales,
 						low_sales: marketSummaryData.low_sales,
 					}; 
-					await writeFile(`../../nft-market-data/${marketId}/marketSummary.json`, JSON.stringify(marketSummary));
-					console.log("PUSH TO GH");
-					// try {
-					// 	execSync(`cd ../../nft-market-data && git add --all && git commit -am 'update' && git push -f`);
-					// } catch(e) {
-					// 	console.log("ERROR:\n", e.stdout.toString(), e.stderr.toString());
-					// }
-					console.log("DONE");
+					await writeFile(`${PATH}/${marketId}/marketSummary.json`, JSON.stringify(marketSummary));
+
+					if (process.env.NODE_ENV === 'prod') {
+						console.log("PUSH TO GH");
+						try {
+							execSync(`cd ${PATH} && git add --all && git commit -am 'update' && git push -f`);
+						} catch(e) {
+							console.log("ERROR:\n", e.stdout.toString(), e.stderr.toString());
+						}
+						console.log("DONE");
+					}
 					res(marketSummary);
 				}
 			);
 		});
 	}),
-	contracts: (db) => new Promise((res, rej) => {
+	contracts: (db, startTimestamp) => new Promise((res, rej) => {
 		const provider = new providers.JsonRpcProvider("https://rpc.testnet.near.org");
 
-		db.connect(onConnect = (err, client, release) => {
+		db.connect(onConnect = async (err, client, release) => {
 			if (err) {
 				return rej(err);
+			}
+
+			let currentHighestBlockTimestamp = 0;
+			let curData = {};
+
+			try {
+				curData = JSON.parse(await readFile(`${PATH}/contracts.json`));
+				currentHighestBlockTimestamp = startTimestamp ? startTimestamp : curData.blockstamp; 	
+			} catch(e) {
+				console.log("Cannot read contract summary. Creating file and defaulting blockstamp to 0 - ", e);
 			}
 	
 			client.query(
@@ -501,42 +546,68 @@ module.exports = {
 						min(emitted_at_block_timestamp) as ts
 					from
 						assets__non_fungible_token_events
-					
+					where 
+						emitted_at_block_timestamp > $1::bigint
 					group by
 						emitted_by_contract_account_id
 					order by
 						min(emitted_at_block_timestamp)
 					desc
-				`, [],
+				`, [currentHighestBlockTimestamp],
 				onResult = async (err, result) => {
 					release();
 					if (err) {
 						return rej(err);
 					}
 
-					let formattedRows = []; 
+					if (result.rows.length === 0) {
+						console.log('NO NEW CONTRACTS');
+						return res(curData);
+					}
+
+					let formattedRows = curData.contracts || {};
+
+					let futureHighestBlockTimestamp = currentHighestBlockTimestamp;
 
 					//loop through each row of the result and gets metadata information from RPC
 					for(let i = 0; i < result.rows.length; i++) {
 						try {
-							//get the symbol and name for the contract. If the provider can't call the nft_metadata function, skips contract.
-							const data = await getContractMetadata(provider, result.rows[i].contract_id);
-							data.contract_id = result.rows[i].contract_id; 
-							data.ts = result.rows[i].ts;
-							formattedRows.push(data); 
+							if(!formattedRows[result.rows[i].contract_id]) {
+								//get the symbol and name for the contract. If the provider can't call the nft_metadata function, skips contract.
+								const data = await getContractMetadata(provider, result.rows[i].contract_id);
+								const media = await getContractMedia(provider, result.rows[i].contract_id);
+
+								data.ts = result.rows[i].ts;
+								data.media = media;
+								formattedRows[result.rows[i].contract_id] = data; 
+							} else {
+								console.log("data exists already for - ", result.rows[i].contract_id, " skipping.");
+							}
 						} catch(e) {
 							console.log("Skipping. Error for contract: ", result.rows[i].contract_id);
 						}
 						console.log("Finished ", i+1, " of ", result.rows.length);
+						if(result.rows[i].ts > futureHighestBlockTimestamp) {
+							futureHighestBlockTimestamp = result.rows[i].ts;
+						}
 					}
 
 					const data = JSON.stringify({
-						updated_at: Date.now(),
+						blockstamp: futureHighestBlockTimestamp,
 						contracts: formattedRows,
 					});
-					await writeFile('../../nft-market-data/contracts.json', data);
-					execSync(`cd ../../nft-market-data && git add . && git commit -am 'update' && git push -f`);
 
+					await writeFile(`${PATH}/contracts.json`, data);
+					if (process.env.NODE_ENV === 'prod') {
+						console.log("PUSH TO GH");
+						try {
+							execSync(`cd ${PATH} && git add --all && git commit -am 'update' && git push -f`);
+						} catch(e) {
+							console.log("ERROR:\n", e.stdout.toString(), e.stderr.toString());
+						}
+						console.log("DONE");
+					}
+					
 					res(formattedRows);
 				}
 			);
