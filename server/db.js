@@ -9,7 +9,7 @@ const {
 	contractId: marketId,
 } = getConfig();
 
-const PATH = process.env.NODE_ENV === 'prod' ? '../../nft-market-data' : '../dist/out'
+const PATH = process.env.NODE_ENV === 'prod' ? '../../nft-market-data' : '../dist/out';
 
 async function getContractMedia(provider, accountId) {
 	let args = { from_index: "0", limit: 10 };
@@ -118,7 +118,7 @@ function appendEventToContractAndUpdateSummary(contracts, log, marketSummaryData
 	updateSummary(contracts, log, marketSummaryData);
 }
 
-function updateAverageChange(marketSummaryData, log, changeLog, updateHighest) {
+function updateChangeInAverageSummary(marketSummaryData, log, changeInAverageSummary, updateHighest) {
 	let changeArray = updateHighest == true ? marketSummaryData.high_change : marketSummaryData.low_change;
 	//We need to populate the change array with unique contracts (less than 50 so far)
 	if (changeArray.length < 50) {
@@ -135,21 +135,22 @@ function updateAverageChange(marketSummaryData, log, changeLog, updateHighest) {
 			//check if we should replace the change log for the contract
 			if (updateHighest == true) {
 				//if we're updating the highest, check if the change is greater
-				if (changeLog.change > changeArray[foundIndex].change) {
-					changeArray[foundIndex] = changeLog;
+				if(changeInAverageSummary.change > changeArray[foundIndex].change) {
+					changeArray[foundIndex] = changeInAverageSummary;
+					changeArray.sort((a,b) => (a.change > b.change) ? 1 : ((b.change > a.change) ? -1 : 0));
 				}
 			} else {
 				//if we're updating the lowest, check if the change is less than
-				if (changeLog.change < changeArray[foundIndex].change) {
-					changeArray[foundIndex] = changeLog;
+				if(changeInAverageSummary.change < changeArray[foundIndex].change) {
+					changeArray[foundIndex] = changeInAverageSummary;
+					changeArray.sort((a,b) => (a.change < b.change) ? 1 : ((b.change < a.change) ? -1 : 0));
 				}
 			}
-
-		}
+		} 
 		//no contract was found. We should push the change log and sort the array.
 		else {
 			//push the change log
-			changeArray.push(changeLog);
+			changeArray.push(changeInAverageSummary);
 			//sort by the average
 			if (updateHighest == true) {
 				//if we're updating the highest, sort by change ascending
@@ -175,13 +176,15 @@ function updateAverageChange(marketSummaryData, log, changeLog, updateHighest) {
 			//check if we should replace the change log for the contract
 			if (updateHighest == true) {
 				//if we're updating the highest, check if the change is greater
-				if (changeLog.change > changeArray[foundIndex].change) {
-					changeArray[foundIndex] = changeLog;
+				if(changeInAverageSummary.change > changeArray[foundIndex].change) {
+					changeArray[foundIndex] = changeInAverageSummary;
+					changeArray.sort((a,b) => (a.change > b.change) ? 1 : ((b.change > a.change) ? -1 : 0));
 				}
 			} else {
 				//if we're updating the lowest, check if the change is less than
-				if (changeLog.change < changeArray[foundIndex].change) {
-					changeArray[foundIndex] = changeLog;
+				if(changeInAverageSummary.change < changeArray[foundIndex].change) {
+					changeArray[foundIndex] = changeInAverageSummary;
+					changeArray.sort((a,b) => (a.change < b.change) ? 1 : ((b.change < a.change) ? -1 : 0));
 				}
 			}
 		}
@@ -193,7 +196,7 @@ function updateAverageChange(marketSummaryData, log, changeLog, updateHighest) {
 				
 				We only need to do this computation if our change log is better than index 0
 			*/
-			if (updateHighest == true ? changeLog.change > changeArray[0] : changeLog.change < changeArray[0]) {
+			if(updateHighest == true ? changeInAverageSummary.change > changeArray[0].change : changeInAverageSummary.change < changeArray[0].change) {
 				//loop through and try and find the appropriate spot to insert the change log.
 				//default to index 49 in case we don't find anywhere.
 				var foundSpot = 49;
@@ -215,13 +218,13 @@ function updateAverageChange(marketSummaryData, log, changeLog, updateHighest) {
 						[5, 4, 2, 1]
 
 					*/
-					if (updateHighest == true) {
-						if (changeLog.change < changeArray[i].change) {
+					if(updateHighest == true) {
+						if (changeInAverageSummary.change < changeArray[i].change) {
 							foundSpot = i;
 							break;
 						}
 					} else {
-						if (changeLog.change > changeArray[i].change) {
+						if (changeInAverageSummary.change > changeArray[i].change) {
 							foundSpot = i;
 							break;
 						}
@@ -229,7 +232,7 @@ function updateAverageChange(marketSummaryData, log, changeLog, updateHighest) {
 
 				}
 				//splice the array to insert and push everything back
-				changeArray.splice(foundSpot, 0, changeLog);
+				changeArray.splice(foundSpot, 0, changeInAverageSummary);
 				//shift the array over by 1
 				changeArray.shift();
 			}
@@ -244,6 +247,221 @@ function updateAverageChange(marketSummaryData, log, changeLog, updateHighest) {
 	}
 }
 
+function updateAveragePriceSummary(marketSummaryData, log, averagePriceSummary, updateHighest) {
+	let existingArray = updateHighest == true ? marketSummaryData.high_sales : marketSummaryData.low_sales;
+	//We need to populate the array with unique contracts (less than 50 so far)
+	if(existingArray.length < 50) {
+		//check if the contract exists in the set yet
+		var foundIndex = -1;
+		for(var i = 0; i < existingArray.length; i++) {
+			if (existingArray[i].contract_id == log.data.contract_id) {
+				foundIndex = i;
+				break;
+			}
+		}
+		//if we found the contract
+		if(foundIndex != -1) {
+			//check if we should replace the average price log for the contract
+			if(updateHighest == true) {
+				//if we're updating the highest, check if our avg is greater than the existing avg
+				if(averagePriceSummary.avg > existingArray[foundIndex].avg) {
+					existingArray[foundIndex] = averagePriceSummary;
+					existingArray.sort((a,b) => (a.avg > b.avg) ? 1 : ((b.avg > a.avg) ? -1 : 0));
+				}
+			} else {
+				//if we're updating the lowest, check if the avg is less
+				if(averagePriceSummary.avg < existingArray[foundIndex].avg) {
+					existingArray[foundIndex] = averagePriceSummary;
+					existingArray.sort((a,b) => (a.avg < b.avg) ? 1 : ((b.avg < a.avg) ? -1 : 0));
+				}
+			}
+			
+		} 
+		//no contract was found. We should push the avg price log and sort the array.
+		else {
+			//push the avg price log
+			existingArray.push(averagePriceSummary);
+			//sort by the average
+			if(updateHighest == true) {
+				//if we're updating the highest, sort by avg ascending
+				existingArray.sort((a,b) => (a.avg > b.avg) ? 1 : ((b.avg > a.avg) ? -1 : 0));
+			} else {
+				//of we're updating the lowest, sort by avg descending
+				existingArray.sort((a,b) => (a.avg < b.avg) ? 1 : ((b.avg < a.avg) ? -1 : 0));
+			}
+		}
+	} 
+	//we filled up the average price array. Need to start replacing values.
+	else {
+		//check if the contract exists in the set yet
+		var foundIndex = -1;
+		for(var i = 0; i < existingArray.length; i++) {
+			if (existingArray[i].contract_id == log.data.contract_id) {
+				foundIndex = i;
+				break;
+			}
+		}
+		//if we found the contract
+		if(foundIndex != -1) {
+			//check if we should replace the average price log for the contract
+			if(updateHighest == true) {
+				//if we're updating the highest, check if the avg is greater
+				if(averagePriceSummary.avg > existingArray[foundIndex].avg) {
+					existingArray[foundIndex] = averagePriceSummary;
+					existingArray.sort((a,b) => (a.avg > b.avg) ? 1 : ((b.avg > a.avg) ? -1 : 0));
+				}
+			} else {
+				//if we're updating the lowest, check if the avg is less than
+				if(averagePriceSummary.avg < existingArray[foundIndex].avg) {
+					existingArray[foundIndex] = averagePriceSummary;
+					existingArray.sort((a,b) => (a.avg < b.avg) ? 1 : ((b.avg < a.avg) ? -1 : 0));
+				}
+			}
+		} 
+		//no contract was found. We should replace an existing contract based on which avg is higher.
+		else {
+			/*
+				since the avg price array is sorted, index 0 will have the smallest avg (if sorting highest).
+				and index 0 will have the largest avg (if sorting lowest) 
+				
+				We only need to do this computation if our average price log has a better avg than index 0
+			*/
+			if(updateHighest == true ? averagePriceSummary.avg > existingArray[0].avg : averagePriceSummary.avg < existingArray[0].avg) {
+				//loop through and try and find the appropriate spot to insert the avg price log.
+				//default to index 49 in case we don't find anywhere.
+				var foundSpot = 49;
+				for(var i = 0; i < existingArray.length; i++) {
+					/*
+						example: we have avg of 4
+						[2, 3, 5]
+						=>
+						[3, 4, 5] (splice and shift array)
+
+						if we're updating the highest:
+						- keep iterating until we find an avg that's greater than our avg. We should insert our avg
+						into that spot and shift the array
+
+						if we're updating the lowest:
+						- keep iterating until we find a avg that's less than our avg. We should then insert ours into
+						that spot and shift the array
+
+						[5, 4, 2, 1]
+
+					*/
+					if(updateHighest == true) {
+						if (averagePriceSummary.avg < existingArray[i].avg) {
+							foundSpot = i;
+							break;
+						}
+					} else {
+						if (averagePriceSummary.avg > existingArray[i].avg) {
+							foundSpot = i;
+							break;
+						}
+					}
+					
+				}
+				//splice the array to insert and push everything back
+				existingArray.splice(foundSpot, 0, averagePriceSummary);
+				//shift the array over by 1
+				existingArray.shift();
+			}
+		}
+	}
+
+	//update the market summary data depending on if we're looking at the highest or lowest change
+	if(updateHighest == true) {
+		marketSummaryData.high_sales = existingArray;
+	} else {
+		marketSummaryData.low_sales = existingArray;
+	}
+}
+
+function updatedVolumeOrEventsSummary(marketSummaryData, log, volumeOrEventSummary, updateVolume) {
+	let existingArray = updateVolume == true ? marketSummaryData.top_volume : marketSummaryData.top_events;
+	//We need to populate the array with unique contracts (less than 50 so far)
+	if(existingArray.length < 50) {
+		//check if the contract exists in the set yet
+		var foundIndex = -1;
+		for(var i = 0; i < existingArray.length; i++) {
+			if (existingArray[i].contract_id == log.data.contract_id) {
+				foundIndex = i;
+				break;
+			}
+		}
+		//if we found the contract
+		if(foundIndex != -1) {
+			//check if we should replace the summary for the contract by comparing the totals
+			if(volumeOrEventSummary.total > existingArray[foundIndex].total) {
+				existingArray[foundIndex] = volumeOrEventSummary;
+				existingArray.sort((a,b) => (a.total > b.total) ? 1 : ((b.total > a.total) ? -1 : 0));
+			}
+		} 
+		//no contract was found. We should push the summary and sort the array.
+		else {
+			//push the summary log
+			existingArray.push(volumeOrEventSummary);
+			//sort by the total
+			existingArray.sort((a,b) => (a.total > b.total) ? 1 : ((b.total > a.total) ? -1 : 0));
+		}
+	} 
+	//we filled up the array. Need to start replacing values.
+	else {
+		//check if the contract exists in the set yet
+		var foundIndex = -1;
+		for(var i = 0; i < existingArray.length; i++) {
+			if (existingArray[i].contract_id == log.data.contract_id) {
+				foundIndex = i;
+				break;
+			}
+		}
+		//if we found the contract
+		if(foundIndex != -1) {
+			//check if the total is greater
+			if(volumeOrEventSummary.total > existingArray[foundIndex].total) {
+				existingArray[foundIndex] = volumeOrEventSummary;
+				existingArray.sort((a,b) => (a.total > b.total) ? 1 : ((b.total > a.total) ? -1 : 0));
+			}
+		} 
+		//no contract was found. We should replace an existing contract based on which total is higher.
+		else {
+			/*
+				since the total price array is sorted, index 0 will have the smallest total
+				
+				We only need to do this computation if our log has a better total than index 0
+			*/
+			if(volumeOrEventSummary.total > existingArray[0].total) {
+				//loop through and try and find the appropriate spot to insert the avg price log.
+				//default to index 49 in case we don't find anywhere.
+				var foundSpot = 49;
+				for(var i = 0; i < existingArray.length; i++) {
+					/*
+						example: we have total of 4
+						[2, 3, 5]
+						=>
+						[3, 4, 5] (splice and shift array)
+					*/
+					if (volumeOrEventSummary.total < existingArray[i].total) {
+						foundSpot = i;
+						break;
+					}
+				}
+				//splice the array to insert and push everything back
+				existingArray.splice(foundSpot, 0, volumeOrEventSummary);
+				//shift the array over by 1
+				existingArray.shift();
+			}
+		}
+	}
+
+	//update the market summary data depending on if we're looking at the highest or lowest change
+	if(updateVolume == true) {
+		marketSummaryData.top_volume = existingArray;
+	} else {
+		marketSummaryData.top_events = existingArray;
+	}
+}
+
 function updateSummary(contracts, log, marketSummaryData) {
 	//remove unnecessary info by creating new item to store object
 	const contractSummaryInfo = { amount: log.data.amount, updated_at: log.data.updated_at };
@@ -252,6 +470,11 @@ function updateSummary(contracts, log, marketSummaryData) {
 	contracts.summary = contracts.summary || { events: 0, sales: 0, avg_sale: "0" };
 	contracts.tokens[log.data.token_id].summary = contracts.tokens[log.data.token_id].summary || { events: 0, sales: 0, avg_sale: "0" };
 	console.log('contracts: ', contracts);
+	
+	//set the event summary for the contract (increment the total since we haven't incremented it yet on the contract side)
+	let eventSummary = {total: contracts.summary.events+1, contract_id: log.data.contract_id, updated_at: log.data.updated_at};
+	//since an event will be added no matter what, we should update the market summary for events
+	updatedVolumeOrEventsSummary(marketSummaryData, log, eventSummary, false);
 
 	//increment total offers made
 	if (log.event == "update_offer") {
@@ -283,19 +506,34 @@ function updateSummary(contracts, log, marketSummaryData) {
 		let new_avg_sale = new BN(contracts.summary.avg_sale);
 
 		/*
-			HIGHEST CHANGE IN AVERAGE PRICE 
+			HIGHEST / LOWEST CHANGE IN AVERAGE PRICE 
 		*/
 		//check if the old avg sale is 0. If it is, don't do anything.
 		if (old_avg_sale.toString() != 0) {
-			let changeLog = { change: new_avg_sale.div(old_avg_sale).mul(new BN("100")).toString(), contract_id: log.data.contract_id, updated_at: log.data.updated_at };
-			//update the change for the highest
-			updateAverageChange(marketSummaryData, log, changeLog, true);
-			//update the change for the lowest
-			updateAverageChange(marketSummaryData, log, changeLog, false);
+			let changeInAverageSummary = {change: new_avg_sale.div(old_avg_sale).mul(new BN("100")).toString(), contract_id: log.data.contract_id, updated_at: log.data.updated_at};
+			//update the highest change in average
+			updateChangeInAverageSummary(marketSummaryData, log, changeInAverageSummary, true);
+			//update the lowest change in average
+			updateChangeInAverageSummary(marketSummaryData, log, changeInAverageSummary, false);
 		}
 
-		console.log("HIGHEST CHANGE - ", marketSummaryData.high_change);
-		console.log("LOWEST CHANGE - ", marketSummaryData.low_change);
+		/*
+			HIGHEST / LOWEST AVERAGE PRICE
+		*/
+
+		let averagePriceSummary = {avg: contracts.summary.avg_sale, contract_id: log.data.contract_id, updated_at: log.data.updated_at};
+		//update the average price in the high_sales
+		updateAveragePriceSummary(marketSummaryData, log, averagePriceSummary, true);
+		//update the average price in the low_sales
+		updateAveragePriceSummary(marketSummaryData, log, averagePriceSummary, false);
+		
+		/*
+			VOLUME TRADED SUMMARY
+		*/
+		//set the event summary for the contract (don't increment the total since we already incremented it on the contract side)
+		let volumeSummary = {total: contracts.summary.sales, contract_id: log.data.contract_id, updated_at: log.data.updated_at};
+		//we should update the market summary for volume traded
+		updatedVolumeOrEventsSummary(marketSummaryData, log, volumeSummary, true);
 
 		//make sure highest and lowest aren't undefined
 		contracts.summary.highest = contracts.summary.highest || contractSummaryInfo;
@@ -397,11 +635,6 @@ module.exports = {
 				low_sales: marketSummary.low_sales || [],
 			};
 
-			console.log("MARKET SUMMARY - ", marketSummary);
-
-			// debugging
-			currentHighestBlockTimestamp = 0;
-
 			client.query(
 				`
 				SELECT *
@@ -426,7 +659,7 @@ module.exports = {
 						console.log("No receipts found since timestamp: ", currentHighestBlockTimestamp);
 						return res(marketSummary);
 					}
-
+					
 					//loop through and bulk all logs together for each contract
 					for (let rowNum = 0; rowNum < result.rows.length; rowNum++) {
 						const hash = result.rows[rowNum].originated_from_transaction_hash.toString();
@@ -520,6 +753,7 @@ module.exports = {
 					}
 					res(marketSummary);
 				}
+				
 			);
 		});
 	}),
