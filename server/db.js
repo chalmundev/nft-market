@@ -67,83 +67,74 @@ function appendEventToContractAndUpdateSummary(contracts, log) {
 }
 
 function updateSummary(contracts, log) {
-
-	/*
-
-	/// TODO
-
-	/// for contracts and tokens
-	/// track all events as "events" and track resolved only as "sales"
-
-	/// for tokens
-	/// add highest/lowest for token with { amount, updated_at }
-
-	/// rename summary.highest_offer_sold to summary.highest/lowest
-
-	/// MARKET SUMMARY
-
-	Front page (market summary)
-
-	5 Editor's Choice (we choose)
-	
-	5 Contracts with New Events (first 5 unique events in a market update) shift and push
-	5 Contracts with Top # Events (check contract summary against this array in market summary)
-	5 Contracts with Highest Sale (check contract summary against this array in market summary)
-	5 Contracts with Lowest Sale (check contract summary against this array in market summary)
-
-	Inside Contract Page (contract summary)
-
-	5 Tokens with most new events (already have offers array so done)
-	5 Tokens with most # events (already have offers array so done)
-	5 Tokens with highest sale
-	5 Tokens with lowest sale
-
-	*/
-
-
 	//remove unnecessary info by creating new item to store object
 	const contractSummaryInfo = { amount: log.data.amount, updated_at: log.data.updated_at };
 	
 	//make sure the summaries for tokens and the contract are defined.
-	contracts.summary = contracts.summary || { offers_len: 0, vol_traded: 0, avg_sale: "0" };
-	contracts.tokens[log.data.token_id].summary = contracts.tokens[log.data.token_id].summary || { offers_len: 0, vol_traded: 0, avg_sale: "0"};
+	contracts.summary = contracts.summary || { events: 0, sales: 0, avg_sale: "0" };
+	contracts.tokens[log.data.token_id].summary = contracts.tokens[log.data.token_id].summary || { events: 0, sales: 0, avg_sale: "0"};
 	
 	//increment total offers made
 	if(log.event == "update_offer") {
 		//update contract summary
-		contracts.summary.offers_len += 1;
+		contracts.summary.events += 1;
 		//update token summary
-		contracts.tokens[log.data.token_id].summary.offers_len += 1;
+		contracts.tokens[log.data.token_id].summary.events += 1;
 	} 
 	//potentially change highest and lowest offer
 	else {
-		//update token volume traded
-		contracts.tokens[log.data.token_id].summary.vol_traded += 1;
-		//update contract volume traded
-		contracts.summary.vol_traded += 1;
-
+		/*
+			CONTRACTS
+		*/
+		//update contract sales and events
+		contracts.summary.sales += 1;
+		contracts.summary.events += 1;
 
 		//perform the average sale calculations. Adding 1 to avg --> new_avg = old_avg + (val - avg)/numValues
-		contracts.tokens[log.data.token_id].summary.avg_sale = 
-		new BN(contracts.tokens[log.data.token_id].summary.avg_sale)
-			.add((new BN(log.data.amount).sub(new BN(contracts.tokens[log.data.token_id].summary.avg_sale)))
-				.div(new BN(contracts.tokens[log.data.token_id].summary.vol_traded))).toString();
-		
 		contracts.summary.avg_sale = 
 			new BN(contracts.summary.avg_sale)
 				.add((new BN(log.data.amount).sub(new BN(contracts.summary.avg_sale)))
-					.div(new BN(contracts.summary.vol_traded))).toString();
+					.div(new BN(contracts.summary.sales))).toString();
 		
 		//make sure highest and lowest aren't undefined
-		contracts.summary.highest_offer_sold = contracts.summary.highest_offer_sold || contractSummaryInfo;
-		contracts.summary.lowest_offer_sold = contracts.summary.lowest_offer_sold || contractSummaryInfo;
-		//check if highest offer exists
-		if(log.data.amount > contracts.summary.highest_offer_sold.amount) {
-			contracts.summary.highest_offer_sold = contractSummaryInfo;
+		contracts.summary.highest = contracts.summary.highest || contractSummaryInfo;
+		contracts.summary.lowest = contracts.summary.lowest || contractSummaryInfo;
+		
+		//check if offer is higher than existing higher
+		if(log.data.amount > contracts.summary.highest.amount) {
+			contracts.summary.highest = contractSummaryInfo;
 		}
 		
-		if(log.data.amount.amount < contracts.summary.lowest_offer_sold.amount) {
-			contracts.summary.lowest_offer_sold = contractSummaryInfo;
+		//check if offer is lower than existing lower
+		if(log.data.amount < contracts.summary.lowest.amount) {
+			contracts.summary.lowest = contractSummaryInfo;
+		}
+
+		/*
+			TOKENS
+		*/
+
+		//update token sales and events for the summary
+		contracts.tokens[log.data.token_id].summary.sales += 1;
+		contracts.tokens[log.data.token_id].summary.events += 1;
+
+		contracts.tokens[log.data.token_id].summary.avg_sale = 
+		new BN(contracts.tokens[log.data.token_id].summary.avg_sale)
+			.add((new BN(log.data.amount).sub(new BN(contracts.tokens[log.data.token_id].summary.avg_sale)))
+				.div(new BN(contracts.tokens[log.data.token_id].summary.sales))).toString();
+
+		//make sure highest and lowest aren't undefined
+		contracts.tokens[log.data.token_id].summary.highest = contracts.tokens[log.data.token_id].summary.highest || contractSummaryInfo;
+		contracts.tokens[log.data.token_id].summary.lowest = contracts.tokens[log.data.token_id].summary.lowest || contractSummaryInfo;
+		
+		//check if offer is higher than existing higher
+		if(log.data.amount > contracts.tokens[log.data.token_id].summary.highest.amount) {
+			contracts.tokens[log.data.token_id].summary.highest = contractSummaryInfo;
+		}
+		
+		//check if offer is lower than existing lower
+		if(log.data.amount < contracts.tokens[log.data.token_id].summary.lowest.amount) {
+			contracts.tokens[log.data.token_id].summary.lowest = contractSummaryInfo;
 		}
 	}
 }
@@ -152,7 +143,7 @@ function updateSummary(contracts, log) {
 module.exports = {
 	market: (db, startTimestamp) => new Promise((res, rej) => {
 
-		console.log(`\nMARKET UPDATE: ${new Date()}\n`)
+		console.log(`\nMARKET UPDATE: ${new Date()}\n`);
 
 		const provider = new providers.JsonRpcProvider(`https://rpc.${networkId}.near.org`);
 		const archivalProvider = new providers.JsonRpcProvider(`https://archival-rpc.${networkId}.near.org`);
@@ -215,7 +206,7 @@ module.exports = {
 								
 							//get the list of receipts including logs
 							const { receipts_outcome } = await getTransactionInformation(provider, result.rows[rowNum].originated_from_transaction_hash);
-							logEvents(receipts_outcome, eventsPerContract)
+							logEvents(receipts_outcome, eventsPerContract);
 							txDone[hash] = true;	
 
 						} catch(e) {
@@ -227,7 +218,7 @@ module.exports = {
 							// try archival provider
 							try {
 								const { receipts_outcome } = await getTransactionInformation(archivalProvider, result.rows[rowNum].originated_from_transaction_hash);
-								logEvents(receipts_outcome, eventsPerContract)
+								logEvents(receipts_outcome, eventsPerContract);
 								txDone[hash] = true;	
 							} catch(e) {
 								console.log("SKIPPING: ", e, result.rows[rowNum].originated_from_transaction_hash);
@@ -258,8 +249,8 @@ module.exports = {
 						}
 					}
 
-					if(result.rows.length >= 1000) {
-						console.log("Warning. 1000 rows returned from indexer. Potential data missed.");
+					if(result.rows.length >= 5000) {
+						console.log("Warning. 5000 rows returned from indexer. Potential data missed.");
 					}
 
 					console.log("MARKET SUMMARY");
@@ -268,7 +259,6 @@ module.exports = {
 						updated_at: Date.now(),
 					}; 
 					await writeFile(`../../nft-market-data/${marketId}/marketSummary.json`, JSON.stringify(marketSummary));
-
 					console.log("PUSH TO GH");
 					try {
 						execSync(`cd ../../nft-market-data && git add --all && git commit -am 'update' && git push -f`);
@@ -288,26 +278,6 @@ module.exports = {
 			if (err) {
 				return rej(err);
 			}
-
-			/// TODO rewrite formattedRows as a map : { [contract_id]: { nft_metadata } }
-
-			/// TODO check existing updated_at timestamp in contracts.json
-			/// read file in and parse as json, store in memory for final step
-			/// get ts
-			/// multiply by 1000000 (postgres has ns timestamps)
-			/// add where clause searching after timestamp
-
-			// where emitted_at_block_timestamp > $1::bigint (postgres has ns timestamps)
-
-			/// FINAL update file and concat new contracts
-
-			/*
-
-			For each contract call nft_tokens with limit: 10 and try to find metadata with valid media and store this token as an "example"
-
-
-			
-			*/
 	
 			client.query(
 				`
