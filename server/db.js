@@ -86,6 +86,132 @@ function appendEventToContractAndUpdateSummary(contracts, log, marketSummaryData
 	updateSummary(contracts, log, marketSummaryData);
 }
 
+function updateAverageChange(marketSummaryData, log, changeLog, updateHighest) {
+	let changeArray = updateHighest == true ? marketSummaryData.high_change : marketSummaryData.low_change;
+	//We need to populate the change array with unique contracts (less than 50 so far)
+	if(changeArray.length < 50) {
+		//check if the contract exists in the set yet
+		var foundIndex = -1;
+		for(var i = 0; i < changeArray.length; i++) {
+			if (changeArray[i].contract_id == log.data.contract_id) {
+				foundIndex = i;
+				break;
+			}
+		}
+		//if we found the contract
+		if(foundIndex != -1) {
+			//check if we should replace the change log for the contract
+			if(updateHighest == true) {
+				//if we're updating the highest, check if the change is greater
+				if(changeLog.change > changeArray[foundIndex].change) {
+					changeArray[foundIndex] = changeLog;
+				}
+			} else {
+				//if we're updating the lowest, check if the change is less than
+				if(changeLog.change < changeArray[foundIndex].change) {
+					changeArray[foundIndex] = changeLog;
+				}
+			}
+			
+		} 
+		//no contract was found. We should push the change log and sort the array.
+		else {
+			//push the change log
+			changeArray.push(changeLog);
+			//sort by the average
+			if(updateHighest == true) {
+				//if we're updating the highest, sort by change ascending
+				changeArray.sort((a,b) => (a.change > b.change) ? 1 : ((b.change > a.change) ? -1 : 0));
+			} else {
+				//of we're updating the lowest, sort by change descending
+				changeArray.sort((a,b) => (a.change < b.change) ? 1 : ((b.change < a.change) ? -1 : 0));
+			}
+		}
+	} 
+	//we filled up the high change array. Need to start replacing values.
+	else {
+		//check if the contract exists in the set yet
+		var foundIndex = -1;
+		for(var i = 0; i < changeArray.length; i++) {
+			if (changeArray[i].contract_id == log.data.contract_id) {
+				foundIndex = i;
+				break;
+			}
+		}
+		//if we found the contract
+		if(foundIndex != -1) {
+			//check if we should replace the change log for the contract
+			if(updateHighest == true) {
+				//if we're updating the highest, check if the change is greater
+				if(changeLog.change > changeArray[foundIndex].change) {
+					changeArray[foundIndex] = changeLog;
+				}
+			} else {
+				//if we're updating the lowest, check if the change is less than
+				if(changeLog.change < changeArray[foundIndex].change) {
+					changeArray[foundIndex] = changeLog;
+				}
+			}
+		} 
+		//no contract was found. We should replace an existing contract based on which change is higher.
+		else {
+			/*
+				since the change array is sorted, index 0 will have the smallest change (if sorting highest).
+				and index 0 will have the largest change (if sorting lowest) 
+				
+				We only need to do this computation if our change log is better than index 0
+			*/
+			if(updateHighest == true ? changeLog.change > changeArray[0] : changeLog.change < changeArray[0]) {
+				//loop through and try and find the appropriate spot to insert the change log.
+				//default to index 49 in case we don't find anywhere.
+				var foundSpot = 49;
+				for(var i = 0; i < changeArray.length; i++) {
+					/*
+						example: we have change of 4
+						[2, 3, 5]
+						=>
+						[3, 4, 5] (splice and shift array)
+
+						if we're updating the highest:
+						- keep iterating until we find a change that's greater than our change. We should insert our change
+						into that spot and shift the array
+
+						if we're updating the lowest:
+						- keep iterating until we find a change that's less than our change. We should then insert ours into
+						that spot and shift the array
+
+						[5, 4, 2, 1]
+
+					*/
+					if(updateHighest == true) {
+						if (changeLog.change < changeArray[i].change) {
+							foundSpot = i;
+							break;
+						}
+					} else {
+						if (changeLog.change > changeArray[i].change) {
+							foundSpot = i;
+							break;
+						}
+					}
+					
+				}
+				//splice the array to insert and push everything back
+				changeArray.splice(foundSpot, 0, changeLog);
+				//shift the array over by 1
+				changeArray.shift();
+			}
+		}
+	}
+
+	//update the market summary data depending on if we're looking at the highest or lowest change
+	if(updateHighest == true) {
+		marketSummaryData.high_change = changeArray;
+	} else {
+		marketSummaryData.low_change = changeArray;
+	}
+}
+
 function updateSummary(contracts, log, marketSummaryData) {
 	//remove unnecessary info by creating new item to store object
 	const contractSummaryInfo = { amount: log.data.amount, updated_at: log.data.updated_at };
@@ -130,82 +256,14 @@ function updateSummary(contracts, log, marketSummaryData) {
 		//check if the old avg sale is 0. If it is, don't do anything.
 		if (old_avg_sale.toString() != 0) {
 			let changeLog = {change: new_avg_sale.div(old_avg_sale).mul(new BN("100")).toString(), contract_id: log.data.contract_id, updated_at: log.data.updated_at};
-
-			//We need to populate the high change with unique contracts (less than 50 so far)
-			if(marketSummaryData.high_change.length < 50) {
-				//check if the contract exists in the set yet
-				var foundIndex = -1;
-				for(var i = 0; i < marketSummaryData.high_change.length; i++) {
-					if (marketSummaryData.high_change[i].contract_id == log.data.contract_id) {
-						foundIndex = i;
-						break;
-					}
-				}
-				//if we found the contract
-				if(foundIndex != -1) {
-					//check if we should replace the change log for the contract
-					if(changeLog.change > marketSummaryData.high_change[foundIndex].change) {
-						marketSummaryData.high_change[foundIndex] = changeLog;
-					}
-				} 
-				//no contract was found. We should push the change log and sort the array.
-				else {
-					//push the change log
-					marketSummaryData.high_change.push(changeLog);
-					//sort by the average
-					marketSummaryData.high_change.sort((a,b) => (a.change > b.change) ? 1 : ((b.change > a.change) ? -1 : 0));
-				}
-			} 
-			//we filled up the high change array. Need to start replacing values.
-			else {
-				//check if the contract exists in the set yet
-				var foundIndex = -1;
-				for(var i = 0; i < marketSummaryData.high_change.length; i++) {
-					if (marketSummaryData.high_change[i].contract_id == log.data.contract_id) {
-						foundIndex = i;
-						break;
-					}
-				}
-				//if we found the contract
-				if(foundIndex != -1) {
-					//check if we should replace the change log for the contract
-					if(changeLog.change > marketSummaryData.high_change[foundIndex].change) {
-						marketSummaryData.high_change[foundIndex] = changeLog;
-					}
-				} 
-				//no contract was found. We should replace an existing contract based on which change is higher.
-				else {
-					/*
-						since the market high change is sorted, index 0 will have the smallest change. 
-						We only need to do this computation if our change log is better than index 0
-					*/
-					if(changeLog.change > marketSummaryData.high_change[0]) {
-						//loop through and try and find the appropriate spot to insert the change log.
-						//default to index 49 in case we don't find anywhere.
-						var foundSpot = 49;
-						for(var i = 0; i < marketSummaryData.high_change.length; i++) {
-							/*
-								example: we have change of 4
-								[2, 3, 5]
-								=>
-								[3, 4, 5] (splice and shift array)
-							*/
-							if (changeLog.change < marketSummaryData.high_change[i].change) {
-								foundSpot = i;
-								break;
-							}
-						}
-						//splice the array to insert and push everything back
-						marketSummaryData.high_change.splice(foundSpot, 0, changeLog);
-						//shift the array over by 1
-						marketSummaryData.high_change.shift();
-					}
-				}
-			}
-			
+			//update the change for the highest
+			updateAverageChange(marketSummaryData, log, changeLog, true);
+			//update the change for the lowest
+			updateAverageChange(marketSummaryData, log, changeLog, false);
 		}
 
-		console.log("HIGHEST CHANGE - ", marketSummaryData.high_change);		
+		console.log("HIGHEST CHANGE - ", marketSummaryData.high_change);
+		console.log("LOWEST CHANGE - ", marketSummaryData.low_change);		
 		
 		//make sure highest and lowest aren't undefined
 		contracts.summary.highest = contracts.summary.highest || contractSummaryInfo;
