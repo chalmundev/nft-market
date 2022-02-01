@@ -25,8 +25,8 @@ fastify.get('/', async (request, reply) => {
 	return { hello: 'world' };
 });
 
-fastify.get('/contracts', (req, reply) => {
-	return contracts(fastify.pg.testnet);
+fastify.get('/contracts/:startTimestamp?', (req, reply) => {
+	return contracts(fastify.pg.testnet, req.params.startTimestamp || false);
 });
 
 fastify.get('/market/:startTimestamp?', (req, reply) => {
@@ -42,6 +42,6 @@ const start = async () => {
 		process.exit(1);
 	}
 	/// hit /market every minute
-	setInterval(() => market(fastify.pg.testnet), 60000)
+	setInterval(() => market(fastify.pg.testnet), 60000);
 };
 start();

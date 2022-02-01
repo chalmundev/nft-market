@@ -9,6 +9,36 @@ const {
 	contractId: marketId,
 } = getConfig();
 
+async function getContractMedia(provider, accountId) {
+	let args = {from_index: "0", limit: 10};
+	let base64 = btoa(JSON.stringify(args));
+
+	const rawResult = await provider.query({
+	  request_type: "call_function",
+	  account_id: accountId,
+	  method_name: "nft_tokens",
+	  args_base64: base64,
+	  finality: "optimistic",
+	});
+
+	// format result
+	const res = JSON.parse(Buffer.from(rawResult.result).toString());
+	let exampleMedia = null;
+
+	for(var i = 0; i < res.length; i++) {
+		let metadata = res[i].metadata;
+		if(metadata.media && metadata.media.length != 0) {
+			if(metadata.media.length < 2048) {
+				exampleMedia = metadata.media;
+				console.log('exampleMedia: ', exampleMedia);
+				break;
+			}
+		}
+	}
+
+	return exampleMedia;
+}
+
 async function getContractMetadata(provider, accountId) {
 	const rawResult = await provider.query({
 	  request_type: "call_function",
@@ -152,7 +182,7 @@ function updateSummary(contracts, log) {
 module.exports = {
 	market: (db, startTimestamp) => new Promise((res, rej) => {
 
-		console.log(`\nMARKET UPDATE: ${new Date()}\n`)
+		console.log(`\nMARKET UPDATE: ${new Date()}\n`);
 
 		const provider = new providers.JsonRpcProvider(`https://rpc.${networkId}.near.org`);
 		const archivalProvider = new providers.JsonRpcProvider(`https://archival-rpc.${networkId}.near.org`);
@@ -215,7 +245,7 @@ module.exports = {
 								
 							//get the list of receipts including logs
 							const { receipts_outcome } = await getTransactionInformation(provider, result.rows[rowNum].originated_from_transaction_hash);
-							logEvents(receipts_outcome, eventsPerContract)
+							logEvents(receipts_outcome, eventsPerContract);
 							txDone[hash] = true;	
 
 						} catch(e) {
@@ -227,7 +257,7 @@ module.exports = {
 							// try archival provider
 							try {
 								const { receipts_outcome } = await getTransactionInformation(archivalProvider, result.rows[rowNum].originated_from_transaction_hash);
-								logEvents(receipts_outcome, eventsPerContract)
+								logEvents(receipts_outcome, eventsPerContract);
 								txDone[hash] = true;	
 							} catch(e) {
 								console.log("SKIPPING: ", e, result.rows[rowNum].originated_from_transaction_hash);
@@ -281,13 +311,25 @@ module.exports = {
 			);
 		});
 	}),
-	contracts: (db) => new Promise((res, rej) => {
+	contracts: (db, startTimestamp) => new Promise((res, rej) => {
 		const provider = new providers.JsonRpcProvider("https://rpc.testnet.near.org");
 
-		db.connect(onConnect = (err, client, release) => {
+		db.connect(onConnect = async (err, client, release) => {
 			if (err) {
 				return rej(err);
 			}
+
+			let currentHighestBlockTimestamp = 0;
+			let curData = {};
+
+			try {
+				curData = JSON.parse(await readFile(`../../nft-market-data/contracts.json`));
+				currentHighestBlockTimestamp = startTimestamp ? startTimestamp : curData.blockstamp; 	
+			} catch(e) {
+				console.log("Cannot read contract summary. Creating file and defaulting blockstamp to 0 - ", e);
+			}
+
+			//let currentHighestBlockTimestamp = 0;
 
 			/// TODO rewrite formattedRows as a map : { [contract_id]: { nft_metadata } }
 
@@ -304,9 +346,6 @@ module.exports = {
 			/*
 
 			For each contract call nft_tokens with limit: 10 and try to find metadata with valid media and store this token as an "example"
-
-
-			
 			*/
 	
 			client.query(
@@ -316,39 +355,53 @@ module.exports = {
 						min(emitted_at_block_timestamp) as ts
 					from
 						assets__non_fungible_token_events
-					
+					where 
+						emitted_at_block_timestamp > $1::bigint
 					group by
 						emitted_by_contract_account_id
 					order by
 						min(emitted_at_block_timestamp)
 					desc
-				`, [],
+				`, [currentHighestBlockTimestamp],
 				onResult = async (err, result) => {
 					release();
 					if (err) {
 						return rej(err);
 					}
 
-					let formattedRows = []; 
+					let formattedRows = curData.contracts || {};
+
+					let futureHighestBlockTimestamp = currentHighestBlockTimestamp;
 
 					//loop through each row of the result and gets metadata information from RPC
 					for(let i = 0; i < result.rows.length; i++) {
 						try {
-							//get the symbol and name for the contract. If the provider can't call the nft_metadata function, skips contract.
-							const data = await getContractMetadata(provider, result.rows[i].contract_id);
-							data.contract_id = result.rows[i].contract_id; 
-							data.ts = result.rows[i].ts;
-							formattedRows.push(data); 
+							if(!formattedRows[result.rows[i].contract_id]) {
+								//get the symbol and name for the contract. If the provider can't call the nft_metadata function, skips contract.
+								const data = await getContractMetadata(provider, result.rows[i].contract_id);
+								const media = await getContractMedia(provider, result.rows[i].contract_id);
+
+								data.contract_id = result.rows[i].contract_id; 
+								data.ts = result.rows[i].ts;
+								data.media = media;
+								formattedRows[result.rows[i].contract_id] = data; 
+							} else {
+								console.log("data exists already for - ", result.rows[i].contract_id, " skipping.");
+							}
 						} catch(e) {
 							console.log("Skipping. Error for contract: ", result.rows[i].contract_id);
 						}
 						console.log("Finished ", i+1, " of ", result.rows.length);
+						if(result.rows[i].ts > futureHighestBlockTimestamp) {
+							futureHighestBlockTimestamp = result.rows[i].ts;
+						}
 					}
 
 					const data = JSON.stringify({
-						updated_at: Date.now(),
+						blockstamp: futureHighestBlockTimestamp,
 						contracts: formattedRows,
 					});
+
 					await writeFile('../../nft-market-data/contracts.json', data);
 					execSync(`cd ../../nft-market-data && git add . && git commit -am 'update' && git push -f`);
 
