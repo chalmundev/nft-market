@@ -42,6 +42,6 @@ const start = async () => {
 		process.exit(1);
 	}
 	/// hit /market every minute
-	setInterval(() => market(fastify.pg.testnet), 60000)
+	setInterval(() => market(fastify.pg.testnet), 60000);
 };
 start();

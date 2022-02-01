@@ -30,7 +30,7 @@ async function getTransactionInformation(provider, transactionHash) {
 	]);
 }
 
-function logEvents(receipts_outcome, eventsPerContract) {
+function logEvents(receipts_outcome, eventsPerContract, marketSummaryData) {
 	//loop through each receipt
 	for(let i = 0; i < receipts_outcome.length; i++) {
 		const { logs } = receipts_outcome[i].outcome;
@@ -45,6 +45,17 @@ function logEvents(receipts_outcome, eventsPerContract) {
 				if(/update_offer|resolve_offer/.test(log.event)) {
 					eventsPerContract[log.data.contract_id] = eventsPerContract[log.data.contract_id] || [];
 					eventsPerContract[log.data.contract_id].push(log);
+					
+					const new_offer = { 
+						event: log.event == "update_offer" ? 0 : 1, 
+						contract_id: log.data.contract_id, 
+						token_id: log.data.token_id,
+						updated_at: log.data.updated_at,
+						amount: log.data.amount, 
+						maker_id: log.data.maker_id, 
+						taker_id: log.data.taker_id, 
+					};
+					AddToQueue(log.event == "update_offer" ? marketSummaryData.new_offers : marketSummaryData.new_sales, new_offer);
 				} else {
 					console.log("Log of non recognizable market event --> ", log);
 				}
@@ -53,7 +64,16 @@ function logEvents(receipts_outcome, eventsPerContract) {
 	}
 }
 
-function appendEventToContractAndUpdateSummary(contracts, log) {
+function AddToQueue(queue, element) {
+	if(queue.length < 50) {
+		queue.push(element);
+	} else {
+		queue.shift();
+		queue.push(element);
+	}
+}
+
+function appendEventToContractAndUpdateSummary(contracts, log, marketSummaryData) {
 	//remove unnecessary info by creating new item to store object
 	const offer = { event: log.event == "update_offer" ? 0 : 1,  maker_id: log.data.maker_id, taker_id: log.data.taker_id, amount: log.data.amount, updated_at: log.data.updated_at};
 
@@ -63,16 +83,17 @@ function appendEventToContractAndUpdateSummary(contracts, log) {
 	const offers = token.offers = token.offers || [];
 	
 	offers.push(offer);
-	updateSummary(contracts, log);
+	updateSummary(contracts, log, marketSummaryData);
 }
 
-function updateSummary(contracts, log) {
+function updateSummary(contracts, log, marketSummaryData) {
 	//remove unnecessary info by creating new item to store object
 	const contractSummaryInfo = { amount: log.data.amount, updated_at: log.data.updated_at };
 	
 	//make sure the summaries for tokens and the contract are defined.
 	contracts.summary = contracts.summary || { events: 0, sales: 0, avg_sale: "0" };
 	contracts.tokens[log.data.token_id].summary = contracts.tokens[log.data.token_id].summary || { events: 0, sales: 0, avg_sale: "0"};
+	console.log('contracts: ', contracts);
 	
 	//increment total offers made
 	if(log.event == "update_offer") {
@@ -90,11 +111,101 @@ function updateSummary(contracts, log) {
 		contracts.summary.sales += 1;
 		contracts.summary.events += 1;
 
+		//get old avg sale for market summary data populating
+		let old_avg_sale = new BN(contracts.summary.avg_sale);
+		
+
 		//perform the average sale calculations. Adding 1 to avg --> new_avg = old_avg + (val - avg)/numValues
 		contracts.summary.avg_sale = 
 			new BN(contracts.summary.avg_sale)
 				.add((new BN(log.data.amount).sub(new BN(contracts.summary.avg_sale)))
 					.div(new BN(contracts.summary.sales))).toString();
+		
+		//get new avg sale for market summary data populating			
+		let new_avg_sale = new BN(contracts.summary.avg_sale);
+		
+		/*
+			HIGHEST CHANGE IN AVERAGE PRICE 
+		*/
+		//check if the old avg sale is 0. If it is, don't do anything.
+		if (old_avg_sale.toString() != 0) {
+			let changeLog = {change: new_avg_sale.div(old_avg_sale).mul(new BN("100")).toString(), contract_id: log.data.contract_id, updated_at: log.data.updated_at};
+
+			//We need to populate the high change with unique contracts (less than 50 so far)
+			if(marketSummaryData.high_change.length < 50) {
+				//check if the contract exists in the set yet
+				var foundIndex = -1;
+				for(var i = 0; i < marketSummaryData.high_change.length; i++) {
+					if (marketSummaryData.high_change[i].contract_id == log.data.contract_id) {
+						foundIndex = i;
+						break;
+					}
+				}
+				//if we found the contract
+				if(foundIndex != -1) {
+					//check if we should replace the change log for the contract
+					if(changeLog.change > marketSummaryData.high_change[foundIndex].change) {
+						marketSummaryData.high_change[foundIndex] = changeLog;
+					}
+				} 
+				//no contract was found. We should push the change log and sort the array.
+				else {
+					//push the change log
+					marketSummaryData.high_change.push(changeLog);
+					//sort by the average
+					marketSummaryData.high_change.sort((a,b) => (a.change > b.change) ? 1 : ((b.change > a.change) ? -1 : 0));
+				}
+			} 
+			//we filled up the high change array. Need to start replacing values.
+			else {
+				//check if the contract exists in the set yet
+				var foundIndex = -1;
+				for(var i = 0; i < marketSummaryData.high_change.length; i++) {
+					if (marketSummaryData.high_change[i].contract_id == log.data.contract_id) {
+						foundIndex = i;
+						break;
+					}
+				}
+				//if we found the contract
+				if(foundIndex != -1) {
+					//check if we should replace the change log for the contract
+					if(changeLog.change > marketSummaryData.high_change[foundIndex].change) {
+						marketSummaryData.high_change[foundIndex] = changeLog;
+					}
+				} 
+				//no contract was found. We should replace an existing contract based on which change is higher.
+				else {
+					/*
+						since the market high change is sorted, index 0 will have the smallest change. 
+						We only need to do this computation if our change log is better than index 0
+					*/
+					if(changeLog.change > marketSummaryData.high_change[0]) {
+						//loop through and try and find the appropriate spot to insert the change log.
+						//default to index 49 in case we don't find anywhere.
+						var foundSpot = 49;
+						for(var i = 0; i < marketSummaryData.high_change.length; i++) {
+							/*
+								example: we have change of 4
+								[2, 3, 5]
+								=>
+								[3, 4, 5] (splice and shift array)
+							*/
+							if (changeLog.change < marketSummaryData.high_change[i].change) {
+								foundSpot = i;
+								break;
+							}
+						}
+						//splice the array to insert and push everything back
+						marketSummaryData.high_change.splice(foundSpot, 0, changeLog);
+						//shift the array over by 1
+						marketSummaryData.high_change.shift();
+					}
+				}
+			}
+			
+		}
+
+		console.log("HIGHEST CHANGE - ", marketSummaryData.high_change);		
 		
 		//make sure highest and lowest aren't undefined
 		contracts.summary.highest = contracts.summary.highest || contractSummaryInfo;
@@ -157,15 +268,48 @@ module.exports = {
 				// console.log("Unable to create directory for contract ", marketId);
 			});
 
+			console.log("MARKET ID - ", marketId);
+
+			/*
+			- 5 Editor's Choice
+			- 50 Newest sales
+			- 50 Newest offers
+			- 50 Contracts trending up (highest positive avg change)
+			- 50 Contracts trending down (highest negative avg change)
+			- 50 Most highest sale contracts (highest amount avg sale amounts)
+			- 50 Most lowest sale contracts (lowest amount avg sale amounts)
+			- 50 Most volume contracts (most # sales)
+			- 50 Most active contracts of all time (most # of offers and sales aka "events")
+			- 50 Highest token sales of all time
+			- 50 Lowest token sales of all time
+			*/
+
 			let currentHighestBlockTimestamp = 0;
 			let marketSummary = {};
+
 			try {
 				marketSummary = JSON.parse(await readFile(`../../nft-market-data/${marketId}/marketSummary.json`));
 				currentHighestBlockTimestamp = startTimestamp ? startTimestamp : marketSummary.blockstamp; 
 			} catch(e) {
 				console.log("Cannot read market summary for contract ", marketId);
 			}
-	
+
+			let marketSummaryData = {
+				new_sales: marketSummary.new_sales || [],
+				new_offers: marketSummary.new_offers || [],
+				high_change: marketSummary.high_change || [],
+				low_change: marketSummary.low_change || [],
+				high_sales: marketSummary.high_sales || [],
+				low_sales: marketSummary.low_sales || [],
+				top_volume: marketSummary.top_volume || [],
+				top_events: marketSummary.top_events || [],
+				high_sales: marketSummary.high_sales || [],
+				low_sales: marketSummary.low_sales || [],
+			};
+			
+			console.log("MARKET SUMMARY - ", marketSummary);
+			
+			currentHighestBlockTimestamp = 0;
 			client.query(
 				`
 				SELECT *
@@ -194,19 +338,22 @@ module.exports = {
 					//loop through and bulk all logs together for each contract
 					for(let rowNum = 0; rowNum < result.rows.length; rowNum++) {
 						const hash = result.rows[rowNum].originated_from_transaction_hash.toString();
-
+						// if(rowNum >=150) {
+						// 	break;
+						// }
 						try {
 							//update future highest block timestamp
 							futureHighestBlockTimestamp = result.rows[rowNum].included_in_block_timestamp > futureHighestBlockTimestamp ? result.rows[rowNum].included_in_block_timestamp : futureHighestBlockTimestamp;
 						
 							//has hash been analyzed already?
 							if(txDone[hash]) {
+								//console.log("Already analyzed. Continuing");
 								continue;
 							}
 								
 							//get the list of receipts including logs
 							const { receipts_outcome } = await getTransactionInformation(provider, result.rows[rowNum].originated_from_transaction_hash);
-							logEvents(receipts_outcome, eventsPerContract);
+							logEvents(receipts_outcome, eventsPerContract, marketSummaryData);
 							txDone[hash] = true;	
 
 						} catch(e) {
@@ -218,7 +365,7 @@ module.exports = {
 							// try archival provider
 							try {
 								const { receipts_outcome } = await getTransactionInformation(archivalProvider, result.rows[rowNum].originated_from_transaction_hash);
-								logEvents(receipts_outcome, eventsPerContract);
+								logEvents(receipts_outcome, eventsPerContract, marketSummaryData);
 								txDone[hash] = true;	
 							} catch(e) {
 								console.log("SKIPPING: ", e, result.rows[rowNum].originated_from_transaction_hash);
@@ -242,7 +389,7 @@ module.exports = {
 							//loop through each event per contract
 							for(var i = 0; i < eventsPerContract[contractId].length; i++) {
 								console.log("LOOPING LOG: ", i, "OF", eventsPerContract[contractId].length);
-								appendEventToContractAndUpdateSummary(currentContractData, eventsPerContract[contractId][i]);
+								appendEventToContractAndUpdateSummary(currentContractData, eventsPerContract[contractId][i], marketSummaryData);
 							}
 							console.log("WRITING CONTRACT FILE");
 							await writeFile(`../../nft-market-data/${marketId}/${contractId}.json`, JSON.stringify(currentContractData));
@@ -257,14 +404,24 @@ module.exports = {
 					marketSummary = {
 						blockstamp: futureHighestBlockTimestamp,
 						updated_at: Date.now(),
+						new_sales: marketSummaryData.new_sales,
+						new_offers: marketSummaryData.new_offers,
+						high_change: marketSummaryData.high_change,
+						low_change: marketSummaryData.low_change,
+						high_sales: marketSummaryData.high_sales,
+						low_sales: marketSummaryData.low_sales,
+						top_volume: marketSummaryData.top_volume,
+						top_events: marketSummaryData.top_events,
+						high_sales: marketSummaryData.high_sales,
+						low_sales: marketSummaryData.low_sales,
 					}; 
 					await writeFile(`../../nft-market-data/${marketId}/marketSummary.json`, JSON.stringify(marketSummary));
 					console.log("PUSH TO GH");
-					try {
-						execSync(`cd ../../nft-market-data && git add --all && git commit -am 'update' && git push -f`);
-					} catch(e) {
-						console.log("ERROR:\n", e.stdout.toString(), e.stderr.toString());
-					}
+					// try {
+					// 	execSync(`cd ../../nft-market-data && git add --all && git commit -am 'update' && git push -f`);
+					// } catch(e) {
+					// 	console.log("ERROR:\n", e.stdout.toString(), e.stderr.toString());
+					// }
 					console.log("DONE");
 					res(marketSummary);
 				}
