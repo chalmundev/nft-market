@@ -655,6 +655,11 @@ module.exports = {
 				low_sales: marketSummary.low_sales || [],
 			};
 
+			console.log("MARKET SUMMARY - ", marketSummary);
+
+			// debugging
+			// currentHighestBlockTimestamp = 0;
+
 			client.query(
 				`
 				SELECT *
