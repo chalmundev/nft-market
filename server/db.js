@@ -721,6 +721,7 @@ module.exports = {
 
 		db.connect(onConnect = async (err, client, release) => {
 			if (err) {
+				processingMarket = false;
 				return rej(err);
 			}
 
@@ -783,6 +784,7 @@ module.exports = {
 				onResult = async (err, result) => {
 					release();
 					if (err) {
+						processingMarket = false;
 						return rej(err);
 					}
 
@@ -792,6 +794,7 @@ module.exports = {
 
 					if (result.rows.length == 0) {
 						console.log("No receipts found since timestamp: ", currentHighestBlockTimestamp);
+						processingMarket = false;
 						return res(marketSummary);
 					}
 					
@@ -819,7 +822,8 @@ module.exports = {
 						} catch (e) {
 							// if it's some error besides a tx doesn't exist
 							if (!/doesn't exist/.test(e)) {
-								return console.log("SKIPPING: ", e, result.rows[rowNum].originated_from_transaction_hash);
+								console.log("SKIPPING: ", e, result.rows[rowNum].originated_from_transaction_hash);
+								continue;
 							}
 
 							// try archival provider
