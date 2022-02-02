@@ -12,12 +12,6 @@ export const RouteContracts = ({ update, contracts, index }) => {
 
 	const [filter, setFilter] = useStore('__FILTER')
 
-	/// TODO new market summary data to main page here
-
-	/// TODO new contract summary data
-
-	/// TODO new token summary data
-
 	console.log(index)
 
 	const supply = contracts.length

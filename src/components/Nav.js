@@ -10,6 +10,9 @@ const Menu = ({ wallet }) => {
 			<Link to="/">Home</Link>
 		</li>
 		<li>
+			<Link to="/contracts">All NFTs</Link>
+		</li>
+		<li>
 			<Link to="/offers/maker">My Offers</Link>
 		</li>
 		<li>

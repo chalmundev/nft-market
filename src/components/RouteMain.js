@@ -2,12 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useStore } from '../utils/store';
 
-export const RouteContracts = ({ contracts }) => {
+export const RouteMain = ({ marketSummary }) => {
 	const navigate = useNavigate();
-
-	const [filter, setFilter] = useStore('__FILTER')
-
-	/// TODO rows view for contracts
 
 	/// TODO new market summary data to main page here
 
@@ -15,19 +11,11 @@ export const RouteContracts = ({ contracts }) => {
 
 	/// TODO new token summary data
 
+	console.log(marketSummary)
+
 	return <>
 
-		<input value={filter} onChange={(e) => setFilter(e.target.value)} />
-
-		{
-			contracts
-				.filter(({ contract_id, name }) => new RegExp(filter, 'gi').test(name))
-				.map(({ contract_id, ts, name }) => {
-					return <div key={contract_id} onClick={() => navigate('/contract/' + contract_id)}>
-						{name} - {contract_id} - {ts}
-					</div>;
-				})
-		}
+		
 
 	</>
 }
