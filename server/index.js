@@ -22,22 +22,22 @@ fastify.register(fpg, {
 // 	connectionString: 'postgres://nftmarket:nftmarket@127.0.0.1:5432/nftmarket'
 // });
 
-if (process.env.NODE_ENV !== 'prod') {
-	fastify.get('/', async (request, reply) => {
-		return { hello: 'world' };
-	});
+fastify.get('/contracts/:adminCode?', (req, reply) => {
+	if (req.params?.adminCode !== process.env.ADMIN_CODE) {
+		return JSON.stringify({ error: 'invalid code '})
+	}
+	return contracts(fastify.pg.testnet);
+});
 
-	fastify.get('/contracts/:startTimestamp?', (req, reply) => {
-		return contracts(fastify.pg.testnet, req.params.startTimestamp || false);
-	});
+fastify.get('/market/:adminCode?', (req, reply) => {
+	if (req.params?.adminCode !== process.env.ADMIN_CODE) {
+		return JSON.stringify({ error: 'invalid code '})
+	}
+	return market(fastify.pg.testnet);
+});
 
-	fastify.get('/market/:startTimestamp?', (req, reply) => {
-		return market(fastify.pg.testnet, req.params.startTimestamp || false);
-	});
-}
-
-fastify.get('/reset/:adminCode', (req, reply) => {
-	if (req.params.adminCode !== process.env.ADMIN_CODE) {
+fastify.get('/reset/:adminCode?', (req, reply) => {
+	if (req.params?.adminCode !== process.env.ADMIN_CODE) {
 		return JSON.stringify({ error: 'invalid code '})
 	}
 	return reset();
