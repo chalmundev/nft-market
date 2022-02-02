@@ -13,6 +13,8 @@ export const RouteMain = ({ marketSummary }) => {
 
 	console.log(marketSummary);
 
+
+
 	return <>
 
 		
