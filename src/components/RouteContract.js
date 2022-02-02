@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { fetchData } from '../state/app';
 import { view, fetchTokens } from '../state/near';
 import { Rows } from './Rows';
+import { TokenMedia } from './TokenMedia';
 
 const PAGE_SIZE = 30;
 
@@ -63,23 +64,23 @@ export const RouteContract = ({ dispatch, update, data }) => {
 			{summary && <>
 				<h3>Market Summary</h3>
 				<p>Average: {formatNearAmount(summary.avg_sale, 4)}</p>
-				{summary.highest_offer_sold && <p>Highest: {formatNearAmount(summary.highest_offer_sold.amount, 4)}</p>}
-				{summary.lowest_offer_sold && <p>Lowest: {formatNearAmount(summary.lowest_offer_sold.amount, 4)}</p>}
-				<p>Volume: {summary.vol_traded}</p>
-				<p>Offers (all time): {summary.offers_len}</p>
+				{summary.highest && <p>Highest: {formatNearAmount(summary.highest.amount, 4)}</p>}
+				{summary.lowest && <p>Lowest: {formatNearAmount(summary.lowest.amount, 4)}</p>}
+				<p>Sales: {summary.sales}</p>
+				<p>Events: {summary.events}</p>
 			</>}
 
 			<p>Page {index+1} / {Math.ceil(supply / PAGE_SIZE)}</p>
 
 			<div className='button-row'>
 				{index !== 0 ? <button onClick={() => handlePage(index - 1)}>Prev</button> : <button style={{ visibility: 'hidden' }}></button>}
-				{(index + 1) * PAGE_SIZE < supply && <button onClick={() => handlePage(index + 1)}>Next</button>}
+				{(index + 1) * PAGE_SIZE < supply ? <button onClick={() => handlePage(index + 1)}>Next</button> : <button style={{ visibility: 'hidden' }}></button>}
 			</div>
 
 			<Rows {...{
 				arr: tokens,
-				Item: ({ token_id, metadata }) => <div onClick={() => navigate(`/token/${contract_id}/${token_id}`)}>
-					<img src={metadata.media} />
+				Item: ({ token_id, metadata: { media } }) => <div onClick={() => navigate(`/token/${contract_id}/${token_id}`)}>
+					<TokenMedia {...{media}} />
 					<p>{token_id}</p>
 				</div>
 			}} />

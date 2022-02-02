@@ -45,6 +45,7 @@ const start = async () => {
 	}
 	/// hit /market every minute
 	if (process.env.NODE_ENV === 'prod') {
+		contracts(fastify.pg.testnet)
 		setInterval(() => market(fastify.pg.testnet), 60000); // 1m
 		setInterval(() => contracts(fastify.pg.testnet), 3600000); // 1h
 	} else {

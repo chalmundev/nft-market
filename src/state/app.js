@@ -1,4 +1,5 @@
 import { State } from '../utils/state';
+import { parseMedia } from '../utils/token';
 
 import { initNear, marketId } from './near';
 
@@ -36,6 +37,7 @@ export const fetchContracts = () => async ({ update }) => {
 	const contracts = Object.entries(res.contracts).map(([contract_id, data]) => ({
 		contract_id,
 		...data,
+		media: parseMedia(data.media),
 	}))
 	update('data', { contracts });
 };

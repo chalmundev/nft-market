@@ -84,7 +84,7 @@ export const RouteOffers = ({ dispatch, update, account, offers, supply, index, 
 
 			<Rows {...{
 				arr: offerArr,
-				Item: ({ contract_id, token_id, amount, maker_id }) => <div>
+				Item: ({ contract_id, token_id, amount, maker_id }) => <div onClick={() => navigate(`/token/${contract_id}/${token_id}`)}>
 					{
 						cache[contract_id]?.[token_id] && <>
 						<img src={cache[contract_id][token_id].metadata.media} />

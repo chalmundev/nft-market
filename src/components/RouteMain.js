@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useStore } from '../utils/store';
 
-export const RouteMain = ({ contracts }) => {
+export const RouteContracts = ({ contracts }) => {
 	const navigate = useNavigate();
 
 	const [filter, setFilter] = useStore('__FILTER')

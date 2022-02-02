@@ -7,6 +7,7 @@ import { providers, networkId, contractId, parseNearAmount, formatNearAmount } f
 import { howLongAgo } from '../utils/date';
 import { parseToken } from '../utils/token';
 import { getOfferFromHashes } from '../utils/receipts';
+import { TokenMedia } from './TokenMedia';
 
 const OUTBID_AMOUNT = '99999999999999999999999'
 const OUTBID_TIMEOUT = 86400000
@@ -145,6 +146,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	const isOwner = token.owner_id === account?.account_id;
 	const ifOfferOwner = offer?.maker_id === account?.account_id;
 	const offerLabel = isOwner ? 'Set Price' : 'Make Offer'
+	const { media } = token.metadata
 
 	return (
 		<div>
@@ -157,7 +159,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				}}>Update Market Data</button>
 			</div> */}
 
-			<img src={token.metadata.media} />
+			<TokenMedia {...{media}} />
 
 			<p>{token.token_id}</p>
 			<p>{isOwner ? 'You own this token' : token.owner_id}</p>
@@ -165,8 +167,10 @@ export const RouteToken = ({ dispatch, account, data }) => {
 			{summary && <>
 				<h3>Market Summary</h3>
 				<p>Average: {formatNearAmount(summary.avg_sale, 4)}</p>
-				<p>Volume: {summary.vol_traded}</p>
-				<p>Offers (all time): {summary.offers_len}</p>
+				{summary.highest && <p>Highest: {formatNearAmount(summary.highest.amount, 4)}</p>}
+				{summary.lowest && <p>Lowest: {formatNearAmount(summary.lowest.amount, 4)}</p>}
+				<p>Sales: {summary.sales}</p>
+				<p>Events: {summary.events}</p>
 			</>}
 
 			{

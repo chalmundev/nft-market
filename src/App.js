@@ -11,7 +11,7 @@ import { initNear } from './state/near';
 import { networkId } from './../utils/near-utils';
 
 import { Nav } from './components/Nav';
-import { RouteMain } from './components/RouteMain';
+import { RouteContracts } from './components/RouteContracts';
 import { RouteOffers } from './components/RouteOffers';
 import { RouteContract } from './components/RouteContract';
 import { RouteToken } from './components/RouteToken';
@@ -41,11 +41,13 @@ const App = ({ mobile }) => {
 	const {
 		wallet, account, data,
 		data: {
-			contracts,
+			marketSummary, contracts, 
 			index, cache,
 			offers, supply,
 		}
 	} = state;
+
+	console.log(marketSummary)
 
 	const showBackHome = /\/(maker|taker)/gi.test(window.location.pathname);
 	const showBackToken = /\/(token)/gi.test(window.location.pathname);
@@ -97,7 +99,7 @@ const App = ({ mobile }) => {
 								} />
 
 								<Route path="/" element={
-									<RouteMain {...{ contracts }} />
+									<RouteContracts {...{ update, contracts, index }} />
 								} />
 							</Routes>
 						</>

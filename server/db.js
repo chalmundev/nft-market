@@ -12,6 +12,8 @@ const {
 const MAX_LEN_MARKET_SUMMARIES = 5;
 const PATH = process.env.NODE_ENV === 'prod' ? '../../nft-market-data' : '../dist/out';
 
+let processingMarket = false
+
 async function getContractMedia(provider, accountId) {
 	let args = { from_index: "0", limit: 10 };
 	let base64 = btoa(JSON.stringify(args));
@@ -515,7 +517,6 @@ function updateSummary(contracts, log, marketSummaryData) {
 		//get old avg sale for market summary data populating
 		let old_avg_sale = new BN(contracts.summary.avg_sale);
 
-
 		//perform the average sale calculations. Adding 1 to avg --> new_avg = old_avg + (val - avg)/numValues
 		contracts.summary.avg_sale =
 			new BN(contracts.summary.avg_sale)
@@ -599,8 +600,19 @@ function updateSummary(contracts, log, marketSummaryData) {
 }
 
 
+
+///  EXPORTS
+
+
+
 module.exports = {
 	market: (db, startTimestamp) => new Promise((res, rej) => {
+
+		if (processingMarket) {
+			res('Update in progress')
+			return
+		}
+		processingMarket = true;
 
 		console.log(`\nMARKET UPDATE: ${new Date()}\n`);
 
@@ -777,6 +789,8 @@ module.exports = {
 						console.log("DONE");
 					}
 					res(marketSummary);
+
+					processingMarket = false
 				}
 				
 			);
