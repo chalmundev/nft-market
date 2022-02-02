@@ -12,7 +12,7 @@ const {
 const MAX_LEN_MARKET_SUMMARIES = 10;
 const PATH = process.env.NODE_ENV === 'prod' ? '../../nft-market-data' : '../dist/out';
 
-let processingMarket = false
+let processingMarket = false;
 
 async function getContractMedia(provider, accountId) {
 	let args = { from_index: "0", limit: 10 };
@@ -567,10 +567,9 @@ function updateSummary(contracts, log, marketSummaryData) {
 	const contractSummaryInfo = { amount: log.data.amount, updated_at: log.data.updated_at };
 
 	//make sure the summaries for tokens and the contract are defined.
-	contracts.summary = contracts.summary || { events: 0, sales: 0, avg_sale: "0", avg_change: "0" };
-	contracts.tokens[log.data.token_id].summary = contracts.tokens[log.data.token_id].summary || { events: 0, sales: 0, avg_sale: "0", avg_change: "0" };
-	console.log('contracts: ', contracts);
-
+	contracts.summary = contracts.summary || { events: 0, sales: 0, avg_sale: "0", avg_change: 0 };
+	contracts.tokens[log.data.token_id].summary = contracts.tokens[log.data.token_id].summary || { events: 0, sales: 0, avg_sale: "0", avg_change: 0 };
+	
 	//set the event summary for the contract (increment the total since we haven't incremented it yet on the contract side)
 	let eventSummary = { total: contracts.summary.events + 1, contract_id: log.data.contract_id, updated_at: log.data.updated_at };
 	//since an event will be added no matter what, we should update the market summary for events
@@ -608,9 +607,10 @@ function updateSummary(contracts, log, marketSummaryData) {
 			HIGHEST / LOWEST CHANGE IN AVERAGE PRICE 
 		*/
 		//check if the old avg sale is 0. If it is, don't do anything.
-		if (old_avg_sale.toString() != 0) {
+		if (old_avg_sale.toString() != "0") {
 			//set change in average
-			let changeInAvg = new_avg_sale.div(old_avg_sale).toString();
+			let changeInAvg = parseFloat((parseInt(new_avg_sale.toString(), 10) / parseInt(old_avg_sale.toString(), 10)).toFixed(4));
+
 			contracts.summary.avg_change = changeInAvg;
 
 			let changeInAverageSummary = { change: changeInAvg, contract_id: log.data.contract_id, updated_at: log.data.updated_at };
@@ -671,7 +671,8 @@ function updateSummary(contracts, log, marketSummaryData) {
 
 		if (old_avg_sale_tokens.toString() != 0) {
 			//set change in average
-			let changeInAvg = new_avg_sale_tokens.div(old_avg_sale_tokens).toString();
+			let changeInAvg = parseFloat((parseInt(new_avg_sale_tokens.toString(), 10) / parseInt(old_avg_sale_tokens.toString(), 10)).toFixed(4));
+
 			contracts.tokens[log.data.token_id].summary.avg_change = changeInAvg;
 		}
 
@@ -708,8 +709,8 @@ module.exports = {
 	market: (db, startTimestamp) => new Promise((res, rej) => {
 
 		if (processingMarket) {
-			res('Update in progress')
-			return
+			res('Update in progress');
+			return;
 		}
 		processingMarket = true;
 
@@ -766,8 +767,6 @@ module.exports = {
 				low_sale_tokens: marketSummary.low_sale_tokens || [],
 			};
 
-			console.log("MARKET SUMMARY - ", marketSummary);
-
 			// debugging
 			// currentHighestBlockTimestamp = 0;
 
@@ -795,7 +794,7 @@ module.exports = {
 						console.log("No receipts found since timestamp: ", currentHighestBlockTimestamp);
 						return res(marketSummary);
 					}
-
+					
 					//loop through and bulk all logs together for each contract
 					for (let rowNum = 0; rowNum < result.rows.length; rowNum++) {
 						const hash = result.rows[rowNum].originated_from_transaction_hash.toString();
@@ -835,8 +834,9 @@ module.exports = {
 						console.log("Receipt ", rowNum + 1, " of ", result.rows.length, " done.");
 					}
 
-					await writeFile(`./data.json`, JSON.stringify(eventsPerContract));
+					//await writeFile(`./data.json`, JSON.stringify(eventsPerContract));
 
+					
 					//loop through the logs for each contract
 					for (var contractId in eventsPerContract) {
 						console.log("CONTRACT: ", contractId);
@@ -891,7 +891,7 @@ module.exports = {
 					}
 					res(marketSummary);
 
-					processingMarket = false
+					processingMarket = false;
 				}
 
 			);
@@ -994,7 +994,6 @@ module.exports = {
 
 	reset: () => new Promise((res, rej) => {
 		execSync(`cd ${PATH} && rm -rf ${marketId} contracts.json`);
-		res(JSON.stringify({ reset: 'done' }))
+		res(JSON.stringify({ reset: 'done' }));
 	}),
-
 };
