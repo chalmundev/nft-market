@@ -265,13 +265,13 @@ function updateAveragePriceSummary(marketSummaryData, log, averagePriceSummary, 
 				//if we're updating the highest, check if our avg is greater than the existing avg
 				if (averagePriceSummary.avg > existingArray[foundIndex].avg) {
 					existingArray[foundIndex] = averagePriceSummary;
-					existingArray.sort((a, b) => (a.avg > b.avg) ? 1 : ((b.avg > a.avg) ? -1 : 0));
+					existingArray.sort((a, b) => new BN(a.avg).gte(new BN(b.avg)) ? 1 : -1);
 				}
 			} else {
 				//if we're updating the lowest, check if the avg is less
 				if (averagePriceSummary.avg < existingArray[foundIndex].avg) {
 					existingArray[foundIndex] = averagePriceSummary;
-					existingArray.sort((a, b) => (a.avg < b.avg) ? 1 : ((b.avg < a.avg) ? -1 : 0));
+					existingArray.sort((a, b) => new BN(a.avg).lte(new BN(b.avg)) ? 1 : -1);
 				}
 			}
 
@@ -283,10 +283,10 @@ function updateAveragePriceSummary(marketSummaryData, log, averagePriceSummary, 
 			//sort by the average
 			if (updateHighest == true) {
 				//if we're updating the highest, sort by avg ascending
-				existingArray.sort((a, b) => (a.avg > b.avg) ? 1 : ((b.avg > a.avg) ? -1 : 0));
+				existingArray.sort((a, b) => new BN(a.avg).gte(new BN(b.avg)) ? 1 : -1);
 			} else {
 				//of we're updating the lowest, sort by avg descending
-				existingArray.sort((a, b) => (a.avg < b.avg) ? 1 : ((b.avg < a.avg) ? -1 : 0));
+				existingArray.sort((a, b) => new BN(a.avg).lte(new BN(b.avg)) ? 1 : -1);
 			}
 		}
 	}
@@ -307,13 +307,13 @@ function updateAveragePriceSummary(marketSummaryData, log, averagePriceSummary, 
 				//if we're updating the highest, check if the avg is greater
 				if (averagePriceSummary.avg > existingArray[foundIndex].avg) {
 					existingArray[foundIndex] = averagePriceSummary;
-					existingArray.sort((a, b) => (a.avg > b.avg) ? 1 : ((b.avg > a.avg) ? -1 : 0));
+					existingArray.sort((a, b) => new BN(a.avg).gte(new BN(b.avg)) ? 1 : -1);
 				}
 			} else {
 				//if we're updating the lowest, check if the avg is less than
 				if (averagePriceSummary.avg < existingArray[foundIndex].avg) {
 					existingArray[foundIndex] = averagePriceSummary;
-					existingArray.sort((a, b) => (a.avg < b.avg) ? 1 : ((b.avg < a.avg) ? -1 : 0));
+					existingArray.sort((a, b) => new BN(a.avg).lte(new BN(b.avg)) ? 1 : -1);
 				}
 			}
 		}
@@ -367,9 +367,9 @@ function updateAveragePriceSummary(marketSummaryData, log, averagePriceSummary, 
 
 				//sort the array
 				if (updateHighest == true) {
-					existingArray.sort((a, b) => (a.avg > b.avg) ? 1 : ((b.avg > a.avg) ? -1 : 0));
+					existingArray.sort((a, b) => new BN(a.avg).gte(new BN(b.avg)) ? 1 : -1);
 				} else {
-					existingArray.sort((a, b) => (a.avg < b.avg) ? 1 : ((b.avg < a.avg) ? -1 : 0));
+					existingArray.sort((a, b) => new BN(a.avg).lte(new BN(b.avg)) ? 1 : -1);
 				}
 			}
 		}
@@ -479,10 +479,10 @@ function updatedHighestOrLowestSales(marketSummaryData, saleSummary, updateHighe
 
 		if (updateHighest == true) {
 			//if we're updating the highest, check if the amount is less
-			existingArray.sort((a, b) => (a.amount > b.amount) ? 1 : ((b.amount > a.amount) ? -1 : 0));
+			existingArray.sort((a, b) => new BN(a.amount).gte(new BN(b.amount)) ? 1 : -1);
 		} else {
 			//if we're updating the lowest, check if the amount is less
-			existingArray.sort((a, b) => (a.amount < b.amount) ? 1 : ((b.amount < a.amount) ? -1 : 0));
+			existingArray.sort((a, b) => new BN(a.amount).lte(new BN(b.amount)) ? 1 : -1);
 		}
 	} else {
 		/*
@@ -533,9 +533,9 @@ function updatedHighestOrLowestSales(marketSummaryData, saleSummary, updateHighe
 
 			//sort the array
 			if (updateHighest == true) {
-				existingArray.sort((a, b) => (a.amount > b.amount) ? 1 : ((b.amount > a.amount) ? -1 : 0));
+				existingArray.sort((a, b) => new BN(a.amount).gte(new BN(b.amount)) ? 1 : -1);
 			} else {
-				existingArray.sort((a, b) => (a.amount < b.amount) ? 1 : ((b.amount < a.amount) ? -1 : 0));
+				existingArray.sort((a, b) => new BN(a.amount).lte(new BN(b.amount)) ? 1 : -1);
 			}
 		}
 
