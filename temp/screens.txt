@@ -137,7 +137,7 @@ Below are some internal notes of the indexer we're building for context:
 		updated_at, // when it last had an event
 	}],
 	// all time
-	high_sales: [{
+	high_sales_tokens: [{
 		contract_id,
 		token_id,
 		updated_at, // when it happened
@@ -146,7 +146,7 @@ Below are some internal notes of the indexer we're building for context:
 		taker_id,
 	}],
 	// all time
-	low_sales: [{
+	low_sales_tokens: [{
 		contract_id,
 		token_id,
 		updated_at, // when it happened

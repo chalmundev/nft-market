@@ -9,7 +9,7 @@ const {
 	contractId: marketId,
 } = getConfig();
 
-const MAX_LEN_MARKET_SUMMARIES = 5;
+const MAX_LEN_MARKET_SUMMARIES = 10;
 const PATH = process.env.NODE_ENV === 'prod' ? '../../nft-market-data' : '../dist/out';
 
 async function getContractMedia(provider, accountId) {
@@ -104,19 +104,6 @@ function AddToQueue(queue, element) {
 		queue.shift();
 		queue.push(element);
 	}
-}
-
-function appendEventToContractAndUpdateSummary(contracts, log, marketSummaryData) {
-	//remove unnecessary info by creating new item to store object
-	const offer = { event: log.event == "update_offer" ? 0 : 1, maker_id: log.data.maker_id, taker_id: log.data.taker_id, amount: log.data.amount, updated_at: log.data.updated_at };
-
-	const tokens = contracts.tokens = contracts.tokens || {};
-
-	const token = tokens[log.data.token_id] = tokens[log.data.token_id] || {};
-	const offers = token.offers = token.offers || [];
-
-	offers.push(offer);
-	updateSummary(contracts, log, marketSummaryData);
 }
 
 function updateChangeInAverageSummary(marketSummaryData, log, changeInAverageSummary, updateHighest) {
@@ -482,13 +469,104 @@ function updatedVolumeOrEventsSummary(marketSummaryData, log, volumeOrEventSumma
 	}
 }
 
+function updatedHighestOrLowestSales(marketSummaryData, saleSummary, updateHighest) {
+	let existingArray = updateHighest == true ? marketSummaryData.high_sale_tokens : marketSummaryData.low_sale_tokens;
+	//if the array is less than max length, simply push and sort
+	if(existingArray.length < MAX_LEN_MARKET_SUMMARIES) {
+		existingArray.push(saleSummary);
+
+		if(updateHighest == true) {
+			//if we're updating the highest, check if the amount is less
+			existingArray.sort((a,b) => (a.amount > b.amount) ? 1 : ((b.amount > a.amount) ? -1 : 0));
+		} else {
+			//if we're updating the lowest, check if the amount is less
+			existingArray.sort((a,b) => (a.amount < b.amount) ? 1 : ((b.amount < a.amount) ? -1 : 0));
+		}
+	} else {
+		/*
+				since the array is sorted, index 0 will have the smallest amount (if updating highest). Index 0
+				will have the largest amount if updating lowest
+				
+				We only need to do this computation if our log has a better total than index 0
+			*/
+		if(updateHighest == true ? saleSummary.amount > existingArray[0].amount : saleSummary.amount < existingArray[0].amount) {
+			//loop through and try and find the appropriate spot to insert the log.
+			//default to index MAX_LEN_MARKET_SUMMARIES - 1 in case we don't find anywhere.
+			var foundSpot = MAX_LEN_MARKET_SUMMARIES - 1;
+			for(var i = 0; i < existingArray.length; i++) {
+				/*
+					example: we have avg of 4
+					[2, 3, 5]
+					=>
+					[3, 4, 5] (splice and shift array)
+
+					if we're updating the highest:
+					- keep iterating until we find an avg that's greater than our avg. We should insert our avg
+					into that spot and shift the array
+
+					if we're updating the lowest:
+					- keep iterating until we find a avg that's less than our avg. We should then insert ours into
+					that spot and shift the array
+
+					[5, 4, 2, 1]
+
+				*/
+				if(updateHighest == true) {
+					if (saleSummary.amount < existingArray[i].amount) {
+						foundSpot = i;
+						break;
+					}
+				} else {
+					if (saleSummary.amount > existingArray[i].amount) {
+						foundSpot = i;
+						break;
+					}
+				}
+				
+			}
+			//splice the array to insert and push everything back
+			existingArray.splice(foundSpot, 0, saleSummary);
+			//shift the array over by 1
+			existingArray.shift();
+
+			//sort the array
+			if (updateHighest == true) {
+				existingArray.sort((a,b) => (a.amount > b.amount) ? 1 : ((b.amount > a.amount) ? -1 : 0));
+			} else {
+				existingArray.sort((a,b) => (a.amount < b.amount) ? 1 : ((b.amount < a.amount) ? -1 : 0));
+			}
+		}
+
+	}
+		
+	//update the market summary data depending on if we're looking at the highest or lowest change
+	if(updateHighest == true) {
+		marketSummaryData.high_sale_tokens = existingArray;
+	} else {
+		marketSummaryData.low_sale_tokens = existingArray;
+	}
+}
+
+function appendEventToContractAndUpdateSummary(contracts, log, marketSummaryData) {
+	//remove unnecessary info by creating new item to store object
+	const offer = { event: log.event == "update_offer" ? 0 : 1, maker_id: log.data.maker_id, taker_id: log.data.taker_id, amount: log.data.amount, updated_at: log.data.updated_at };
+
+	const tokens = contracts.tokens = contracts.tokens || {};
+
+	const token = tokens[log.data.token_id] = tokens[log.data.token_id] || {};
+	const offers = token.offers = token.offers || [];
+
+	offers.push(offer);
+	updateSummary(contracts, log, marketSummaryData);
+}
+
 function updateSummary(contracts, log, marketSummaryData) {
 	//remove unnecessary info by creating new item to store object
 	const contractSummaryInfo = { amount: log.data.amount, updated_at: log.data.updated_at };
 
 	//make sure the summaries for tokens and the contract are defined.
-	contracts.summary = contracts.summary || { events: 0, sales: 0, avg_sale: "0" };
-	contracts.tokens[log.data.token_id].summary = contracts.tokens[log.data.token_id].summary || { events: 0, sales: 0, avg_sale: "0" };
+	contracts.summary = contracts.summary || { events: 0, sales: 0, avg_sale: "0", avg_change: "0" };
+	contracts.tokens[log.data.token_id].summary = contracts.tokens[log.data.token_id].summary || { events: 0, sales: 0, avg_sale: "0", avg_change: "0" };
 	console.log('contracts: ', contracts);
 	
 	//set the event summary for the contract (increment the total since we haven't incremented it yet on the contract side)
@@ -524,13 +602,17 @@ function updateSummary(contracts, log, marketSummaryData) {
 
 		//get new avg sale for market summary data populating			
 		let new_avg_sale = new BN(contracts.summary.avg_sale);
-
+		
 		/*
 			HIGHEST / LOWEST CHANGE IN AVERAGE PRICE 
 		*/
 		//check if the old avg sale is 0. If it is, don't do anything.
 		if (old_avg_sale.toString() != 0) {
-			let changeInAverageSummary = {change: new_avg_sale.div(old_avg_sale).mul(new BN("100")).toString(), contract_id: log.data.contract_id, updated_at: log.data.updated_at};
+			//set change in average
+			let changeInAvg = new_avg_sale.div(old_avg_sale).toString();
+			contracts.summary.avg_change = changeInAvg;
+
+			let changeInAverageSummary = {change: changeInAvg, contract_id: log.data.contract_id, updated_at: log.data.updated_at};
 			//update the highest change in average
 			updateChangeInAverageSummary(marketSummaryData, log, changeInAverageSummary, true);
 			//update the lowest change in average
@@ -577,10 +659,20 @@ function updateSummary(contracts, log, marketSummaryData) {
 		contracts.tokens[log.data.token_id].summary.sales += 1;
 		contracts.tokens[log.data.token_id].summary.events += 1;
 
+		//
+		let old_avg_sale_tokens = new BN(contracts.tokens[log.data.token_id].summary.avg_sale);
 		contracts.tokens[log.data.token_id].summary.avg_sale =
 			new BN(contracts.tokens[log.data.token_id].summary.avg_sale)
 				.add((new BN(log.data.amount).sub(new BN(contracts.tokens[log.data.token_id].summary.avg_sale)))
 					.div(new BN(contracts.tokens[log.data.token_id].summary.sales))).toString();
+
+		let new_avg_sale_tokens = new BN(contracts.tokens[log.data.token_id].summary.avg_sale);	
+		
+		if (old_avg_sale_tokens.toString() != 0) {
+			//set change in average
+			let changeInAvg = new_avg_sale_tokens.div(old_avg_sale_tokens).toString();
+			contracts.tokens[log.data.token_id].summary.avg_change = changeInAvg;
+		}
 
 		//make sure highest and lowest aren't undefined
 		contracts.tokens[log.data.token_id].summary.highest = contracts.tokens[log.data.token_id].summary.highest || contractSummaryInfo;
@@ -595,6 +687,13 @@ function updateSummary(contracts, log, marketSummaryData) {
 		if (log.data.amount < contracts.tokens[log.data.token_id].summary.lowest.amount) {
 			contracts.tokens[log.data.token_id].summary.lowest = contractSummaryInfo;
 		}
+
+		/*
+			UPDATE Highest and Lowest Sales
+		*/
+		const saleLog = { contract_id: log.data.contract_id, token_id: log.data.token_id, maker_id: log.data.maker_id, taker_id: log.data.taker_id, amount: log.data.amount, updated_at: log.data.updated_at };
+		updatedHighestOrLowestSales(marketSummaryData, saleLog, true);
+		updatedHighestOrLowestSales(marketSummaryData, saleLog, false);
 	}
 }
 
@@ -651,9 +750,11 @@ module.exports = {
 				low_sales: marketSummary.low_sales || [],
 				top_volume: marketSummary.top_volume || [],
 				top_events: marketSummary.top_events || [],
-				high_sales: marketSummary.high_sales || [],
-				low_sales: marketSummary.low_sales || [],
+				high_sale_tokens: marketSummary.high_sale_tokens || [],
+				low_sale_tokens: marketSummary.low_sale_tokens || [],
 			};
+
+			//currentHighestBlockTimestamp = 0;
 
 			client.query(
 				`
@@ -719,6 +820,8 @@ module.exports = {
 						console.log("Receipt ", rowNum + 1, " of ", result.rows.length, " done.");
 					}
 
+					await writeFile(`./data.json`, JSON.stringify(eventsPerContract));
+
 					//loop through the logs for each contract
 					for (var contractId in eventsPerContract) {
 						console.log("CONTRACT: ", contractId);
@@ -757,8 +860,8 @@ module.exports = {
 						low_sales: marketSummaryData.low_sales,
 						top_volume: marketSummaryData.top_volume,
 						top_events: marketSummaryData.top_events,
-						high_sales: marketSummaryData.high_sales,
-						low_sales: marketSummaryData.low_sales,
+						high_sale_tokens: marketSummaryData.high_sale_tokens,
+						low_sale_tokens: marketSummaryData.low_sale_tokens,
 					};
 					await writeFile(`${PATH}/${marketId}/marketSummary.json`, JSON.stringify(marketSummary));
 
