@@ -5,6 +5,7 @@
   "author": "chalmundev",
   "license": "MIT",
   "dependencies": {
+    "dotenv": "^15.0.0",
     "fastify": "^3.25.3",
     "fastify-postgres": "^3.6.0",
     "near-api-js": "^0.44.2",

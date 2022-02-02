@@ -38,7 +38,7 @@ export const fetchContracts = () => async ({ update }) => {
 		contract_id,
 		...data,
 		media: parseMedia(data.media),
-	}))
+	}));
 	update('data', { contracts });
 };
 

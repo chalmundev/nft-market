@@ -53,9 +53,9 @@ test('contract is deployed', async (t) => {
 	storageAmount = await contractAccount.viewFunction(
 		contractId,
 		'offer_storage_amount',
-	)
+	);
 
-	console.log('offer_storage_amount', storageAmount)
+	console.log('offer_storage_amount', storageAmount);
 
 	t.is(contractId, contractAccount.accountId);
 });
@@ -91,31 +91,31 @@ test('owner remove offers', async (t) => {
 			contractId,
 			methodName: 'remove_offers',
 			gas
-		}).catch((e) => { console.warn(e) }),
+		}).catch((e) => { console.warn(e); }),
 		contractAccount.functionCall({
 			contractId,
 			methodName: 'remove_offers_by_maker_id',
 			args: { account_id: aliceId },
 			gas
-		}).catch((e) => { console.warn(e) }),
+		}).catch((e) => { console.warn(e); }),
 		contractAccount.functionCall({
 			contractId,
 			methodName: 'remove_offers_by_taker_id',
 			args: { account_id: aliceId },
 			gas
-		}).catch((e) => { console.warn(e) }),
+		}).catch((e) => { console.warn(e); }),
 		contractAccount.functionCall({
 			contractId,
 			methodName: 'remove_offers_by_maker_id',
 			args: { account_id: bobId },
 			gas
-		}).catch((e) => { console.warn(e) }),
+		}).catch((e) => { console.warn(e); }),
 		contractAccount.functionCall({
 			contractId,
 			methodName: 'remove_offers_by_taker_id',
 			args: { account_id: bobId },
 			gas
-		}).catch((e) => { console.warn(e) })
+		}).catch((e) => { console.warn(e); })
 	]);
 
 	const aliceOffers = await contractAccount.viewFunction(
@@ -143,12 +143,12 @@ test('alice and bob withdraw storage', async (t) => {
 			contractId,
 			methodName: 'withdraw_offer_storage',
 			gas
-		}).catch((e) => { console.warn(e) }),
+		}).catch((e) => { console.warn(e); }),
 		bob.functionCall({
 			contractId,
 			methodName: 'withdraw_offer_storage',
 			gas
-		}).catch((e) => { console.warn(e) }),
+		}).catch((e) => { console.warn(e); }),
 	]);
 	t.true(true);
 });
@@ -199,7 +199,7 @@ test('tokens minted', async (t) => {
 
 test('alice make_offer on token 1', async (t) => {
 
-	await recordStart(contractId)
+	await recordStart(contractId);
 
 	const res = await alice.functionCall({
 		contractId,
@@ -211,7 +211,7 @@ test('alice make_offer on token 1', async (t) => {
 		attachedDeposit: parseNearAmount('0.22'),
 	});
 
-	await recordStop(contractId)
+	await recordStop(contractId);
 
 	t.is(res?.status?.SuccessValue, '');
 });
@@ -275,9 +275,9 @@ test('bob CANNOT remove_offer from token 1 but owner can', async (t) => {
 			gas,
 			attachedDeposit: 1,
 		});
-		t.true(false)
+		t.true(false);
 	} catch(e) {
-		t.true(true)
+		t.true(true);
 	}
 
 	const res = await contractAccount.functionCall({
@@ -662,7 +662,7 @@ test('Alice makes exact offer', async (t) => {
 		},
 	);
 
-	console.log(res2)
+	console.log(res2);
 
 	t.is(res2.owner_id, aliceId);
 

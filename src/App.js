@@ -11,18 +11,17 @@ import { initNear } from './state/near';
 import { networkId } from './../utils/near-utils';
 
 import { Nav } from './components/Nav';
-import { RouteContracts } from './components/RouteContracts';
 import { RouteOffers } from './components/RouteOffers';
 import { RouteContract } from './components/RouteContract';
 import { RouteToken } from './components/RouteToken';
+import { RouteContracts } from './components/RouteContracts';
+import { RouteMain } from './components/RouteMain';
 
 import './App.scss';
 
 const App = ({ mobile }) => {
 
 	const { state, dispatch, update } = useContext(appStore);
-
-	// console.log(state)
 
 	const navigate = useNavigate();
 
@@ -36,8 +35,6 @@ const App = ({ mobile }) => {
 	};
 	useEffect(onMount, []);
 
-	/// let's go!
-
 	const {
 		wallet, account, data,
 		data: {
@@ -46,8 +43,6 @@ const App = ({ mobile }) => {
 			offers, supply,
 		}
 	} = state;
-
-	console.log(marketSummary)
 
 	const showBackHome = /\/(maker|taker)/gi.test(window.location.pathname);
 	const showBackToken = /\/(token)/gi.test(window.location.pathname);
@@ -98,8 +93,12 @@ const App = ({ mobile }) => {
 									<RouteToken {...{ dispatch, update, account, data }} />
 								} />
 
+								<Route path="/contracts" element={
+									<RouteContracts {...{ update, index, contracts }} />
+								} />
+
 								<Route path="/" element={
-									<RouteContracts {...{ update, contracts, index }} />
+									<RouteMain {...{ update, marketSummary }} />
 								} />
 							</Routes>
 						</>

@@ -1,10 +1,10 @@
-import React from 'react'
+import React from 'react';
 
 export const Rows = ({ arr, Item }) => {
 	const rows = [], numCols = Math.ceil(window.innerWidth / 375);
 	for (let i = 0; i < arr.length; i += numCols) {
 		const slice = arr.slice(i, i + numCols);
-		while (slice.length < numCols) slice.push(null)
+		while (slice.length < numCols) slice.push(null);
 		rows.push(slice);
 	}
 
@@ -12,5 +12,5 @@ export const Rows = ({ arr, Item }) => {
 		{
 			row.map((props, j) => props ? <Item key={j} {...props} /> : <div key={j}></div>)
 		}
-	</div>)
-}
+	</div>);
+};

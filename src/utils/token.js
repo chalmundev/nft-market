@@ -8,10 +8,10 @@ export const parseMedia = (media) => {
 	if (ipfsHash) {
 		return 'https://cloudflare-ipfs.com/ipfs/' + ipfsHash + file;
 	}
-	return media
-}
+	return media;
+};
 
 export const parseToken = (token) => {
-	token.metadata.media = parseMedia( token?.metadata?.media)
+	token.metadata.media = parseMedia( token?.metadata?.media);
 	return token;
 };
