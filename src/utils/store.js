@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 export const get = (k) => {
 	const v = localStorage.getItem(k);
-	if (v.charAt(0) !== '{') {
+	if (v?.charAt(0) !== '{') {
 		return v
 	}
 	try {
