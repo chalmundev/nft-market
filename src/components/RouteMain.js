@@ -11,11 +11,11 @@ export const RouteMain = ({ marketSummary }) => {
 
 	/// TODO new token summary data
 
-	console.log(marketSummary)
+	console.log(marketSummary);
 
 	return <>
 
 		
 
-	</>
-}
+	</>;
+};

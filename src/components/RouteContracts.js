@@ -10,18 +10,18 @@ const PAGE_SIZE = 30;
 export const RouteContracts = ({ update, contracts, index }) => {
 	const navigate = useNavigate();
 
-	const [filter, setFilter] = useStore('__FILTER')
+	const [filter, setFilter] = useStore('__FILTER');
 
-	console.log(index)
+	console.log(index);
 
-	const supply = contracts.length
+	const supply = contracts.length;
 	const displayContracts = contracts
 		.filter(({ contract_id, name }) => new RegExp(filter, 'gi').test(contract_id + name))
-		.slice(index * PAGE_SIZE, (index+1) * PAGE_SIZE)
+		.slice(index * PAGE_SIZE, (index+1) * PAGE_SIZE);
 
 	const handlePage = async (_index = 0) => {
 		update('data.index', _index);
-	}
+	};
 
 	return <>
 
@@ -44,5 +44,5 @@ export const RouteContracts = ({ update, contracts, index }) => {
 				</div>;
 			}
 		}} />
-	</>
-}
+	</>;
+};

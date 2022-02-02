@@ -9,8 +9,8 @@ import { parseToken } from '../utils/token';
 import { getOfferFromHashes } from '../utils/receipts';
 import { TokenMedia } from './TokenMedia';
 
-const OUTBID_AMOUNT = '99999999999999999999999'
-const OUTBID_TIMEOUT = 86400000
+const OUTBID_AMOUNT = '99999999999999999999999';
+const OUTBID_TIMEOUT = 86400000;
 
 export const RouteToken = ({ dispatch, account, data }) => {
 	const params = useParams();
@@ -46,19 +46,19 @@ export const RouteToken = ({ dispatch, account, data }) => {
 					contract_id,
 					token_id,
 				}
-			}))
+			}));
 			setOffer(offer);
 		} catch (e) {
 			console.warn(e);
 		}
 
-		setLastOffer(await getOfferFromHashes())
+		setLastOffer(await getOfferFromHashes());
 
 		const storageAvailable = await dispatch(view({
 			methodName: 'offer_storage_available',
 			args: { owner_id: account.account_id }
 		}));
-		console.log(storageAvailable)
+		console.log(storageAvailable);
 
 		setToken(token);
 	};
@@ -67,7 +67,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	const handleMakeOffer = () => {
 
 		if (offer && offer.maker_id !== offer.taker_id && new BN(parseNearAmount(amount)).sub(new BN(OUTBID_AMOUNT)).lt(new BN(offer.amount))) {
-			return alert('Counter offer is too small')
+			return alert('Counter offer is too small');
 		}
 
 		dispatch(action({
@@ -93,24 +93,24 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 	const handleAcceptOffer = async () => {
 		let msg = amount.length === 0
-		? JSON.stringify({ auto_transfer: true })
-		: JSON.stringify({ amount: parseNearAmount(amount) })
+			? JSON.stringify({ auto_transfer: true })
+			: JSON.stringify({ amount: parseNearAmount(amount) });
 
 		if (offer) {
 			if (amount.length > 0 && new BN(parseNearAmount(amount)).sub(new BN(OUTBID_AMOUNT)).lt(new BN(offer.amount))) {
-				return alert('Counter offer is too small')
+				return alert('Counter offer is too small');
 			}
 		} else {
 			const storageAvailable = await dispatch(view({
 				methodName: 'offer_storage_available',
 				args: { owner_id: account.account_id }
 			}));
-			console.log(storageAvailable)
+			console.log(storageAvailable);
 			if (storageAvailable === 0) {
-				alert('must pre-pay offer storage')
+				alert('must pre-pay offer storage');
 				const attachedDeposit = await dispatch(view({
 					methodName: 'offer_storage_amount',
-				}))
+				}));
 				return dispatch(action({
 					methodName: 'pay_offer_storage',
 					args: {},
@@ -145,8 +145,8 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 	const isOwner = token.owner_id === account?.account_id;
 	const ifOfferOwner = offer?.maker_id === account?.account_id;
-	const offerLabel = isOwner ? 'Set Price' : 'Make Offer'
-	const { media } = token.metadata
+	const offerLabel = isOwner ? 'Set Price' : 'Make Offer';
+	const { media } = token.metadata;
 
 	return (
 		<div>

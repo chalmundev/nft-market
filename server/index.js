@@ -2,10 +2,10 @@ const { mkdir } = require('fs/promises');
 const fastify = require('fastify')({ logger: true });
 const fpg = require('fastify-postgres');
 
-const { market, contracts } = require('./db');
+const { market, contracts, reset } = require('./db');
 
 const PORT = 3000;
-const HOST = process.env.ENV === 'prod' ? '0.0.0.0' : '127.0.0.1';
+const HOST = process.env.NODE_ENV === 'prod' ? '0.0.0.0' : '127.0.0.1';
 
 fastify.register(fpg, {
 	name: 'mainnet',
@@ -22,16 +22,25 @@ fastify.register(fpg, {
 // 	connectionString: 'postgres://nftmarket:nftmarket@127.0.0.1:5432/nftmarket'
 // });
 
-fastify.get('/', async (request, reply) => {
-	return { hello: 'world' };
-});
+if (process.env.NODE_ENV !== 'prod') {
+	fastify.get('/', async (request, reply) => {
+		return { hello: 'world' };
+	});
 
-fastify.get('/contracts/:startTimestamp?', (req, reply) => {
-	return contracts(fastify.pg.testnet, req.params.startTimestamp || false);
-});
+	fastify.get('/contracts/:startTimestamp?', (req, reply) => {
+		return contracts(fastify.pg.testnet, req.params.startTimestamp || false);
+	});
 
-fastify.get('/market/:startTimestamp?', (req, reply) => {
-	return market(fastify.pg.testnet, req.params.startTimestamp || false);
+	fastify.get('/market/:startTimestamp?', (req, reply) => {
+		return market(fastify.pg.testnet, req.params.startTimestamp || false);
+	});
+}
+
+fastify.get('/reset/:adminCode', (req, reply) => {
+	if (req.params.adminCode !== process.env.ADMIN_CODE) {
+		return JSON.stringify({ error: 'invalid code '})
+	}
+	return reset();
 });
 
 const start = async () => {

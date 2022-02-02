@@ -14,7 +14,7 @@ export const RouteOffers = ({ dispatch, update, account, offers, supply, index, 
 
 	const isMaker = /maker/.test(window.location.href);
 	const isTaker = !isMaker;
-	const type = isMaker ? 'maker' : 'taker'
+	const type = isMaker ? 'maker' : 'taker';
 
 	const onMount = async () => {
 		if (offers[type].length > 0) {
@@ -60,7 +60,7 @@ export const RouteOffers = ({ dispatch, update, account, offers, supply, index, 
 			key: 'data.offers.' + type
 		}));
 
-		await dispatch(fetchBatchTokens(offers.map(({ contract_id, token_id}) => ({ contract_id, token_id}))))
+		await dispatch(fetchBatchTokens(offers.map(({ contract_id, token_id}) => ({ contract_id, token_id}))));
 
 		update('loading', false);
 	};
@@ -87,7 +87,7 @@ export const RouteOffers = ({ dispatch, update, account, offers, supply, index, 
 				Item: ({ contract_id, token_id, amount, maker_id }) => <div onClick={() => navigate(`/token/${contract_id}/${token_id}`)}>
 					{
 						cache[contract_id]?.[token_id] && <>
-						<img src={cache[contract_id][token_id].metadata.media} />
+							<img src={cache[contract_id][token_id].metadata.media} />
 						</>
 					}
 					{ isTaker && <p>From: { maker_id === account?.account_id ? 'You' : maker_id}</p>}

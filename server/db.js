@@ -766,14 +766,10 @@ module.exports = {
 				low_sale_tokens: marketSummary.low_sale_tokens || [],
 			};
 
-<<<<<<< HEAD
 			console.log("MARKET SUMMARY - ", marketSummary);
 
 			// debugging
 			// currentHighestBlockTimestamp = 0;
-=======
-			//currentHighestBlockTimestamp = 0;
->>>>>>> ad729d2221c583199026efa743e92fda52c920b4
 
 			client.query(
 				`
@@ -993,5 +989,10 @@ module.exports = {
 			);
 
 		});
-	})
+	}),
+
+	reset: () => new Promise((res, rej) => {
+		execSync(`cd ${PATH} && rm -rf ${marketId} contracts.json`);
+		res(JSON.stringify({ reset: 'done' }))
+	}
 };

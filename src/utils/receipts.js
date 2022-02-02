@@ -24,7 +24,7 @@ function getEvents(receipts_outcome) {
 export const getOfferFromHashes = async () => {
 	const txHashes = window.location.href.split('?transactionHashes=')[1];
 	if (!txHashes) {
-		return
+		return;
 	}
 	const [hash] = txHashes.split();
 	try {
@@ -37,6 +37,6 @@ export const getOfferFromHashes = async () => {
 			return { event: log.event === 'update_offer' ? 0 : 1, maker_id: log.data.maker_id, taker_id: log.data.taker_id, amount: log.data.amount, updated_at: log.data.updated_at };
 		}
 	} catch(e) {
-		console.warn(e)
+		console.warn(e);
 	}
-}
+};

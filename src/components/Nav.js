@@ -27,42 +27,42 @@ const Menu = ({ wallet }) => {
 					<Link to="/" onClick={() => wallet.signIn()}>Sign In</Link>
 			}
 		</li>
-	</ul>
-}
+	</ul>;
+};
 
 export const Nav = ({ wallet, mobile }) => {
-	if (!wallet) return null
+	if (!wallet) return null;
 
-	const [active, setActive] = useState(false)
+	const [active, setActive] = useState(false);
 
 	const handleClose = () => {
-		window.scrollTo(0, 0)
-		setActive(false)
-	}
+		window.scrollTo(0, 0);
+		setActive(false);
+	};
 
 	return <>
-	<nav className={ (mobile && active).toString() }>
-		<ul>
-			<li>
-				<Link to="/" onClick={handleClose}><strong>SecondX</strong></Link>
-			</li>
-		</ul>
+		<nav className={ (mobile && active).toString() }>
+			<ul>
+				<li>
+					<Link to="/" onClick={handleClose}><strong>SecondX</strong></Link>
+				</li>
+			</ul>
+			{
+				mobile
+					?
+					<ul>
+						<li>
+							<Link to="#" onClick={() => setActive(!active)}>Menu</Link>
+						</li>
+					</ul>
+					:
+					<Menu {...{wallet}} />
+			}
+		</nav>
 		{
-			mobile
-				?
-				<ul>
-					<li>
-						<Link to="#" onClick={() => setActive(!active)}>Menu</Link>
-					</li>
-				</ul>
-				:
-				<Menu {...{wallet}} />
+			mobile && <div className={ ['mobile-menu', active].join(' ') } onClick={handleClose} >
+				<Menu {...{ wallet }}/>
+			</div>
 		}
-	</nav>
-	{
-		mobile && <div className={ ['mobile-menu', active].join(' ') } onClick={handleClose} >
-			<Menu {...{ wallet }}/>
-		</div>
-	}
-	</>
-}
+	</>;
+};

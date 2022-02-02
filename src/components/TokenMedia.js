@@ -1,6 +1,6 @@
-import React from 'react'
+import React from 'react';
 
-import Missing from './../img/missing.jpg'
+import Missing from './../img/missing.jpg';
 
 export const TokenMedia = ({ media }) => {
 
@@ -14,5 +14,5 @@ export const TokenMedia = ({ media }) => {
 			}}
 		/>
 
-	</div>
-}
+	</div>;
+};
