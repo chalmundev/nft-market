@@ -12,6 +12,9 @@ target
 
 # production
 dist
+server/.env-prod
+.env-prod
+.env-*
 
 # misc
 notes

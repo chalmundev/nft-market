@@ -1,3 +1,4 @@
+require('dotenv').config({ path: '.env-prod' })
 module.exports = {
 	apps : [
 		{
@@ -5,7 +6,7 @@ module.exports = {
 		  script: "./index.js",
 		  watch: true,
 		  env: {
-			  "NODE_ENV": "dev"
+			  "NODE_ENV": "dev",
 		  },
 		  env_prod: {
 			  "NODE_ENV": "prod",
