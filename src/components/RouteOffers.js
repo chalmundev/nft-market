@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import { formatNearAmount, view, fetchBatchTokens } from '../state/near';
 import { Rows } from './Rows';
 
 const PAGE_SIZE = 30;
 
-export const RouteOffers = ({ dispatch, update, account, offers, supply, index, cache }) => {
+export const RouteOffers = ({ dispatch, update, navigate, account, offers, supply, index, cache }) => {
 	if (!account) return null;
 
 	const { account_id } = account;
-
-	const navigate = useNavigate();
 
 	const isMaker = /maker/.test(window.location.href);
 	const isTaker = !isMaker;

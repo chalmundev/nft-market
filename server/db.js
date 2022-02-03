@@ -368,6 +368,7 @@ function updateAveragePriceSummary(marketSummaryData, log, averagePriceSummary, 
 				//sort the array
 				if (updateHighest == true) {
 					existingArray.sort((a, b) => (a.avg > b.avg) ? 1 : ((b.avg > a.avg) ? -1 : 0));
+					existingArray.sort((a, b) => new BN(a.avg).gte(new BN(b.avg)) ? 1 : -1);
 				} else {
 					existingArray.sort((a, b) => (a.avg < b.avg) ? 1 : ((b.avg < a.avg) ? -1 : 0));
 				}

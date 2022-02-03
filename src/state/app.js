@@ -22,6 +22,7 @@ const initialState = {
 		},
 		marketSummary: {},
 		contracts: [],
+		contractMap: {},
 	}
 };
 
@@ -33,13 +34,17 @@ export const onAppMount = (message) => async ({ update, getState, dispatch }) =>
 };
 
 export const fetchContracts = () => async ({ update }) => {
-	const res = await fetchJson(`${DATA_HOST}/contracts.json`);
-	const contracts = Object.entries(res.contracts).map(([contract_id, data]) => ({
-		contract_id,
-		...data,
-		media: parseMedia(data.media),
-	}));
-	update('data', { contracts });
+	const { contracts: contractMap } = await fetchJson(`${DATA_HOST}/contracts.json`);
+	const contracts = Object.entries(contractMap).map(([contract_id, data]) => {
+		const media = parseMedia(data.media)
+		contractMap[contract_id].media = media
+		return {
+			contract_id,
+			...data,
+			media,
+		}
+	});
+	update('data', { contracts, contractMap });
 };
 
 export const fetchData = (fn = 'marketSummary') => async ({ update }) => {

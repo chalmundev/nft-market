@@ -13,8 +13,7 @@ const OUTBID_AMOUNT = '99999999999999999999999';
 const OUTBID_TIMEOUT = 86400000;
 
 export const RouteToken = ({ dispatch, account, data }) => {
-	const params = useParams();
-	const { contract_id, token_id } = params;
+	const { contract_id, token_id } = useParams();
 
 	const { tokens } = data;
 

@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React from 'react';
 import { useStore } from '../utils/store';
 
 import { Rows } from './Rows';
@@ -7,12 +6,9 @@ import { TokenMedia } from './TokenMedia';
 
 const PAGE_SIZE = 30;
 
-export const RouteContracts = ({ update, contracts, index }) => {
-	const navigate = useNavigate();
+export const RouteContracts = ({ update, navigate, contracts, index }) => {
 
 	const [filter, setFilter] = useStore('__FILTER');
-
-	console.log(index);
 
 	const supply = contracts.length;
 	const displayContracts = contracts

@@ -60,7 +60,9 @@ nav {
 		width: 100%;
 		object-fit: contain;
 		aspect-ratio: 1 / 1;
+		overflow: hidden;
 	}
+	border-bottom-left-radius: 15%;
 }
 
 .form-group {
