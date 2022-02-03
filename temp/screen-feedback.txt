@@ -1,0 +1,46 @@
+
+
+Background on NEAR NFTs
+
+Every token has:
+- token_id
+- title (optional but we will use token_id if it's not available)
+- contract_id (it belongs to)
+- image
+
+
+Overall
+- we'll remember if they collapsed price history/change sections so they can navigate easier
+
+Contract
+
+- PRICE CHANGE (last 5 price changes for the contract)
+	- From is actually the token name (or token_id)
+	- 
+
+
+
+Token
+
+- Either Bid or Buy
+- Remove Auction Ends - replace with USD price feed
+- Owner vs. artist
+- NFT Title (if exists) + Token ID
+- Past Offers
+- 4h 2d ago
+- Kill the offers because we have history at the bottom
+- Chart at bottom
+
+Summary Layout for Token
+- Media
+- Title (and / or token_id)
+- Current Owner
+- Current Bid - Current Bid Owner
+- Volume
+- History
+- Chart (with no change history)
+
+For Amounts
+
+3.45 N
+($42.56 USD) <-- tiny
