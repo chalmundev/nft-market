@@ -53,11 +53,11 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 		setLastOffer(await getOfferFromHashes());
 
-		const storageAvailable = await dispatch(view({
-			methodName: 'offer_storage_available',
-			args: { owner_id: account.account_id }
-		}));
-		console.log(storageAvailable);
+		// debugging
+		// const storageAvailable = await dispatch(view({
+		// 	methodName: 'offer_storage_available',
+		// 	args: { owner_id: account.account_id }
+		// }));
 
 		setToken(token);
 	};

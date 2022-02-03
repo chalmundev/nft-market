@@ -54,15 +54,15 @@ nav {
 }
 
 .token-image {
-	background: #eee;
 	max-width: 400px;
 	> img {
 		width: 100%;
-		object-fit: contain;
+		object-fit: cover;
+		object-position: center top;
 		aspect-ratio: 1 / 1;
 		overflow: hidden;
+		border-bottom-left-radius: 15%;
 	}
-	border-bottom-left-radius: 15%;
 }
 
 .form-group {
