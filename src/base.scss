@@ -1,0 +1,52 @@
+* {
+	box-sizing: border-box;
+}
+
+body {
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	color: $rambutan;
+	font-family: 'evolventa';
+}
+
+a, a:hover, a:visited, a:focus {
+	text-decoration: none;
+	color: $lime;
+}
+
+h1, h2, h3, p {
+	margin: $m;
+}
+
+ul {
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+}
+
+input, button {
+	width: 100%;
+	background: none;
+	color: $lime;
+	height: 48px;
+	padding: 16px 16px 14px 16px;
+	outline: none;
+	font-family: 'evolventa';
+	margin: $m;
+	border-image-source: $light-gradient;
+	border-width: 1px;
+	border-image-slice: 1;
+}
+
+input {
+	font-size: 1.1rem;
+	width: calc(100% - 2 * $m);
+}
+
+button {
+	color: $avocado;
+	letter-spacing: 0.05rem;
+	font-family: 'evolventa-bold';
+	background: $light-gradient;
+}

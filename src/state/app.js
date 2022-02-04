@@ -3,7 +3,7 @@ import { parseMedia } from '../utils/token';
 
 import { initNear, marketId } from './near';
 
-const DATA_HOST = process.env.REACT_APP_ENV === 'prod' ? 'https://data.secondx.app' : 'http://localhost:1234/out';
+const DATA_HOST = process.env.REACT_APP_DATA === 'remote' ? 'https://data.secondx.app' : 'http://localhost:1234/out';
 
 // example
 const initialState = {

@@ -52,12 +52,12 @@ const App = ({ mobile }) => {
 	const showBackContract = /\/(contract)/gi.test(pathname);
 	const txHashes = href.split('?transactionHashes=')[1];
 
-	return (
+	return (<>
 		<main className="container-fluid">
 
 			<Nav {...{ wallet, mobile }} />
 
-			<section className="content">
+			<section className={['content', mobile && 'mobile'].join(' ')}>
 				{
 					state.loading
 						?
@@ -108,6 +108,7 @@ const App = ({ mobile }) => {
 				}
 			</section>
 		</main>
+		</>
 	);
 };
 

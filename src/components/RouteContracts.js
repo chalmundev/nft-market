@@ -25,7 +25,7 @@ export const RouteContracts = ({ update, navigate, contracts, index }) => {
 
 		<p>Page {index+1} / {Math.ceil(supply / PAGE_SIZE)}</p>
 
-		<div className='button-row'>
+		<div className='grid apart-2'>
 			{index !== 0 ? <button onClick={() => handlePage(index - 1)}>Prev</button> : <button style={{ visibility: 'hidden' }}></button>}
 			{(index + 1) * PAGE_SIZE < supply ? <button onClick={() => handlePage(index + 1)}>Next</button> : <button style={{ visibility: 'hidden' }}></button>}
 		</div>
