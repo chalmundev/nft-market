@@ -10,7 +10,8 @@
     "fastify-postgres": "^3.6.0",
     "near-api-js": "^0.44.2",
     "pg": "^8.7.1",
-    "pm2": "^5.1.2"
+    "pm2": "^5.1.2",
+    "uuid": "^8.3.2"
   },
   "scripts": {
     "start": "yarn stop && pm2 start ecosystem.config.js -f --watch && pm2 logs",

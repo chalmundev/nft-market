@@ -4,6 +4,7 @@ const path = require("path");
 const homedir = require("os").homedir();
 const fs = require('fs');
 const BN = require('bn.js');
+const { v4 } = require('uuid');
 
 const getConfig = require("../utils/config");
 const {
@@ -11,15 +12,19 @@ const {
 	contractId: marketId,
 } = getConfig();
 
-const MAX_LEN_MARKET_SUMMARIES = 100;
-const PATH = process.env.NODE_ENV === 'prod' ? '../../nft-market-data' : '../dist/out';
+const {
+	initNFT,
+} = require('../test/test-utils');
 
-let processingMarket = false;
+const currentTime = new Date().getTime();
 
 let near;
 let config;
 let bidderOne;
 let bidderTwo;
+let tokenOwner;
+let nftContractId =  currentTime + "." + marketId;
+
 
 async function getCurrentBid(provider, contract_id, token_id) {
 	let args = { contract_id: contract_id, token_id: token_id };
@@ -95,9 +100,9 @@ const initializeAccounts = async (initialBalance) => {
 	console.log("Creating bidding accounts.");	
 	const topLevelAccount = await near.account("market-user.testnet"); 
 
-	const date =  new Date().getTime().toString();
-	const newBidderOneId = date + "." + "market-user.testnet";
-	const newBidderTwoId = date + "-two." + "market-user.testnet";
+	const newBidderOneId = currentTime + "." + "market-user.testnet";
+	const newBidderTwoId = currentTime + "-two." + "market-user.testnet";
+	const tokenOwnerId = currentTime + "-owner." + "market-user.testnet";
 
 	const newKeyPairOne = KeyPair.fromRandom('ed25519');
 	const pubKeyOne = newKeyPairOne.getPublicKey(); 
@@ -112,11 +117,18 @@ const initializeAccounts = async (initialBalance) => {
 	fs.writeFileSync(process.env.HOME + `/.near-credentials/${networkId}/${newBidderTwoId}.json` , newKeyPairTwo.toString(), 'utf-8');
 	await topLevelAccount.createAccount(newBidderTwoId, pubKeyTwo, parseNearAmount(initialBalance.toString()));
 	await near.config.keyStore.setKey(networkId, newBidderTwoId, newKeyPairTwo);
-	console.log('config.keyStore: ', near.config.keyStore);
-
 	bidderTwo = await near.account(newBidderTwoId);
 
-	console.log("Account 2 Created. Done.");
+	console.log("Account 2 Created.");
+
+	const ownerKeyPair = KeyPair.fromRandom('ed25519');
+	const ownerPubKey = ownerKeyPair.getPublicKey(); 
+	fs.writeFileSync(process.env.HOME + `/.near-credentials/${networkId}/${tokenOwnerId}.json` , ownerKeyPair.toString(), 'utf-8');
+	await topLevelAccount.createAccount(tokenOwnerId, ownerPubKey, parseNearAmount(initialBalance.toString()));
+	await near.config.keyStore.setKey(networkId, tokenOwnerId, ownerKeyPair);
+	tokenOwner = await near.account(tokenOwnerId);
+
+	console.log("Account 3 Created. Done.");
 };
 
 const initiateNear = async () => {
@@ -252,12 +264,76 @@ const makeBid = async (account, contract_id, token_id, price) => {
 	});
 };
 
+const mintAndAcceptTokens = async (provider) => {
+	console.log("Creating NFT contract");
+	const nftContractMetadata = {
+		spec: "nft-1.0.0",
+		name: "NFT Tutorial " + currentTime,
+		symbol: "NFT"
+	};
+	await initNFT(nftContractId, nftContractMetadata);
+	const minter = await near.account(marketId);
+
+	let tokenList = [];
+	//mint 15 random NFTs on the contract
+	for(var i = 0; i < 15; i++) {
+		console.log("Minting ", i , " of 15");
+		const res = await fetch("https://api.giphy.com/v1/gifs/random?api_key=tZABeKQjaI8sVMmlm1RRWBLmb4YiBRR8&tag=&rating=pg");
+		const json = await res.json();
+
+		const title = json.data.title;
+		const media = json.data.images.downsized.url;
+		//royalty object to pass into mint f	unction
+		const token_id = v4();
+
+		minter.functionCall({
+			contractId: nftContractId,
+			methodName: 'nft_mint',
+			args: {
+				token_id,
+				metadata: {
+					title,
+					media
+				},
+				receiver_id: tokenOwner.accountId,
+			},
+			gas: "200000000000000",
+			attachedDeposit: parseNearAmount('0.2'),
+		});
+		tokenList.push({contract_id: nftContractId, token_id: token_id});
+	}
+
+	console.log("Starting bids");
+	await startBids(provider, tokenList);
+
+	for(var i = 0; i < tokenList.length; i++) {
+		console.log("Accepting offers ", i, " of ", tokenList.length);
+
+		const msg = JSON.stringify({
+			auto_transfer: true
+		});
+	
+		await tokenOwner.functionCall({
+			contractId: nftContractId,
+			methodName: 'nft_approve',
+			args: {
+				token_id: tokenList[i].token_id,
+				account_id: marketId,
+				msg,
+			},
+			gas: "200000000000000",
+			attachedDeposit: parseNearAmount("0.1"),
+		});
+	}
+};
+
 async function zombie() {
 	await initiateNear();
 	const initialBalance = "200";
 	await initializeAccounts(initialBalance);
-
 	const provider = new providers.JsonRpcProvider(`https://rpc.${networkId}.near.org`);
+	/*
+
     
 	const rawContractSummary = "https://raw.githubusercontent.com/chalmundev/nft-market-data/main/contracts.json";
 	const res = await fetch(rawContractSummary);
@@ -293,6 +369,8 @@ async function zombie() {
 	}
 
 	await startBids(provider, listOfTokens);
+	*/
+	await mintAndAcceptTokens(provider);
 }
 
 zombie();

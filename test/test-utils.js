@@ -16,15 +16,16 @@ const {
 
 const U128_MAX = '340282366920938463463374607431768211455';
 
-const initNFT = async (newAccountId) => {
+const initNFT = async (newAccountId, metadata) => {
 	const nftContractAccount = await createNFTAccount(newAccountId);
-	await nftContractAccount.deployContract(fs.readFileSync("./out/nft-contract.wasm"));
+	await nftContractAccount.deployContract(fs.readFileSync("../out/nft-contract.wasm"));
 	
 	await nftContractAccount.functionCall({
 		contractId: newAccountId,
-		methodName: 'new_default_meta',
+		methodName: 'new',
 		args: {
 			owner_id: newAccountId,
+			metadata
 		},
 		gas
 	});
