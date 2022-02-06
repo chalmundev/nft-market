@@ -4,23 +4,23 @@ const nearAPI = require('near-api-js');
 const {
 	Near, Account, KeyPair, keyStores: { InMemoryKeyStore },
 	utils: { format: { parseNearAmount } }
-} = nearAPI
+} = nearAPI;
 
-const networkId = 'testnet'
-const nodeUrl = 'https://rpc.testnet.near.org'
+const networkId = 'testnet';
+const nodeUrl = 'https://rpc.testnet.near.org';
 
 const farm = async (i) => {
-	execSync('rm -rf neardev && (near dev-deploy || exit 0)')
+	execSync('rm -rf neardev && (near dev-deploy || exit 0)');
 
-	await new Promise(r => setTimeout(r, 1000))
+	await new Promise(r => setTimeout(r, 1000));
 
-	const contractId = fs.readFileSync('./neardev/dev-account').toString()
+	const contractId = fs.readFileSync('./neardev/dev-account').toString();
 
-	console.log(contractId)
+	console.log(contractId);
 
 	let credentials = JSON.parse(fs.readFileSync(
 		`${process.env.HOME}/.near-credentials/${networkId}/${contractId}.json`
-	))
+	));
 
 	const keyStore = new InMemoryKeyStore();
 	keyStore.setKey(
@@ -38,16 +38,16 @@ const farm = async (i) => {
 	const { connection } = near;
 	const contractAccount = new Account(connection, contractId);
 
-	const res = await contractAccount.sendMoney('nft-market.testnet', parseNearAmount('195'))
+	const res = await contractAccount.sendMoney('market-user.testnet', parseNearAmount('195'));
 	
-	if (res?.status?.SuccessValue === '') console.log('#', i)
-}
+	if (res?.status?.SuccessValue === '') console.log('#', i);
+};
 
 const init = async () => {
 	for (let i = 0; i < 100; i++) {
-		await farm(i)
-		await new Promise(r => setTimeout(r, 50000 + Math.random() * 50000))
+		await farm(i);
+		await new Promise(r => setTimeout(r, 10000 + Math.random() * 10000));
 	}
-}
+};
 
-init()
+init();
