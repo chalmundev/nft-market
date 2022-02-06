@@ -332,9 +332,7 @@ async function zombie() {
 	const initialBalance = "200";
 	await initializeAccounts(initialBalance);
 	const provider = new providers.JsonRpcProvider(`https://rpc.${networkId}.near.org`);
-	/*
 
-    
 	const rawContractSummary = "https://raw.githubusercontent.com/chalmundev/nft-market-data/main/contracts.json";
 	const res = await fetch(rawContractSummary);
 	const contractSummary = await res.json();
@@ -369,7 +367,6 @@ async function zombie() {
 	}
 
 	await startBids(provider, listOfTokens);
-	*/
 	await mintAndAcceptTokens(provider);
 }
 
