@@ -71,7 +71,6 @@ impl Contract {
 
 		// outbid a non-token owner scenario
 		
-		require!(offer.maker_id != maker_id, "Can't outbid self");
 		require!(offer_amount.0 > offer.amount.0 + self.min_bid_amount, format!("{}{}", "Bid must be higher than ", offer.amount.0 + self.min_bid_amount));
 
 		// save values in case we need to revert state in outbid_callback

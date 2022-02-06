@@ -4,6 +4,7 @@ import {
 } from "react-router-dom";
 
 import { Logo } from './Logo'
+import MenuIcon from '../img/menu.svg'
 
 const Menu = ({ wallet }) => {
 
@@ -48,11 +49,7 @@ export const Nav = ({ wallet, mobile }) => {
 			{
 				mobile
 					?
-					<ul>
-						<li>
-							<Link to="#" onClick={() => setActive(!active)}>Menu</Link>
-						</li>
-					</ul>
+					<Link to="#" onClick={() => setActive(!active)}><img src={MenuIcon} /></Link>
 					:
 					<Menu {...{wallet}} />
 			}

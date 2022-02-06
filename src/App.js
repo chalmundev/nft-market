@@ -17,7 +17,7 @@ import { RouteToken } from './components/RouteToken';
 import { RouteContracts } from './components/RouteContracts';
 import { RouteMain } from './components/RouteMain';
 
-import './App.scss';
+import './css/App.scss';
 
 const App = ({ mobile }) => {
 
@@ -39,7 +39,7 @@ const App = ({ mobile }) => {
 		wallet, account, data,
 		data: {
 			marketSummary, contracts, contractMap,
-			index, cache,
+			index, batch,
 			offers, supply,
 		}
 	} = state;
@@ -81,11 +81,11 @@ const App = ({ mobile }) => {
 
 							<Routes>
 								<Route path="/offers/maker" element={
-									<RouteOffers {...{ ...routeParams, account, offers, index, supply, cache }} />
+									<RouteOffers {...{ ...routeParams, account, offers, index, supply, batch }} />
 								} />
 
 								<Route path="/offers/taker" element={
-									<RouteOffers {...{ ...routeParams, account, offers, index, supply, cache }} />
+									<RouteOffers {...{ ...routeParams, account, offers, index, supply, batch }} />
 								} />
 
 								<Route path="/contract/:contract_id" element={
@@ -101,7 +101,7 @@ const App = ({ mobile }) => {
 								} />
 
 								<Route path="/" element={
-									<RouteMain {...{ ...routeParams, cache, marketSummary, contractMap }} />
+									<RouteMain {...{ ...routeParams, batch, marketSummary, contractMap, index }} />
 								} />
 							</Routes>
 						</>

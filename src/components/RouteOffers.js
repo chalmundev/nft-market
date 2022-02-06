@@ -4,7 +4,7 @@ import { Rows } from './Rows';
 
 const PAGE_SIZE = 30;
 
-export const RouteOffers = ({ dispatch, update, navigate, account, offers, supply, index, cache }) => {
+export const RouteOffers = ({ dispatch, update, navigate, account, offers, supply, index, batch }) => {
 	if (!account) return null;
 
 	const { account_id } = account;
@@ -83,8 +83,8 @@ export const RouteOffers = ({ dispatch, update, navigate, account, offers, suppl
 				arr: offerArr,
 				Item: ({ contract_id, token_id, amount, maker_id }) => <div onClick={() => navigate(`/token/${contract_id}/${token_id}`)}>
 					{
-						cache[contract_id]?.[token_id] && <>
-							<img src={cache[contract_id][token_id].metadata.media} />
+						batch[contract_id]?.[token_id] && <>
+							<img src={batch[contract_id][token_id].metadata.media} />
 						</>
 					}
 					{ isTaker && <p>From: { maker_id === account?.account_id ? 'You' : maker_id}</p>}

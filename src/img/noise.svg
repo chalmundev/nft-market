@@ -2,10 +2,9 @@
   <filter id='noiseFilter'>
     <feTurbulence 
       type='fractalNoise' 
-      baseFrequency='1' 
-      numOctaves='8' 
-      stitchTiles='stitch' />
+      baseFrequency='0.8' 
+      numOctaves='4' />
   </filter>
 
-  <rect opacity="0.4" width='100%' height='100%' filter='url(#noiseFilter)' />
+  <rect opacity="0.3" width='100%' height='100%' filter='url(#noiseFilter)' />
 </svg>

@@ -1,13 +1,22 @@
 $blackberry: #030504;
 $lime: #C7F94F;
+$lime-alpha: #C7F94FCC;
 $brocolli: #5FBDB5;
+$brocolli-alpha: #5FBDB5CC;
 $melon: #FF6187;
 $plum: #F2F3F2;
 $avocado: #003932;
 $rambutan: #F2F3F2;
 
 $light-gradient: linear-gradient(to bottom, $lime, $brocolli);
+$light-gradient-alpha: linear-gradient(to bottom, $lime-alpha, $brocolli-alpha);
 $light-gradient-right: linear-gradient(to right, $lime, $brocolli);
 
 $m: 16px;
+$dm: 32px;
 $hm: 8px;
+
+@mixin butler-black {
+	font-family: 'butler-black';
+	letter-spacing: 0.05rem;
+}
