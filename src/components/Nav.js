@@ -3,6 +3,8 @@ import {
 	Link,
 } from "react-router-dom";
 
+import { Logo } from './Logo'
+
 const Menu = ({ wallet }) => {
 
 	return <ul>
@@ -41,12 +43,8 @@ export const Nav = ({ wallet, mobile }) => {
 	};
 
 	return <>
-		<nav className={ (mobile && active).toString() }>
-			<ul>
-				<li>
-					<Link to="/" onClick={handleClose}><strong>SecondX</strong></Link>
-				</li>
-			</ul>
+		<nav className={ [mobile && 'mobile', (mobile && active).toString()].join(' ') }>
+			<Link to="/" onClick={handleClose}><Logo /></Link>
 			{
 				mobile
 					?

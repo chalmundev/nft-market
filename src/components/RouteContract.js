@@ -1,6 +1,6 @@
 import { formatNearAmount } from 'near-api-js/lib/utils/format';
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { fetchData } from '../state/app';
 import { view, fetchTokens } from '../state/near';
 import { Rows } from './Rows';
@@ -8,14 +8,13 @@ import { TokenMedia } from './TokenMedia';
 
 const PAGE_SIZE = 30;
 
-export const RouteContract = ({ dispatch, update, data }) => {
-
-	const navigate = useNavigate();
-	const params = useParams();
-	const { contract_id } = params;
+export const RouteContract = ({ dispatch, update, navigate, params, data }) => {
+	const { contract_id } = useParams();
 
 	let { contractId, index, tokens, supply } = data;
 	const summary = data?.[contract_id]?.summary;
+
+	console.log(data?.[contract_id])
 
 	const onMount = async () => {
 		if (contractId === contract_id) {

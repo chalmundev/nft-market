@@ -3,7 +3,7 @@ import { parseMedia } from '../utils/token';
 
 import { initNear, marketId } from './near';
 
-const DATA_HOST = process.env.REACT_APP_ENV === 'prod' ? 'https://data.secondx.app' : 'http://localhost:1234/out';
+const DATA_HOST = process.env.REACT_APP_DATA === 'remote' ? 'https://data.secondx.app' : 'http://localhost:1234/out';
 
 // example
 const initialState = {
@@ -22,6 +22,7 @@ const initialState = {
 		},
 		marketSummary: {},
 		contracts: [],
+		contractMap: {},
 	}
 };
 
@@ -33,13 +34,17 @@ export const onAppMount = (message) => async ({ update, getState, dispatch }) =>
 };
 
 export const fetchContracts = () => async ({ update }) => {
-	const res = await fetchJson(`${DATA_HOST}/contracts.json`);
-	const contracts = Object.entries(res.contracts).map(([contract_id, data]) => ({
-		contract_id,
-		...data,
-		media: parseMedia(data.media),
-	}));
-	update('data', { contracts });
+	const { contracts: contractMap } = await fetchJson(`${DATA_HOST}/contracts.json`);
+	const contracts = Object.entries(contractMap).map(([contract_id, data]) => {
+		const media = parseMedia(data.media)
+		contractMap[contract_id].media = media
+		return {
+			contract_id,
+			...data,
+			media,
+		}
+	});
+	update('data', { contracts, contractMap });
 };
 
 export const fetchData = (fn = 'marketSummary') => async ({ update }) => {

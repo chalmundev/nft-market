@@ -38,22 +38,26 @@ const App = ({ mobile }) => {
 	const {
 		wallet, account, data,
 		data: {
-			marketSummary, contracts, 
+			marketSummary, contracts, contractMap,
 			index, cache,
 			offers, supply,
 		}
 	} = state;
 
-	const showBackHome = /\/(maker|taker)/gi.test(window.location.pathname);
-	const showBackToken = /\/(token)/gi.test(window.location.pathname);
-	const showBackContact = /\/(contract)/gi.test(window.location.pathname);
+	const routeParams = { dispatch, update, navigate }
 
-	return (
+	const { href, pathname } = window.location
+	const showBackHome = /\/(maker|taker)/gi.test(pathname);
+	const showBackToken = /\/(token)/gi.test(pathname);
+	const showBackContract = /\/(contract)/gi.test(pathname);
+	const txHashes = href.split('?transactionHashes=')[1];
+
+	return (<>
 		<main className="container-fluid">
 
 			<Nav {...{ wallet, mobile }} />
 
-			<section className="content">
+			<section className={['content', mobile && 'mobile'].join(' ')}>
 				{
 					state.loading
 						?
@@ -63,48 +67,48 @@ const App = ({ mobile }) => {
 						:
 						<>
 							<div className='crumbs'>
-								{showBackHome || showBackToken || showBackContact ? <div><Link to="/" onClick={(e) => {
+								{showBackHome || showBackToken || showBackContract ? <div><Link to="/" onClick={(e) => {
 									e.preventDefault();
-									if (showBackToken) {
-										return navigate(window.location.pathname.split('/').slice(0, -1).join('/').replace('/token', '/contract'));
+									update('data.index', 0);
+									if (showBackToken && txHashes) {
+										return navigate('/');
+										// return navigate(pathname.split('/').slice(0, -1).join('/').replace('/token', '/contract'));
 									}
-									if (showBackContact) {
-										update('data.index', 0);
-									}
-									navigate('/');
+									return navigate(-1);
 								}}>Back</Link></div> : <div></div>}
 								{account && <div><a href={`https://explorer.${networkId}.near.org/accounts/${account.accountId}`} target="_blank">{account.accountId}</a></div>}
 							</div>
 
 							<Routes>
 								<Route path="/offers/maker" element={
-									<RouteOffers {...{ dispatch, update, account, offers, index, supply, cache }} />
+									<RouteOffers {...{ ...routeParams, account, offers, index, supply, cache }} />
 								} />
 
 								<Route path="/offers/taker" element={
-									<RouteOffers {...{ dispatch, update, account, offers, index, supply, cache }} />
+									<RouteOffers {...{ ...routeParams, account, offers, index, supply, cache }} />
 								} />
 
 								<Route path="/contract/:contract_id" element={
-									<RouteContract {...{ dispatch, update, account, data }} />
+									<RouteContract {...{ ...routeParams, account, data }} />
 								} />
 
 								<Route path="/token/:contract_id/:token_id" element={
-									<RouteToken {...{ dispatch, update, account, data }} />
+									<RouteToken {...{ ...routeParams, account, data }} />
 								} />
 
 								<Route path="/contracts" element={
-									<RouteContracts {...{ update, index, contracts }} />
+									<RouteContracts {...{ ...routeParams, index, contracts }} />
 								} />
 
 								<Route path="/" element={
-									<RouteMain {...{ update, marketSummary }} />
+									<RouteMain {...{ ...routeParams, cache, marketSummary, contractMap }} />
 								} />
 							</Routes>
 						</>
 				}
 			</section>
 		</main>
+		</>
 	);
 };
 
