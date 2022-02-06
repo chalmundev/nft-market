@@ -344,7 +344,7 @@ function updatedVolumeOrEventsSummary(marketSummaryData, log, volumeOrEventSumma
 	}
 }
 
-function updatedHighestOrLowestSales(marketSummaryData, saleSummary, updateHighest) {
+function updatedHighestOrLowestSales(marketSummaryData, log, saleSummary, updateHighest) {
 	let existingArray = updateHighest == true ? marketSummaryData.high_sale_tokens : marketSummaryData.low_sale_tokens;
 	//if the array is less than max length, check if the token exists already
 	if (existingArray.length < MAX_LEN_MARKET_SUMMARIES) {
@@ -570,8 +570,8 @@ function updateSummary(contracts, log, marketSummaryData) {
 			UPDATE Highest and Lowest Sales
 		*/
 		const saleLog = { contract_id: log.data.contract_id, token_id: log.data.token_id, maker_id: log.data.maker_id, taker_id: log.data.taker_id, amount: log.data.amount, updated_at: log.data.updated_at };
-		updatedHighestOrLowestSales(marketSummaryData, saleLog, true);
-		updatedHighestOrLowestSales(marketSummaryData, saleLog, false);
+		updatedHighestOrLowestSales(marketSummaryData, log, saleLog, true);
+		updatedHighestOrLowestSales(marketSummaryData, log, saleLog, false);
 	}
 }
 
@@ -646,8 +646,6 @@ module.exports = {
 
 			// debugging
 			// currentHighestBlockTimestamp = 0;
-
-			currentHighestBlockTimestamp = 1644126858777292800;
 			client.query(
 				`
 				SELECT *
