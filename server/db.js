@@ -9,7 +9,7 @@ const {
 	contractId: marketId,
 } = getConfig();
 
-const MAX_LEN_MARKET_SUMMARIES = 10;
+const MAX_LEN_MARKET_SUMMARIES = 100;
 const PATH = process.env.NODE_ENV === 'prod' ? '../../nft-market-data' : '../dist/out';
 
 let processingMarket = false;
