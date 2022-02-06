@@ -100,12 +100,10 @@ function logEvents(receipts_outcome, eventsPerContract, marketSummaryData) {
 }
 
 function AddToQueue(queue, element) {
-	if (queue.length < MAX_LEN_MARKET_SUMMARIES) {
-		queue.push(element);
-	} else {
-		queue.shift();
-		queue.push(element);
+	if (queue.length >= MAX_LEN_MARKET_SUMMARIES) {
+		queue.pop();
 	}
+	queue.unshift(element);
 }
 
 function updateChangeInAverageSummary(marketSummaryData, log, changeInAverageSummary, updateHighest) {
@@ -320,30 +318,15 @@ function updatedVolumeOrEventsSummary(marketSummaryData, log, volumeOrEventSumma
 		//no contract was found. We should replace an existing contract based on which total is higher.
 		else {
 			/*
-				since the total price array is sorted, index 0 will have the smallest total
+				since the total price array is sorted, the last index will have the smallest total
 				
-				We only need to do this computation if our log has a better total than index 0
+				We only need to do this computation if our log has a better total at that index
 			*/
-			if (volumeOrEventSummary.total > existingArray[0].total) {
-				//loop through and try and find the appropriate spot to insert the avg price log.
-				//default to index MAX_LEN_MARKET_SUMMARIES - 1 in case we don't find anywhere.
-				var foundSpot = MAX_LEN_MARKET_SUMMARIES - 1;
-				for (var i = 0; i < existingArray.length; i++) {
-					/*
-						example: we have total of 4
-						[2, 3, 5]
-						=>
-						[3, 4, 5] (splice and shift array)
-					*/
-					if (volumeOrEventSummary.total < existingArray[i].total) {
-						foundSpot = i;
-						break;
-					}
-				}
-				//splice the array to insert and push everything back
-				existingArray.splice(foundSpot, 0, volumeOrEventSummary);
-				//shift the array over by 1
-				existingArray.shift();
+			if (volumeOrEventSummary.total > existingArray[MAX_LEN_MARKET_SUMMARIES-1].total) {
+				//pop the last entry off
+				existingArray.pop();
+				//push the summary and sort after
+				existingArray.push(volumeOrEventSummary);
 			}
 		}
 	}
@@ -614,6 +597,7 @@ module.exports = {
 			// debugging
 			// currentHighestBlockTimestamp = 0;
 
+			currentHighestBlockTimestamp = 1644126858777292800;
 			client.query(
 				`
 				SELECT *
