@@ -20,6 +20,7 @@
 	background-size: contain;
 	padding: $m;
 	width: calc(100% - 2 * $m);
+	max-width: 400px;
 	margin: $m auto;
 
 	> h2 {

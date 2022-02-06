@@ -10,6 +10,9 @@ export const TokenMedia = ({ media }) => {
 		<img
 			src={media ? media : Missing}
 			onError={({ currentTarget }) => {
+				if (currentTarget.src === Missing) {
+					return
+				}
 				currentTarget.onerror = null;
 				currentTarget.src = Missing;
 			}}
