@@ -146,8 +146,9 @@ function updateChangeInAverageSummary(marketSummaryData, log, changeInAverageSum
 			start by removing the oldest
 		*/
 
-		//sort the array by oldest first and remove that entry
+		//sort the array by highest updated at first and lowest last. This means oldest is at the end of the array
 		changeArray.sort((a, b) => b.updated_at - a.updated_at);
+		//remove the last index (oldest)
 		changeArray.pop();
 
 		//check if the contract exists in the set yet
@@ -207,12 +208,12 @@ function updateAveragePriceSummary(marketSummaryData, log, averagePriceSummary, 
 			//check if we should replace the average price log for the contract
 			if (updateHighest == true) {
 				//if we're updating the highest, check if our avg is greater than the existing avg
-				if (averagePriceSummary.avg > existingArray[foundIndex].avg) {
+				if (new BN(averagePriceSummary.avg).gte(new BN(existingArray[foundIndex].avg))) {
 					existingArray[foundIndex] = averagePriceSummary;
 				}
 			} else {
 				//if we're updating the lowest, check if the avg is less
-				if (averagePriceSummary.avg < existingArray[foundIndex].avg) {
+				if (new BN(averagePriceSummary.avg).lte(new BN(existingArray[foundIndex].avg))) {
 					existingArray[foundIndex] = averagePriceSummary;
 				}
 			}
@@ -229,8 +230,9 @@ function updateAveragePriceSummary(marketSummaryData, log, averagePriceSummary, 
 			start by removing the oldest
 		*/
 
-		//sort the array by oldest first and remove that entry
+		//sort the array by highest updated at first and lowest last. This means oldest is at the end of the array
 		existingArray.sort((a, b) => b.updated_at - a.updated_at);
+		//remove the last index (oldest)
 		existingArray.pop();
 
 		//check if the contract exists in the set yet
@@ -246,12 +248,12 @@ function updateAveragePriceSummary(marketSummaryData, log, averagePriceSummary, 
 			//check if we should replace the average price log for the contract
 			if (updateHighest == true) {
 				//if we're updating the highest, check if the avg is greater
-				if (averagePriceSummary.avg > existingArray[foundIndex].avg) {
+				if (new BN(averagePriceSummary.avg).gte(new BN(existingArray[foundIndex].avg))) {
 					existingArray[foundIndex] = averagePriceSummary;
 				}
 			} else {
 				//if we're updating the lowest, check if the avg is less than
-				if (averagePriceSummary.avg < existingArray[foundIndex].avg) {
+				if (new BN(averagePriceSummary.avg).lte(new BN(existingArray[foundIndex].avg))) {
 					existingArray[foundIndex] = averagePriceSummary;
 				}
 			}
@@ -344,20 +346,68 @@ function updatedVolumeOrEventsSummary(marketSummaryData, log, volumeOrEventSumma
 
 function updatedHighestOrLowestSales(marketSummaryData, saleSummary, updateHighest) {
 	let existingArray = updateHighest == true ? marketSummaryData.high_sale_tokens : marketSummaryData.low_sale_tokens;
-	//if the array is less than max length, simply push and sort at the end
+	//if the array is less than max length, check if the token exists already
 	if (existingArray.length < MAX_LEN_MARKET_SUMMARIES) {
-		existingArray.push(saleSummary);
+		//check if the token exists and only replace if its sale is larger
+		var foundIndex = -1;
+		for (var i = 0; i < existingArray.length; i++) {
+			if (existingArray[i].contract_id == log.data.contract_id && existingArray[i].token_id == log.data.token_id ) {
+				foundIndex = i;
+				break;
+			}
+		}
+		//token exists already
+		if(foundIndex != -1) {
+			if (updateHighest == true) {
+				//if we're updating the highest, check if the avg is greater
+				if (new BN(saleSummary.amount).gte(new BN(existingArray[foundIndex].amount))) {
+					existingArray[foundIndex] = saleSummary;
+				}
+			} else {
+				//if we're updating the lowest, check if the avg is less than
+				if (new BN(saleSummary.amount).lte(new BN(existingArray[foundIndex].amount))) {
+					existingArray[foundIndex] = saleSummary;
+				}
+			}
+		} else {
+			//token doesn't exist so just push the summary
+			existingArray.push(saleSummary);
+		}
 	} else {
 		/*
 			start by removing the oldest
 		*/
 
-		//sort the array by oldest first and remove that entry
+		//sort the array by highest updated at first and lowest last. This means oldest is at the end of the array
 		existingArray.sort((a, b) => b.updated_at - a.updated_at);
+		//remove the last index (oldest)
 		existingArray.pop();
 
-		//push the summary and sort at the end
-		existingArray.push(saleSummary);
+		//check if the token exists and only replace if its sale is larger
+		var foundIndex = -1;
+		for (var i = 0; i < existingArray.length; i++) {
+			if (existingArray[i].contract_id == log.data.contract_id && existingArray[i].token_id == log.data.token_id ) {
+				foundIndex = i;
+				break;
+			}
+		}
+		//token exists already
+		if(foundIndex != -1) {
+			if (updateHighest == true) {
+				//if we're updating the highest, check if the avg is greater
+				if (new BN(saleSummary.amount).gte(new BN(existingArray[foundIndex].amount))) {
+					existingArray[foundIndex] = saleSummary;
+				}
+			} else {
+				//if we're updating the lowest, check if the avg is less than
+				if (new BN(saleSummary.amount).lte(new BN(existingArray[foundIndex].amount))) {
+					existingArray[foundIndex] = saleSummary;
+				}
+			}
+		} else {
+			//token doesn't exist so just push the summary
+			existingArray.push(saleSummary);
+		}
 	}
 
 	//update the market summary data depending on if we're looking at the highest or lowest change
