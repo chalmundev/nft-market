@@ -76,12 +76,10 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 			return;
 		}
 
-		// owner outbid case
+		// owner outbid case (can counter higher or lower and the existing offer will be replaced with a priced offer)
 
 		let amount = amount.unwrap();
-		// owner can counter and set a higher offer
-		require!(amount.0 > offer.amount.0 + self.min_bid_amount, format!("{}{}", "Bid must be higher than ", offer.amount.0 + self.min_bid_amount));
-
+		
 		// save values in case we need to revert state in outbid_callback
 		let prev_maker_id = offer.maker_id;
 		let prev_offer_amount = offer.amount;

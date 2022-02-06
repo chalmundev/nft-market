@@ -4,6 +4,8 @@ import { fetchBatchTokens, formatNearAmount } from '../state/near';
 
 import { Rows } from './Rows';
 import { TokenMedia } from './TokenMedia';
+import { TokenCard } from './TokenCard';
+import { TokenFeatured } from './TokenFeatured';
 
 const format = (amount) => formatNearAmount(amount, 4)
 
@@ -20,7 +22,7 @@ const cats = [
 	{ label: 'Lowest Sellers', key: 'low_sales', innerKey: 'avg', format },
 ]
 
-export const RouteMain = ({ dispatch, update, navigate, cache, marketSummary, contractMap }) => {
+export const RouteMain = ({ dispatch, update, navigate, batch, marketSummary, contractMap, index }) => {
 
 	// console.log(marketSummary);
 
@@ -31,10 +33,26 @@ export const RouteMain = ({ dispatch, update, navigate, cache, marketSummary, co
 	}
 	useEffect(onMount, [])
 
+	const handlePage = async (_index = 0) => {
+		update('data.index', _index);
+	};
+
+	const f = marketSummary.new_offers[0]
+	const displayCats = cats.slice(index, index+1)
+
+	const fc = contractMap?.[f.contract_id]
+
 	return <>
 
 		{
-			cats.map(({ isToken, label, key, innerKey, format, reverse }) => {
+			<TokenFeatured {...{ contract: fc, token: batch?.[f.contract_id]?.[f.token_id] } } />
+		}
+		<div className='grid apart-2'>
+			{index !== 0 ? <button onClick={() => handlePage(index - 1)}>Prev</button> : <button style={{ visibility: 'hidden' }}></button>}
+			{(index + 1) < cats.length ? <button onClick={() => handlePage(index + 1)}>Next</button> : <button style={{ visibility: 'hidden' }}></button>}
+		</div>
+		{
+			displayCats.map(({ isToken, label, key, innerKey, format }) => {
 				const summary = marketSummary[key]
 
 				return <div key={key}>
@@ -45,14 +63,25 @@ export const RouteMain = ({ dispatch, update, navigate, cache, marketSummary, co
 						Item: (data) => {
 							const { contract_id, token_id } = data
 							let { name, media } = contractMap[contract_id]
-							const token = cache[contract_id]?.[token_id]
+							const token = batch[contract_id]?.[token_id]
 							if (isToken) {
 								media = token?.metadata?.media
 							}
 							return <div onClick={() => navigate(isToken ? `/token/${contract_id}/${token_id}` : `/contract/${contract_id}`)}>
-								<TokenMedia {...{ media }} />
-								<p>{name}</p>
-								<p>{format ? format(data[innerKey]) : data[innerKey]}</p>
+								{
+									token
+									?
+									<>
+									<TokenCard {...{ token }} />
+									<p>{format ? format(data[innerKey]) : data[innerKey]}</p>
+									</>
+									:
+									<>
+									<TokenMedia {...{ media } } />
+									<h3>{name}</h3>
+									<p>{format ? format(data[innerKey]) : data[innerKey]}</p>
+									</>
+								}
 							</div>
 						}
 					}} />

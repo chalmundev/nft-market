@@ -94,22 +94,19 @@ export const view = ({
 	}
 };
 
-export const fetchBatchTokens = (contractAndTokenIds = []) => async ({ getState, update }) => {
-	const { cache } = getState()?.data || {};
-	// check cache and filter out tokens we have seen already
-	contractAndTokenIds = contractAndTokenIds.filter(({ contract_id, token_id }) => !cache[contract_id]?.[token_id]);
-	// console.log('fetching new tokens', contractAndTokenIds)
+export const fetchBatchTokens = (contractAndTokenIds = []) => async ({ update }) => {
+	const batch = {}
 	await Promise.all(contractAndTokenIds.map(({ contract_id, token_id }) => contractAccount.viewFunction(
 		contract_id,
 		'nft_token',
 		{ token_id }
 	).then((token) => {
-		if (!cache[contract_id]) {
-			cache[contract_id] = {};
+		if (!batch[contract_id]) {
+			batch[contract_id] = {}
 		}
-		cache[contract_id][token_id] = parseToken(token);
-	})));
-	update('data.cache', cache);
+		batch[contract_id][token_id] = parseToken(token);
+	}).catch((e) => console.warn(e))));
+	update('data.batch', batch);
 };
 
 export const fetchTokens = (contract_id, args) => async ({ getState, dispatch }) => {
@@ -131,3 +128,24 @@ export const fetchTokens = (contract_id, args) => async ({ getState, dispatch })
 		defaultVal: 0,
 	}));
 };
+
+
+/// deprecated using SW
+
+// export const fetchBatchTokens = (contractAndTokenIds = []) => async ({ getState, update }) => {
+// 	const { cache } = getState()?.data || {};
+// 	// check cache and filter out tokens we have seen already
+// 	contractAndTokenIds = contractAndTokenIds.filter(({ contract_id, token_id }) => !cache[contract_id]?.[token_id]);
+// 	// console.log('fetching new tokens', contractAndTokenIds)
+// 	await Promise.all(contractAndTokenIds.map(({ contract_id, token_id }) => contractAccount.viewFunction(
+// 		contract_id,
+// 		'nft_token',
+// 		{ token_id }
+// 	).then((token) => {
+// 		if (!cache[contract_id]) {
+// 			cache[contract_id] = {};
+// 		}
+// 		cache[contract_id][token_id] = parseToken(token);
+// 	})));
+// 	update('data.cache', cache);
+// };

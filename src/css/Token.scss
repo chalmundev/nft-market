@@ -1,0 +1,64 @@
+@import 'globals.scss';
+
+.token-image {
+	max-width: 400px;
+	margin-bottom: -4px;
+	> img {
+		width: 100%;
+		object-fit: cover;
+		object-position: center top;
+		aspect-ratio: 1 / 1;
+		overflow: hidden;
+		border-top-right-radius: 20%;
+		border-bottom-left-radius: 20%;
+	}
+}
+
+.token-featured {
+	background-image: url('url:../img/line-box.svg');
+	background-repeat: no-repeat;
+	background-size: contain;
+	padding: $m;
+	width: calc(100% - 2 * $m);
+	max-width: 400px;
+	margin: $m auto;
+
+	> h2 {
+		@include butler-black;
+		text-align: center;
+		margin-top: $dm;
+	}
+
+	> .token-image {
+		> img {
+			aspect-ratio: 1.096 / 1;
+			box-shadow:
+				0 0 4px rgba(255, 255, 255, 0.3),
+				0 0 16px rgba(255, 255, 255, 0.2);
+		}
+	}
+}
+
+.token-card {
+	width: calc(100% - 2 * $m);
+	margin: $m auto;
+
+	padding: 1px;
+	background: $light-gradient;
+
+	> div {
+		background: $blackberry;
+		background-image: url('url:../img/noise.svg');
+		> div {
+			background: $light-gradient-alpha;
+			padding: $m;
+			> .token-image {
+				> img {
+					box-shadow:
+						0 0 4px rgba(255, 255, 255, 0.3),
+						0 0 16px rgba(255, 255, 255, 0.2);
+				}
+			}
+		}
+	}
+}

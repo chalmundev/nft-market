@@ -5,6 +5,8 @@ import { AppProvider } from './state/app.js';
 import { BrowserRouter } from 'react-router-dom';
 import mobile from 'is-mobile';
 
+navigator.serviceWorker.register(new URL('service-worker.js', import.meta.url), {type: 'module'});
+
 ReactDOM.render(
 	<AppProvider>
 		<BrowserRouter>

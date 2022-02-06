@@ -7,11 +7,10 @@
 	padding-top: 56px;
 	background: $blackberry;
 
-	background-image: url('url:img/bg-desktop.svg');
-	background-size: 100vw 1942px;
+	background-image: url('url:../img/bg-desktop.svg');
 
 	&.mobile {
-		background-image: url('url:img/bg-mobile.svg');
+		background-image: url('url:../img/bg-mobile.svg');
 		background-size: 100vw 1942px;
 	}
 }
@@ -20,8 +19,7 @@
 
 nav {
 	background: $blackberry;
-	background-image: url('url:img/noise.svg');
-	font-family: 'butler-black';
+	background-image: url('url:../img/noise.svg');
 	position: fixed;
 	top: 0;
 	width: 100%;
@@ -38,9 +36,10 @@ nav {
 	}
 	&.mobile {
 		justify-content: center;
-		> ul {
+		> a:nth-child(2) {
 			position: absolute;
 			right: $m;
+			top: 15px;
 		}
 	}
 }
@@ -62,9 +61,9 @@ nav {
 }
 
 .logo {
-	letter-spacing: 0.05rem;
-	font-size: 32px;
-	padding-top: 12px;
+	@include butler-black;
+	font-size: 24px;
+	padding-top: 16px;
 	height: 56px;
 	color: $rambutan;
 	> span {
@@ -105,18 +104,6 @@ nav {
 	}
 }
 
-
-.token-image {
-	max-width: 400px;
-	> img {
-		width: 100%;
-		object-fit: cover;
-		object-position: center top;
-		aspect-ratio: 1 / 1;
-		overflow: hidden;
-		border-bottom-left-radius: 15%;
-	}
-}
 
 .offers {
 	margin-bottom: $m;
