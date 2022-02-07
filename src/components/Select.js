@@ -15,9 +15,9 @@ export const Select = ({ active, options, onSelect }) => {
 				<div>{label}</div>
 				<div className={open.toString()}>
 					{
-						options.map(({ label, key }) => <div key={key}>
-							<Link to={`/summary/${key}`} onClick={onSelect}>{label}</Link>
-						</div>)
+						options.map(({ label, key }) => <Link key={key} to={`/summary/${key}`} onClick={onSelect}>
+							{label}
+						</Link>)
 					}
 				</div>
 			</div>
