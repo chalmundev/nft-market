@@ -83,7 +83,7 @@ export const FeaturedTeaser = ({ contractMap, batch, data, items }) => {
 			</div>
 		</div>
 
-		<div className="titles">
+		<div className="titles" onClick={handleSwipeClick}>
 			<h2>{ title }</h2>
 			<p>{ subtitle }</p>
 		</div>

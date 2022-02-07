@@ -3,18 +3,20 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchData } from '../state/app';
 import { view, fetchTokens } from '../state/near';
+import { parseData } from '../utils/media';
+import { near } from '../utils/format';
 import { Rows } from './Rows';
 import { Media } from './Media';
+
+import '../css/Routes.scss'
 
 const PAGE_SIZE = 30;
 
 export const RouteContract = ({ dispatch, update, navigate, params, data }) => {
 	const { contract_id } = useParams();
 
-	let { contractId, index, tokens, supply } = data;
+	let { contractMap, batch, contractId, index, tokens, supply } = data;
 	const summary = data?.[contract_id]?.summary;
-
-	console.log(data?.[contract_id])
 
 	const onMount = async () => {
 		if (contractId === contract_id) {
@@ -56,27 +58,52 @@ export const RouteContract = ({ dispatch, update, navigate, params, data }) => {
 
 	tokens = tokens.slice().reverse();
 
-	return (
-		<div>
+	const { title, media } = parseData(contractMap, batch, {}, { contract_id })
 
-			<h1>{contract_id}</h1>
-			{summary && <>
-				<h3>Market Summary</h3>
-				<p>Average: {formatNearAmount(summary.avg_sale, 4)}</p>
-				{summary.highest && <p>Highest: {formatNearAmount(summary.highest.amount, 4)}</p>}
-				{summary.lowest && <p>Lowest: {formatNearAmount(summary.lowest.amount, 4)}</p>}
-				<p>Sales: {summary.sales}</p>
-				<p>Events: {summary.events}</p>
-			</>}
+	if (!summary) return null
+
+	return (
+		<div className='contract'>
+
+			<Media {...{media, classNames: ['featured']}} />
+
+			<h2>{title}</h2>
+			<p>{contract_id}</p>
+
+			<div className='stats'>
+				<div>
+					<div>Avg</div>
+					<div>{near(summary.avg_sale)}</div>
+				</div>
+				<div>
+					<div>Sales</div>
+					<div>{summary.sales}</div>
+				</div>
+				<div>
+					<div>Events</div>
+					<div>{summary.events}</div>
+				</div>
+			</div>
+			{summary.highest && <div className='stats'>
+				<div>
+					<div>Highest</div>
+					<div>{ near(summary.highest.amount) }</div>
+				</div>
+				<div>
+					<div>Lowest</div>
+					<div>{ near(summary.lowest.amount) }</div>
+				</div>
+			</div>}
 
 			<p>Page {index+1} / {Math.ceil(supply / PAGE_SIZE)}</p>
 
-			<div className='button-row'>
+			<div className='grid apart-2'>
 				{index !== 0 ? <button onClick={() => handlePage(index - 1)}>Prev</button> : <button style={{ visibility: 'hidden' }}></button>}
 				{(index + 1) * PAGE_SIZE < supply ? <button onClick={() => handlePage(index + 1)}>Next</button> : <button style={{ visibility: 'hidden' }}></button>}
 			</div>
 
 			<Rows {...{
+				width: window.innerWidth/2,
 				arr: tokens,
 				Item: ({ token_id, metadata: { media } }) => <div onClick={() => navigate(`/token/${contract_id}/${token_id}`)}>
 					<Media {...{media}} />

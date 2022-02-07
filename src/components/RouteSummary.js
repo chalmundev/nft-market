@@ -17,24 +17,23 @@ export const RouteSummary = ({ dispatch, update, navigate, batch, marketSummary,
 	const { key } = useParams();
 	const cat = cats.find((cat) => cat.key === key)
 	const { label } = cat
-	const items = marketSummary[key]
+	
+	const [items, setItems] = useState([])
 
 	const onMount = async () => {
-		window.scrollTo(0, 0)
+		setItems(marketSummary[key])
 		const tokens = []
 		cats.filter(({ isToken }) => !!isToken).forEach(({ key }) => tokens.push(...marketSummary[key].map(({ contract_id, token_id }) => ({ contract_id, token_id }))))
 		await dispatch(fetchBatchTokens(tokens));
 	}
-	useEffect(onMount, [])
+	useEffect(onMount, [key])
 
 	return <>
 
 		<Select {...{
 			active: { label, key },
 			options: cats.map(({ label, key }) => ({ label, key })),
-			onSelect: () => {
-				window.scrollTo(0, 0)
-			}
+			onSelect: () => setItems([])
 		}} />
 
 		<div className='summary-list'>
@@ -42,7 +41,7 @@ export const RouteSummary = ({ dispatch, update, navigate, batch, marketSummary,
 				items.map((item, i) => {
 					const { title, subtitle, media, link } = parseData(contractMap, batch, cat, item, true)
 
-					return <div>
+					return <div key={i}>
 						<div>{i+1}</div>
 						<Media {...{ media }} />
 						<div>

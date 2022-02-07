@@ -1,0 +1,25 @@
+
+@import 'globals.scss';
+
+.contract {
+	text-align: center;
+	> h2 {
+		font-family: 'butler-black';
+	}
+
+	.stats {
+		margin: $m;
+		text-align: center;
+		display: flex;
+		justify-content: space-evenly;
+		align-items: center;
+		> div {
+			> div:nth-child(1) {
+				color: $brocolli;
+			}
+			> div:nth-child(2) {
+				font-family: 'evolventa-bold'
+			}
+		}
+	}
+}
