@@ -1,9 +1,9 @@
 import React from 'react';
 
 import Missing from './../img/missing.jpg';
-import '../css/Token.scss';
+import '../css/Features.scss';
 
-export const TokenMedia = ({ media }) => {
+export const Media = ({ media }) => {
 
 	return <div className='token-image'>
 

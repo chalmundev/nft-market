@@ -7,7 +7,7 @@ import { providers, networkId, contractId, parseNearAmount, formatNearAmount } f
 import { howLongAgo } from '../utils/date';
 import { parseToken } from '../utils/token';
 import { getOfferFromHashes } from '../utils/receipts';
-import { TokenMedia } from './TokenMedia';
+import { Media } from './Media';
 
 const OUTBID_AMOUNT = '99999999999999999999999';
 const OUTBID_TIMEOUT = 86400000;
@@ -158,7 +158,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				}}>Update Market Data</button>
 			</div> */}
 
-			<TokenMedia {...{media}} />
+			<Media {...{media}} />
 
 			<p>{token.token_id}</p>
 			<p>{isOwner ? 'You own this token' : token.owner_id}</p>

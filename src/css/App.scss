@@ -4,11 +4,13 @@
 
 
 .content {
+	min-height: 100vh;
 	padding-top: 56px;
+	padding-bottom: $m;
 	background: $blackberry;
-
 	background-image: url('url:../img/bg-desktop.svg');
-
+	background-repeat: repeat-y;
+	background-size: 100vw 1942px;
 	&.mobile {
 		background-image: url('url:../img/bg-mobile.svg');
 		background-size: 100vw 1942px;

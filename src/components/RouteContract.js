@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { fetchData } from '../state/app';
 import { view, fetchTokens } from '../state/near';
 import { Rows } from './Rows';
-import { TokenMedia } from './TokenMedia';
+import { Media } from './Media';
 
 const PAGE_SIZE = 30;
 
@@ -79,7 +79,7 @@ export const RouteContract = ({ dispatch, update, navigate, params, data }) => {
 			<Rows {...{
 				arr: tokens,
 				Item: ({ token_id, metadata: { media } }) => <div onClick={() => navigate(`/token/${contract_id}/${token_id}`)}>
-					<TokenMedia {...{media}} />
+					<Media {...{media}} />
 					<p>{token_id}</p>
 				</div>
 			}} />

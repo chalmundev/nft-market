@@ -1,0 +1,33 @@
+
+@import 'globals.scss';
+
+.select {
+	margin: $m;
+	padding: 1px;
+	background: $light-gradient;
+
+	> div {
+		background: $blackberry;
+		background-image: url('url:../img/noise.svg');
+		> div {
+			background: $light-gradient-alpha;
+
+			> div {
+				padding-left: $m;
+				height: 48px;
+				line-height: 48px;
+				font-size: 1.2rem;
+				color: white;
+			}
+			> div:nth-child(2) {
+				height: 100%;
+				display: none;
+				&.true {
+					display: block;
+				}
+			}
+		}
+
+	}
+	
+}

@@ -15,6 +15,7 @@ import { RouteOffers } from './components/RouteOffers';
 import { RouteContract } from './components/RouteContract';
 import { RouteToken } from './components/RouteToken';
 import { RouteContracts } from './components/RouteContracts';
+import { RouteSummary } from './components/RouteSummary';
 import { RouteMain } from './components/RouteMain';
 
 import './css/App.scss';
@@ -98,6 +99,10 @@ const App = ({ mobile }) => {
 
 								<Route path="/contracts" element={
 									<RouteContracts {...{ ...routeParams, index, contracts }} />
+								} />
+
+								<Route path="/summary/:key" element={
+									<RouteSummary {...{ ...routeParams, batch, marketSummary, contractMap, index }} />
 								} />
 
 								<Route path="/" element={

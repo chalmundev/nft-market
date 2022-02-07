@@ -2,7 +2,7 @@ import React from 'react';
 import { useStore } from '../utils/store';
 
 import { Rows } from './Rows';
-import { TokenMedia } from './TokenMedia';
+import { Media } from './Media';
 
 const PAGE_SIZE = 30;
 
@@ -34,7 +34,7 @@ export const RouteContracts = ({ update, navigate, contracts, index }) => {
 			arr: displayContracts,
 			Item: ({ contract_id, ts, name, media }) => {
 				return <div key={contract_id} onClick={() => navigate('/contract/' + contract_id)}>
-					<TokenMedia {...{media}} />
+					<Media {...{media}} />
 					<p>{name || contract_id}</p>
 					<p>{contract_id}</p>
 				</div>;

@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { TokenMedia } from './TokenMedia';
-import '../css/Token.scss';
+import { Media } from './Media';
+import '../css/Features.scss';
 
 export const TokenFeatured = ({ contract, token }) => {
 	if (!token) return null
@@ -10,7 +10,7 @@ export const TokenFeatured = ({ contract, token }) => {
 
 	return <div className='token-featured'>
 
-		<TokenMedia {...{media}} />
+		<Media {...{media}} />
 
 		<h2>{ contract.name }</h2>
 

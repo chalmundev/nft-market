@@ -1,6 +1,27 @@
+@import 'globals.scss';
+
 * {
 	box-sizing: border-box;
 }
+
+html {
+	scrollbar-face-color: $avocado;
+	scrollbar-base-color: $avocado;
+	scrollbar-3dlight-color: $avocado;
+	scrollbar-highlight-color: $avocado;
+	scrollbar-track-color: black;
+	scrollbar-arrow-color: #000;
+	scrollbar-shadow-color: $avocado;
+	scrollbar-dark-shadow-color: $avocado;
+}
+
+::-webkit-scrollbar { width: 2px; height: 2px;}
+::-webkit-scrollbar-button { width: 0; height: 0; }
+::-webkit-scrollbar-track {  background-color: $avocado; }
+::-webkit-scrollbar-track-piece { background-color: black; }
+::-webkit-scrollbar-thumb { height: 0; background-color: $lime; }
+::-webkit-scrollbar-corner { background-color: $avocado; }
+::-webkit-resizer { background-color: black; }
 
 body {
 	width: 100%;
@@ -8,6 +29,7 @@ body {
 	padding: 0;
 	color: $rambutan;
 	font-family: 'evolventa';
+	overflow-x: hidden;
 }
 
 a, a:hover, a:visited, a:focus {
