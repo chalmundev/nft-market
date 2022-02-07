@@ -519,12 +519,12 @@ function updateSummary(contracts, log, marketSummaryData) {
 		contracts.summary.lowest = contracts.summary.lowest || contractSummaryInfo;
 
 		//check if offer is higher than existing higher
-		if (log.data.amount > contracts.summary.highest.amount) {
+		if (new BN(log.data.amount).gte(new BN(contracts.summary.highest.amount))) {
 			contracts.summary.highest = contractSummaryInfo;
 		}
 
 		//check if offer is lower than existing lower
-		if (log.data.amount < contracts.summary.lowest.amount) {
+		if (new BN(log.data.amount).lte(new BN(contracts.summary.lowest.amount))) {
 			contracts.summary.lowest = contractSummaryInfo;
 		}
 
@@ -557,12 +557,12 @@ function updateSummary(contracts, log, marketSummaryData) {
 		contracts.tokens[log.data.token_id].summary.lowest = contracts.tokens[log.data.token_id].summary.lowest || contractSummaryInfo;
 
 		//check if offer is higher than existing higher
-		if (log.data.amount > contracts.tokens[log.data.token_id].summary.highest.amount) {
+		if (new BN(log.data.amount).gte(new BN(contracts.tokens[log.data.token_id].summary.highest.amount))) {
 			contracts.tokens[log.data.token_id].summary.highest = contractSummaryInfo;
 		}
 
 		//check if offer is lower than existing lower
-		if (log.data.amount < contracts.tokens[log.data.token_id].summary.lowest.amount) {
+		if (new BN(log.data.amount).lte(new BN(contracts.tokens[log.data.token_id].summary.lowest.amount))) {
 			contracts.tokens[log.data.token_id].summary.lowest = contractSummaryInfo;
 		}
 
