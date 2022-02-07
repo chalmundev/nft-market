@@ -4,6 +4,7 @@ import {
 	near, contractAccount, contractId
 } from '../../utils/near-utils';
 import { parseToken } from '../utils/token';
+import { parseContractMap } from './app';
 import getConfig from '../../utils/config';
 const {
 	gas,
@@ -92,6 +93,25 @@ export const view = ({
 	} catch(e) {
 		console.warn(e);
 	}
+};
+
+export const fetchBatchContracts = (contractIds) => async ({ getState, update }) => {
+	const { contractMap } = getState()?.data || {}
+	
+	await Promise.all(contractIds.map((contract_id) => contractAccount.viewFunction(
+		contract_id,
+		'nft_metadata',
+	).then(({ name, symbol }) => {
+		if (contractMap[contract_id]) {
+			return
+		}
+		contractMap[contract_id] = { name, symbol }
+	}).catch((e) => {
+		console.warn(e)
+		contractMap[contract_id] = { name: contract_id, symbol: 'NA' }
+	})));
+
+	update('data', parseContractMap(contractMap));
 };
 
 export const fetchBatchTokens = (contractAndTokenIds = []) => async ({ update }) => {

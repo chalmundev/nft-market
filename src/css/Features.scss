@@ -38,10 +38,6 @@
 }
 
 .summary-teaser {
-	overflow-x: scroll;
-	overflow-y: hidden;
-	white-space: nowrap;
-	-webkit-overflow-scrolling: touch;
 
 	> div:nth-child(1) {
 		display: flex;
@@ -49,40 +45,52 @@
 		justify-content: space-between;
 	}
 
-	> .feature-card {
-		max-width: 400px;
-		margin-right: $m;
-		display: inline-block;
-		padding: 1px;
-		background: $light-gradient;
+	> div:nth-child(2) {
 
-		&:last-child {
-			margin-right: 0;
-		}
+		overflow-x: scroll;
+		overflow-y: hidden;
+		white-space: nowrap;
+		-webkit-overflow-scrolling: touch;
 	
-		> div {
-			background: $blackberry;
-			background-image: url('url:../img/noise.svg');
+		padding-bottom: 2px;
+
+		> .feature-card {
+			max-width: min(400px, 40vw);
+			margin-right: $m;
+			display: inline-block;
+			padding: 1px;
+			background: $light-gradient;
+	
+			&:last-child {
+				margin-right: 0;
+			}
+		
 			> div {
-				background: $light-gradient-alpha;
-				padding: $m;
-				text-align: center;
-	
-				> h3 {
-					height: 24px;
-					overflow: hidden;
-					text-overflow: ellipsis;
-				}
-	
-				> .token-image {
-					> img {
-						box-shadow:
-							0 0 4px rgba(255, 255, 255, 0.3),
-							0 0 16px rgba(255, 255, 255, 0.2);
+				background: $blackberry;
+				background-image: url('url:../img/noise.svg');
+				> div {
+					background: $light-gradient-alpha;
+					padding: $m;
+					text-align: center;
+		
+					> h3 {
+						height: 24px;
+						overflow: hidden;
+						text-overflow: ellipsis;
+					}
+		
+					> .token-image {
+						> img {
+							box-shadow:
+								0 0 4px rgba(255, 255, 255, 0.3),
+								0 0 16px rgba(255, 255, 255, 0.2);
+						}
 					}
 				}
 			}
 		}
 	}
+
+	
 }
 

@@ -29,8 +29,8 @@ const App = ({ mobile }) => {
 	const onMount = async () => {
 		await Promise.all([
 			dispatch(initNear()),
+			await dispatch(fetchContracts()),
 			dispatch(fetchData()),
-			dispatch(fetchContracts()),
 		]);
 		update('loading', false);
 	};

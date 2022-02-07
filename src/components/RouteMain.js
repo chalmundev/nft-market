@@ -17,8 +17,6 @@ export const RouteMain = ({ dispatch, batch, marketSummary, contractMap }) => {
 	const f = marketSummary.new_offers[0]
 	const fc = contractMap?.[f.contract_id]
 
-	console.log(f, fc)
-
 	return <>
 
 		{
