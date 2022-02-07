@@ -1,9 +1,8 @@
 @import 'globals.scss';
 
-.token-image {
-	max-width: 400px;
+.media {
 	margin-bottom: -4px;
-	> img {
+	> img, > canvas {
 		width: 100%;
 		object-fit: cover;
 		object-position: center top;
@@ -14,27 +13,79 @@
 	}
 }
 
-.token-featured {
+.media.featured {
 	background-image: url('url:../img/line-box.svg');
 	background-repeat: no-repeat;
 	background-size: contain;
 	padding: $m;
 	width: calc(100% - 2 * $m);
-	max-width: 400px;
 	margin: $m auto;
-
-	> h2 {
-		@include butler-black;
-		text-align: center;
-		margin-top: $dm;
+	> img, > canvas {
+		margin-top: -2px;
+		aspect-ratio: 1.09 / 1;
+		box-shadow: $soft-glow;
 	}
+}
 
-	> .token-image {
-		> img {
-			aspect-ratio: 1.096 / 1;
-			box-shadow: $soft-glow;
+.featured-teaser {
+	text-align: center;
+
+	> div:nth-child(1) {
+		overflow: hidden;
+		width: 100vw;
+		
+		> div {
+			white-space: nowrap;
+			padding-bottom: 2px;
+
+			> div {
+				width: 100%;
+				display: inline-block;
+				text-align: center;
+
+				> .feature-card {
+					display: inline-block;
+					margin: auto;
+					> .media {
+						width: min(800px, calc(100vw - 2 * $m));
+					}
+				}
+			}
+
 		}
 	}
+
+	> .titles {
+		> h2 {
+			@include butler-black;
+			height: 28px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+	
+		> p {
+			height: 20px;
+		}
+	}
+
+	.pills {
+		text-align: center;
+		> div {
+			border-radius: 2px;
+			background: $lime;
+			display: inline-block;
+			height: 4px;
+			width: 8px;
+			opacity: 0.5;
+			margin: 0 4px;
+			transition: 0.32s cubic-bezier(0.215, 0.610, 0.355, 1);
+			&.active {
+				width: 24px;
+				opacity: 1;
+			}
+		}
+	}
+	
 }
 
 .summary-teaser {
@@ -55,7 +106,7 @@
 		padding-bottom: 2px;
 
 		> .feature-card {
-			max-width: min(400px, 40vw);
+			width: min(400px, 40vw);
 			margin-right: $m;
 			display: inline-block;
 			padding: 1px;

@@ -17,11 +17,10 @@
 	}
 }
 
-
-
 nav {
 	background: $blackberry;
 	background-image: url('url:../img/noise.svg');
+	z-index: 1000;
 	position: fixed;
 	top: 0;
 	width: 100%;

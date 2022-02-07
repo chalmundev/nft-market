@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { fetchBatchTokens } from '../state/near';
 
 import { cats } from '../utils/cats';
+import { FeaturedTeaser } from './FeaturedTeaser';
 import { SummaryTeaser } from './SummaryTeaser';
-import { TokenFeatured } from './TokenFeatured';
 
 export const RouteMain = ({ dispatch, batch, marketSummary, contractMap }) => {
 
@@ -14,13 +14,14 @@ export const RouteMain = ({ dispatch, batch, marketSummary, contractMap }) => {
 	}
 	useEffect(onMount, [])
 
-	const f = marketSummary.new_offers[0]
-	const fc = contractMap?.[f.contract_id]
+	const data = cats.slice(0, 5)
+	const items = []
+	data.forEach((data) => items.push(...marketSummary[data.key].slice(0, 1)))
 
 	return <>
 
 		{
-			<TokenFeatured {...{ contract: fc, token: batch?.[f.contract_id]?.[f.token_id] }} />
+			<FeaturedTeaser {...{ contractMap, batch, data, items }} />
 		}
 
 		{

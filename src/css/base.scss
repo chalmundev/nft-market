@@ -9,19 +9,18 @@ html {
 	scrollbar-base-color: $avocado;
 	scrollbar-3dlight-color: $avocado;
 	scrollbar-highlight-color: $avocado;
-	scrollbar-track-color: black;
-	scrollbar-arrow-color: #000;
+	scrollbar-track-color: #00000022;
+	scrollbar-arrow-color: #00000022;
 	scrollbar-shadow-color: $avocado;
-	scrollbar-dark-shadow-color: $avocado;
 }
 
 ::-webkit-scrollbar { width: 2px; height: 2px;}
 ::-webkit-scrollbar-button { width: 0; height: 0; }
 ::-webkit-scrollbar-track {  background-color: $avocado; }
-::-webkit-scrollbar-track-piece { background-color: black; }
+::-webkit-scrollbar-track-piece { background-color: #00000022; }
 ::-webkit-scrollbar-thumb { height: 0; background-color: $lime; }
 ::-webkit-scrollbar-corner { background-color: $avocado; }
-::-webkit-resizer { background-color: black; }
+::-webkit-resizer { background-color: #00000022; }
 
 body {
 	width: 100%;

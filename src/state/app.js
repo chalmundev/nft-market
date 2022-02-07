@@ -1,5 +1,5 @@
 import { State } from '../utils/state';
-import { parseMedia } from '../utils/token';
+import { parseMedia } from '../utils/media';
 
 import { fetchBatchContracts, initNear, marketId } from './near';
 

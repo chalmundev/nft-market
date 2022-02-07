@@ -5,7 +5,7 @@ import { view, action } from '../state/near';
 import { fetchData } from '../state/app';
 import { providers, networkId, contractId, parseNearAmount, formatNearAmount } from '../../utils/near-utils';
 import { howLongAgo } from '../utils/date';
-import { parseToken } from '../utils/token';
+import { parseToken } from '../utils/media';
 import { getOfferFromHashes } from '../utils/receipts';
 import { Media } from './Media';
 

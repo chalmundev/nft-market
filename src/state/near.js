@@ -3,7 +3,7 @@ const { WalletAccount } = nearAPI;
 import {
 	near, contractAccount, contractId
 } from '../../utils/near-utils';
-import { parseToken } from '../utils/token';
+import { parseToken } from '../utils/media';
 import { parseContractMap } from './app';
 import getConfig from '../../utils/config';
 const {
