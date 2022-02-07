@@ -88,6 +88,28 @@
 	
 }
 
+.summary-list {
+	
+	> div {
+		display: flex;
+		justify-content: space-evenly;
+		align-items: center;
+		margin-bottom: 20px;
+
+		> div {
+			padding-left: $m;
+		}
+
+		> .media {
+			max-width: 100px;
+		}
+
+		> div:nth-child(3) {
+			flex: 1;
+		}
+	}
+}
+
 .summary-teaser {
 
 	> div:nth-child(1) {
@@ -132,9 +154,7 @@
 		
 					> .token-image {
 						> img {
-							box-shadow:
-								0 0 4px rgba(255, 255, 255, 0.3),
-								0 0 16px rgba(255, 255, 255, 0.2);
+							box-shadow: $soft-glow;
 						}
 					}
 				}

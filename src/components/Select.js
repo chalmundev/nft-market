@@ -3,7 +3,7 @@ import {
 	Link,
 } from "react-router-dom";
 
-export const Select = ({ active, options }) => {
+export const Select = ({ active, options, onSelect }) => {
 
 	const { label } = active
 
@@ -16,7 +16,7 @@ export const Select = ({ active, options }) => {
 				<div className={open.toString()}>
 					{
 						options.map(({ label, key }) => <div key={key}>
-							<Link to={`/summary/${key}`}>{label}</Link>
+							<Link to={`/summary/${key}`} onClick={onSelect}>{label}</Link>
 						</div>)
 					}
 				</div>

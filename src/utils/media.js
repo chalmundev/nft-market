@@ -1,9 +1,10 @@
 
-export const parseData = (contractMap, batch, data, item) => {
-	const { format, innerKey, isToken } = data
+export const parseData = (contractMap, batch, data, item, noLabel) => {
+	const { label, format, innerKey, isToken } = data
 	const { contract_id, token_id } = item
 	let { name: title, media } = contractMap[contract_id] || {}
-	const subtitle = format ? format(item[innerKey]) : item[innerKey]
+	let subtitle = noLabel ? '' : label + ' '
+	subtitle += (format ? format(item[innerKey]) : item[innerKey])
 	let link = `/contract/${contract_id}`
 
 	if (isToken) {

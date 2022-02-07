@@ -4,8 +4,10 @@ import {
 	Link,
 	useParams,
 } from "react-router-dom";
+import { parseData } from '../utils/media'
 import { cats } from '../utils/cats';
 import { Select } from './Select';
+import { Media } from './Media';
 import { SummaryTeaser } from './SummaryTeaser';
 
 import '../css/Select.scss'
@@ -18,6 +20,7 @@ export const RouteSummary = ({ dispatch, update, navigate, batch, marketSummary,
 	const items = marketSummary[key]
 
 	const onMount = async () => {
+		window.scrollTo(0, 0)
 		const tokens = []
 		cats.filter(({ isToken }) => !!isToken).forEach(({ key }) => tokens.push(...marketSummary[key].map(({ contract_id, token_id }) => ({ contract_id, token_id }))))
 		await dispatch(fetchBatchTokens(tokens));
@@ -26,16 +29,30 @@ export const RouteSummary = ({ dispatch, update, navigate, batch, marketSummary,
 
 	return <>
 
-		<h3>{label}</h3>
-
 		<Select {...{
 			active: { label, key },
-			options: cats.map(({ label, key }) => ({ label, key }))
+			options: cats.map(({ label, key }) => ({ label, key })),
+			onSelect: () => {
+				window.scrollTo(0, 0)
+			}
 		}} />
 
-		{
-			items.map(({ contract_id }, i) => <p key={i}>{ contract_id }</p>)
-		}
+		<div className='summary-list'>
+			{
+				items.map((item, i) => {
+					const { title, subtitle, media, link } = parseData(contractMap, batch, cat, item, true)
+
+					return <div>
+						<div>{i+1}</div>
+						<Media {...{ media }} />
+						<div>
+							<div>{title}</div>
+							<div>{subtitle}</div>
+						</div>
+					</div>
+				})
+			}
+		</div>
 
 	</>;
 };
