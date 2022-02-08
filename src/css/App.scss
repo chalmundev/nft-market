@@ -89,13 +89,14 @@ nav {
 .grid {
 	display: flex;
 	justify-content: space-evenly;
-	align-items: center;
+	align-items: flex-start;
+	margin-bottom: $hm;
 	> div {
-		width: 100%;
-		padding-left: $m;
+		margin-left: $hm;
+		flex: 1;
 	}
 	> div:last-child {
-		padding-right: $m;
+		margin-right: $hm;
 	}
 	&.apart-2 {
 		justify-content: space-between;

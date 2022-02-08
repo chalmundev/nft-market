@@ -7,6 +7,7 @@ import { parseData } from '../utils/media';
 import { near } from '../utils/format';
 import { Rows } from './Rows';
 import { Media } from './Media';
+import { MediaCard } from './MediaCard';
 
 import '../css/Routes.scss'
 
@@ -95,22 +96,34 @@ export const RouteContract = ({ dispatch, update, navigate, params, data }) => {
 				</div>
 			</div>}
 
-			<p>Page {index+1} / {Math.ceil(supply / PAGE_SIZE)}</p>
+			{
+				Math.ceil(supply / PAGE_SIZE) > 1 && <>
+					<p>Page {index+1} / {Math.ceil(supply / PAGE_SIZE)}</p>
 
-			<div className='grid apart-2'>
-				{index !== 0 ? <button onClick={() => handlePage(index - 1)}>Prev</button> : <button style={{ visibility: 'hidden' }}></button>}
-				{(index + 1) * PAGE_SIZE < supply ? <button onClick={() => handlePage(index + 1)}>Next</button> : <button style={{ visibility: 'hidden' }}></button>}
+					<div className='grid apart-2'>
+						{index !== 0 ? <button onClick={() => handlePage(index - 1)}>Prev</button> : <button style={{ visibility: 'hidden' }}></button>}
+						{(index + 1) * PAGE_SIZE < supply ? <button onClick={() => handlePage(index + 1)}>Next</button> : <button style={{ visibility: 'hidden' }}></button>}
+					</div>
+				</>
+			}
+
+			<div className='tokens'>
+				<Rows {...{
+					width: window.innerWidth/2,
+					arr: tokens,
+					Item: ({ token_id, metadata: { title, media } }) => {
+						return <div key={token_id}>
+							<MediaCard {...{
+								title: title || token_id,
+								subtitle: title ? token_id : null,
+								media,
+								link: `/token/${contract_id}/${token_id}`,
+								classNames: ['feature-card', 'tall']
+							}} />
+						</div>
+					}
+				}} />
 			</div>
-
-			<Rows {...{
-				width: window.innerWidth/2,
-				arr: tokens,
-				Item: ({ token_id, metadata: { media } }) => <div onClick={() => navigate(`/token/${contract_id}/${token_id}`)}>
-					<Media {...{media}} />
-					<p>{token_id}</p>
-				</div>
-			}} />
-
 		</div>
 	);
 };

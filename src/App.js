@@ -48,9 +48,8 @@ const App = ({ mobile }) => {
 	const routeParams = { dispatch, update, navigate }
 
 	const { href, pathname } = window.location
-	const showBackHome = /\/(maker|taker)/gi.test(pathname);
+	const showBack = /\/(maker|taker|summary|contract)/gi.test(pathname);
 	const showBackToken = /\/(token)/gi.test(pathname);
-	const showBackContract = /\/(contract)/gi.test(pathname);
 	const txHashes = href.split('?transactionHashes=')[1];
 
 	return (<>
@@ -68,7 +67,7 @@ const App = ({ mobile }) => {
 						:
 						<>
 							<div className='crumbs'>
-								{showBackHome || showBackToken || showBackContract ? <div><Link to="/" onClick={(e) => {
+								{showBack || showBackToken ? <div><Link to="/" onClick={(e) => {
 									e.preventDefault();
 									update('data.index', 0);
 									if (showBackToken && txHashes) {

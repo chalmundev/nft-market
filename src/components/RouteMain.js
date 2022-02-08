@@ -4,6 +4,7 @@ import { fetchBatchTokens } from '../state/near';
 import { cats } from '../utils/cats';
 import { FeaturedTeaser } from './FeaturedTeaser';
 import { SummaryTeaser } from './SummaryTeaser';
+import { SummaryGrid } from './SummaryGrid';
 
 export const RouteMain = ({ dispatch, batch, marketSummary, contractMap }) => {
 
@@ -18,18 +19,20 @@ export const RouteMain = ({ dispatch, batch, marketSummary, contractMap }) => {
 	const items = []
 	data.forEach((data) => items.push(...marketSummary[data.key].slice(0, 1)))
 
+	const gridData = cats.slice(4, 10)
+	const gridItems = []
+	gridData.forEach((data) => gridItems.push(...marketSummary[data.key].slice(0, 1)))
+
 	return <>
+		<FeaturedTeaser {...{ contractMap, batch, data, items }} />
 
 		{
-			<FeaturedTeaser {...{ contractMap, batch, data, items }} />
-		}
-
-		{
-			cats.map((data) => <div key={data.key}>
+			cats.slice(0, 4).map((data) => <div key={data.key}>
 				<SummaryTeaser {...{ contractMap, batch, data, items: marketSummary[data.key].slice(0, 5) }} />
 			</div>)
 		}
 
+		<SummaryGrid {...{ contractMap, batch, data: gridData, items: gridItems }} />
 
 	</>;
 };

@@ -1,21 +1,24 @@
 $blackberry: #030504;
 $lime: #C7F94F;
-$lime-alpha: #C7F94FBB;
+$lime-alpha: #C7F94FAA;
 $brocolli: #5FBDB5;
-$brocolli-alpha: #5FBDB5BB;
+$brocolli-alpha: #5FBDB5AA;
 $melon: #FF6187;
 $plum: #F2F3F2;
 $avocado: #003932;
+$avocado-alpha: #003932AA;
 $rambutan: #F2F3F2;
 
 $light-gradient: linear-gradient(to bottom, $lime, $brocolli);
 $light-gradient-alpha: linear-gradient(to bottom, $lime-alpha, $brocolli-alpha);
 $light-gradient-right: linear-gradient(to right, $lime, $brocolli);
 
+$dark-gradient: linear-gradient(to right, $avocado, $brocolli);
+$dark-gradient-alpha: linear-gradient(to right, $avocado-alpha, $brocolli-alpha);
+
 $soft-glow:
-	0 0 4px rgba(255, 255, 255, 0.3),
-	0 0 16px rgba(255, 255, 255, 0.2);
-	
+	0 0 4px rgba(255, 255, 255, 0.2),
+	0 0 16px rgba(255, 255, 255, 0.1);
 
 $m: 16px;
 $dm: 32px;

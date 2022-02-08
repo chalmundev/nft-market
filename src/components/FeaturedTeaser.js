@@ -10,7 +10,6 @@ import '../css/Features.scss';
 
 
 export const FeaturedTeaser = ({ contractMap, batch, data, items }) => {
-	const { label, key, isToken, innerKey, format } = data
 
 	const [index, setIndex] = useState(0)
 	const [titles, setTitles] = useState({})
@@ -73,7 +72,7 @@ export const FeaturedTeaser = ({ contractMap, batch, data, items }) => {
 						const { link, media } = parseData(contractMap, batch, data[i], item)
 
 						return <div key={i}>
-							<Link to={link} className='feature-card'>
+							<Link to={link}>
 								<Media {...{ media, classNames: ['featured'] }} />
 							</Link>
 						</div>

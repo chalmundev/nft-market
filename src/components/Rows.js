@@ -10,7 +10,7 @@ export const Rows = ({ arr, Item, width = 375 }) => {
 
 	return rows.map((row, i) => <div className="grid" key={i}>
 		{
-			row.map((props, j) => props ? <Item key={j} {...props} /> : <div key={j}></div>)
+			row.map((props, j) => props ? <Item key={j} {...{ ...props, i: i*row.length + j } } /> : <div key={j}></div>)
 		}
 	</div>);
 };

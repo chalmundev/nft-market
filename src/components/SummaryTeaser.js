@@ -3,7 +3,7 @@ import {
 	Link,
 } from "react-router-dom";
 import { parseData } from '../utils/media'
-import { Media } from './Media';
+import { MediaCard } from './MediaCard';
 import '../css/Features.scss';
 
 /// items are tokens or contracts
@@ -23,15 +23,13 @@ export const SummaryTeaser = ({ contractMap, batch, data, items }) => {
 				items.map((item, i) => {
 					const { title, subtitle, link, media } = parseData(contractMap, batch, data, item)
 
-					return <Link key={i} to={link} className='feature-card'>
-						<div>
-							<div>
-								<Media {...{ media }} />
-								<h3>{title}</h3>
-								<p>{subtitle}</p>
-							</div>
-						</div>
-					</Link>
+					return <MediaCard key={i} {...{
+						title,
+						subtitle,
+						media,
+						link,
+						classNames: ['feature-card']
+					}} />
 				})
 			}
 			
