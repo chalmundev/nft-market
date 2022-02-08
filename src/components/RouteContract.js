@@ -1,4 +1,3 @@
-import { formatNearAmount } from 'near-api-js/lib/utils/format';
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchData } from '../state/app';
@@ -13,7 +12,7 @@ import '../css/Routes.scss'
 
 const PAGE_SIZE = 30;
 
-export const RouteContract = ({ dispatch, update, navigate, params, data }) => {
+export const RouteContract = ({ dispatch, update, mobile, data }) => {
 	const { contract_id } = useParams();
 
 	let { contractMap, batch, contractId, index, tokens, supply } = data;
@@ -109,7 +108,7 @@ export const RouteContract = ({ dispatch, update, navigate, params, data }) => {
 
 			<div className='tokens'>
 				<Rows {...{
-					width: window.innerWidth/2,
+					width: mobile ? window.innerWidth/2 : undefined,
 					arr: tokens,
 					Item: ({ token_id, metadata: { title, media } }) => {
 						return <div key={token_id}>

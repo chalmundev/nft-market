@@ -45,7 +45,7 @@ const App = ({ mobile }) => {
 		}
 	} = state;
 
-	const routeParams = { dispatch, update, navigate }
+	const routeParams = { dispatch, update, navigate, mobile }
 
 	const { href, pathname } = window.location
 	const showBack = /\/(maker|taker|summary|contract)/gi.test(pathname);
