@@ -74,7 +74,7 @@ const start = async () => {
 				}
 				if (!processing[networkId].contracts) {
 					processing[networkId].contracts = true
-					await contracts(fastify.pg[networkId]).catch((e) => console.warn(e))
+					await contracts(fastify.pg[networkId], networkId).catch((e) => console.warn(e))
 					processing[networkId].contracts = false
 				}
 			})
