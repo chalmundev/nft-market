@@ -9,6 +9,7 @@
 		overflow: hidden;
 		border-top-right-radius: 20%;
 		border-bottom-left-radius: 20%;
+		box-shadow: $soft-glow;
 	}
 }
 
@@ -22,7 +23,16 @@
 	> img, > canvas {
 		margin-top: -2px;
 		aspect-ratio: 1.09 / 1;
-		box-shadow: $soft-glow;
+	}
+}
+
+.media.token {
+	width: min(600px, 100%);
+	margin: $m auto;
+	> img, > canvas {
+		aspect-ratio: 1 / 1;
+		border-top-right-radius: 0;
+		border-bottom-left-radius: 10%;
 	}
 }
 

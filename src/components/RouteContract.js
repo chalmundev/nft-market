@@ -6,9 +6,11 @@ import { parseData } from '../utils/media';
 import { near } from '../utils/format';
 import { Rows } from './Rows';
 import { Media } from './Media';
+import { Chart } from './Chart';
 import { MediaCard } from './MediaCard';
 
 import '../css/Routes.scss'
+import { contractPriceHistory } from '../utils/data';
 
 const PAGE_SIZE = 30;
 
@@ -63,7 +65,7 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 	if (!summary) return null
 
 	return (
-		<div className='contract'>
+		<div className='route contract'>
 
 			<Media {...{media, classNames: ['featured']}} />
 
@@ -94,6 +96,8 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 					<div>{ near(summary.lowest.amount) }</div>
 				</div>
 			</div>}
+
+			<Chart data={contractPriceHistory(data?.[contract_id])} />
 
 			{
 				Math.ceil(supply / PAGE_SIZE) > 1 && <>

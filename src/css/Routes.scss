@@ -1,7 +1,9 @@
 
 @import 'globals.scss';
 
-.contract {
+
+.route {
+	
 	text-align: center;
 	> h2 {
 		font-family: 'butler-black';
@@ -18,6 +20,7 @@
 		> div {
 			> div:nth-child(1) {
 				color: $brocolli;
+				text-transform: uppercase;
 			}
 			> div:nth-child(2) {
 				font-family: 'evolventa-bold'
@@ -27,5 +30,41 @@
 
 	.tokens {
 		margin: $hm;
+	}
+
+	.chart {
+		max-width: 600px;
+		margin: $m;
+		margin-bottom: $dm;
+		text-align: left;
+		.recharts-wrapper {
+			margin: $hm 0;
+			background: rgba(255, 255, 255, 0.05);
+		}
+		> p {
+			margin: 0;
+			color: $brocolli;
+			text-transform: uppercase;
+		}
+		.pills {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			.pill {
+				width: 32px;
+				height: 20px;
+				background: $avocado;
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				border-radius: 10px;
+				color: $rambutan;
+				font-size: 0.7rem;
+				text-align: center;
+				line-height: 20px;
+				&.active {
+					background: $lime-alpha;
+				}
+			}
+		}
+		
 	}
 }

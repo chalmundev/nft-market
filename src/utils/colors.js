@@ -1,0 +1,10 @@
+export const $blackberry = '#030504';
+export const $lime = '#C7F94F';
+export const $limeAlpha = '#C7F94FAA';
+export const $brocolli = '#5FBDB5';
+export const $brocolliAlpha = '#5FBDB5AA';
+export const $melon = '#FF6187';
+export const $plum = '#F2F3F2';
+export const $avocado = '#003932';
+export const $avocadoAlpha = '#003932AA';
+export const $rambutan = '#F2F3F2';

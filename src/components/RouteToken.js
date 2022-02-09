@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import BN from 'bn.js';
 import { useParams } from 'react-router-dom';
-import { view, action } from '../state/near';
+import { view, action, fetchBatchTokens } from '../state/near';
 import { fetchData } from '../state/app';
 import { providers, networkId, contractId, parseNearAmount, formatNearAmount } from '../../utils/near-utils';
 import { howLongAgo } from '../utils/date';
-import { parseToken } from '../utils/media';
+import { parseData } from '../utils/media';
+import { near } from '../utils/format';
 import { getOfferFromHashes } from '../utils/receipts';
 import { Media } from './Media';
 
@@ -15,9 +16,8 @@ const OUTBID_TIMEOUT = 86400000;
 export const RouteToken = ({ dispatch, account, data }) => {
 	const { contract_id, token_id } = useParams();
 
-	const { tokens } = data;
+	const { contractMap, batch, tokens } = data;
 
-	const [token, setToken] = useState();
 	const [offer, setOffer] = useState();
 	const [lastOffer, setLastOffer] = useState();
 	const [amount, setAmount] = useState('');
@@ -25,13 +25,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	const onMount = async () => {
 		let token = tokens.find((token) => token.token_id === token_id);
 		if (!token) {
-			token = parseToken(await dispatch(view({
-				contract_id,
-				methodName: 'nft_token',
-				args: {
-					token_id,
-				}
-			})));
+			dispatch(fetchBatchTokens([{ contract_id, token_id }]))
 		}
 
 		if (!data[contract_id]) {
@@ -58,8 +52,6 @@ export const RouteToken = ({ dispatch, account, data }) => {
 		// 	methodName: 'offer_storage_available',
 		// 	args: { owner_id: account.account_id }
 		// }));
-
-		setToken(token);
 	};
 	useEffect(onMount, []);
 
@@ -130,8 +122,6 @@ export const RouteToken = ({ dispatch, account, data }) => {
 		}));
 	};
 
-	if (!token) return null;
-
 	let {
 		summary, offers = []
 	} = data[contract_id]?.tokens?.[token_id] || {};
@@ -142,13 +132,17 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	// 	displayOffers.unshift(lastOffer);
 	// }
 
-	const isOwner = token.owner_id === account?.account_id;
-	const ifOfferOwner = offer?.maker_id === account?.account_id;
-	const offerLabel = isOwner ? 'Set Price' : 'Make Offer';
-	const { media } = token.metadata;
+	// const isOwner = token.owner_id === account?.account_id;
+	// const ifOfferOwner = offer?.maker_id === account?.account_id;
+	// const offerLabel = isOwner ? 'Set Price' : 'Make Offer';
+	// const { media } = token.metadata;
 
+	const { title, subtitle, media, link } = parseData(contractMap, batch, { isToken: true }, { contract_id, token_id })
+
+
+	if (!summary) return null
 	return (
-		<div>
+		<div className="route token">
 
 			{/* <div className="button-row">
 				<button onClick={async () => {
@@ -158,21 +152,40 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				}}>Update Market Data</button>
 			</div> */}
 
-			<Media {...{media}} />
+			<Media {...{media, classNames: ['token']}} />
 
+			<h2>{title}</h2>
+			<p>{token_id}</p>
+{/* 
 			<p>{token.token_id}</p>
-			<p>{isOwner ? 'You own this token' : token.owner_id}</p>
+			<p>{isOwner ? 'You own this token' : token.owner_id}</p> */}
 
-			{summary && <>
-				<h3>Market Summary</h3>
-				<p>Average: {formatNearAmount(summary.avg_sale, 4)}</p>
-				{summary.highest && <p>Highest: {formatNearAmount(summary.highest.amount, 4)}</p>}
-				{summary.lowest && <p>Lowest: {formatNearAmount(summary.lowest.amount, 4)}</p>}
-				<p>Sales: {summary.sales}</p>
-				<p>Events: {summary.events}</p>
-			</>}
+			<div className='stats'>
+				<div>
+					<div>Avg</div>
+					<div>{near(summary.avg_sale)}</div>
+				</div>
+				<div>
+					<div>Sales</div>
+					<div>{summary.sales}</div>
+				</div>
+				<div>
+					<div>Events</div>
+					<div>{summary.events}</div>
+				</div>
+			</div>
+			{summary.highest && <div className='stats'>
+				<div>
+					<div>Highest</div>
+					<div>{ near(summary.highest.amount) }</div>
+				</div>
+				<div>
+					<div>Lowest</div>
+					<div>{ near(summary.lowest.amount) }</div>
+				</div>
+			</div>}
 
-			{
+			{/* {
 				offer && <>
 					<div className="offers current-offer">
 						<h3>Current Offer</h3>
@@ -231,7 +244,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 						</div>
 					</div>)
 				}
-			</div>
+			</div> */}
 
 		</div>
 	);
