@@ -765,7 +765,7 @@ module.exports = {
 		});
 	}),
 
-	contracts: (db) => new Promise((res, rej) => {
+	contracts: (db, networkId) => new Promise((res, rej) => {
 		const provider = new providers.JsonRpcProvider("https://rpc.testnet.near.org");
 
 		db.connect(onConnect = async (err, client, release) => {
