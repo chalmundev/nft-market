@@ -67,15 +67,16 @@ const start = async () => {
 	if (process.env.NODE_ENV === 'prod') {
 		setInterval(() => {
 			['testnet', 'mainnet'].forEach((networkId) => {
-				if (processing[networkId].market) return
-				processing[networkId].market = true
-				await market(fastify.pg[networkId]).catch((e) => console.warn(e))
-				processing[networkId].market = false
-	
-				if (processing[networkId].contracts) return
-				processing[networkId].contracts = true
-				await contracts(fastify.pg[networkId]).catch((e) => console.warn(e))
-				processing[networkId].contracts = false
+				if (!processing[networkId].market) {
+					processing[networkId].market = true
+					await market(fastify.pg[networkId]).catch((e) => console.warn(e))
+					processing[networkId].market = false
+				}
+				if (!processing[networkId].contracts) {
+					processing[networkId].contracts = true
+					await contracts(fastify.pg[networkId]).catch((e) => console.warn(e))
+					processing[networkId].contracts = false
+				}
 			})
 		}, 60000) // 1m
 	} else {
