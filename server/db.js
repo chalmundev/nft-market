@@ -3,11 +3,11 @@ const { execSync } = require('child_process');
 const { providers } = require('near-api-js');
 const BN = require('bn.js');
 
-const getConfig = require("../utils/config");
-const {
-	networkId,
-	contractId: marketId,
-} = getConfig();
+
+const contracts = {
+	testnet: 'v1.nft-market.testnet',
+	mainnet: 'market.secondx.near',
+}
 
 const MAX_LEN_MARKET_SUMMARIES = 100;
 const PATH = process.env.NODE_ENV === 'prod' ? '../../nft-market-data' : '../dist/out';
@@ -581,8 +581,9 @@ function updateSummary(contracts, log, marketSummaryData) {
 
 
 module.exports = {
-	market: (db) => new Promise((res, rej) => {
+	market: (db, networkId) => new Promise((res, rej) => {
 
+		const marketId = contracts[networkId]
 
 		console.log(`\nMARKET UPDATE: ${new Date()}\n`);
 

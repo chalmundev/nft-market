@@ -69,7 +69,7 @@ const start = async () => {
 			['testnet', 'mainnet'].forEach((networkId) => {
 				if (!processing[networkId].market) {
 					processing[networkId].market = true
-					await market(fastify.pg[networkId]).catch((e) => console.warn(e))
+					await market(fastify.pg[networkId], networkId).catch((e) => console.warn(e))
 					processing[networkId].market = false
 				}
 				if (!processing[networkId].contracts) {
