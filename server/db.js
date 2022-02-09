@@ -12,7 +12,6 @@ const {
 const MAX_LEN_MARKET_SUMMARIES = 100;
 const PATH = process.env.NODE_ENV === 'prod' ? '../../nft-market-data' : '../dist/out';
 
-let processingMarket = false;
 
 async function getContractMedia(provider, accountId) {
 	let args = { from_index: "0", limit: 10 };
@@ -582,13 +581,8 @@ function updateSummary(contracts, log, marketSummaryData) {
 
 
 module.exports = {
-	market: (db, startTimestamp) => new Promise((res, rej) => {
+	market: (db) => new Promise((res, rej) => {
 
-		if (processingMarket) {
-			res('Update in progress');
-			return;
-		}
-		processingMarket = true;
 
 		console.log(`\nMARKET UPDATE: ${new Date()}\n`);
 
@@ -597,7 +591,6 @@ module.exports = {
 
 		db.connect(onConnect = async (err, client, release) => {
 			if (err) {
-				processingMarket = false;
 				return rej(err);
 			}
 
@@ -659,7 +652,6 @@ module.exports = {
 				onResult = async (err, result) => {
 					release();
 					if (err) {
-						processingMarket = false;
 						return rej(err);
 					}
 
@@ -669,7 +661,6 @@ module.exports = {
 
 					if (result.rows.length == 0) {
 						console.log("No receipts found since timestamp: ", currentHighestBlockTimestamp);
-						processingMarket = false;
 						return res(marketSummary);
 					}
 					
@@ -768,15 +759,13 @@ module.exports = {
 						console.log("DONE");
 					}
 					res(marketSummary);
-
-					processingMarket = false;
 				}
 
 			);
 		});
 	}),
 
-	contracts: (db, startTimestamp) => new Promise((res, rej) => {
+	contracts: (db) => new Promise((res, rej) => {
 		const provider = new providers.JsonRpcProvider("https://rpc.testnet.near.org");
 
 		db.connect(onConnect = async (err, client, release) => {

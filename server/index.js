@@ -43,6 +43,17 @@ fastify.get('/reset/:adminCode?', (req, reply) => {
 	return reset();
 });
 
+let processing = {
+	testnet: {
+		market: false,
+		contracts: false,
+	},
+	mainnet: {
+		market: false,
+		contracts: false,
+	},
+}
+
 const start = async () => {
 
 	try {
@@ -54,9 +65,19 @@ const start = async () => {
 	}
 	/// hit /market every minute
 	if (process.env.NODE_ENV === 'prod') {
-		contracts(fastify.pg.testnet)
-		setInterval(() => market(fastify.pg.testnet), 60000); // 1m
-		setInterval(() => contracts(fastify.pg.testnet), 60000); // 1m
+		setInterval(() => {
+			['testnet', 'mainnet'].forEach((networkId) => {
+				if (processing[networkId].market) return
+				processing[networkId].market = true
+				await market(fastify.pg[networkId]).catch((e) => console.warn(e))
+				processing[networkId].market = false
+	
+				if (processing[networkId].contracts) return
+				processing[networkId].contracts = true
+				await contracts(fastify.pg[networkId]).catch((e) => console.warn(e))
+				processing[networkId].contracts = false
+			})
+		}, 60000) // 1m
 	} else {
 		await mkdir(`../dist/out`).catch((e) => {
 			if (!/already exists/.test(e)) {
