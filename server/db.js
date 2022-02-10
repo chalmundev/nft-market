@@ -54,7 +54,7 @@ async function getContractMetadata(provider, accountId) {
 
 	// format result
 	const res = JSON.parse(Buffer.from(rawResult.result).toString());
-	return { name: res.name, symbol: res.symbol };
+	return { name: res.name, symbol: res.symbol, base_uri: res.base_uri };
 }
 
 async function getTransactionInformation(provider, transactionHash) {
@@ -584,6 +584,7 @@ module.exports = {
 	market: (db, networkId) => new Promise((res, rej) => {
 
 		const marketId = contracts[networkId];
+		const NEW_PATH = PATH + `/${networkId}/`;
 
 		console.log(`\nMARKET UPDATE: ${new Date()}\n`);
 
@@ -595,7 +596,7 @@ module.exports = {
 				return rej(err);
 			}
 
-			await mkdir(`${PATH}/${marketId}`).catch((e) => {
+			await mkdir(`${NEW_PATH}/${marketId}`).catch((e) => {
 				// console.log("Unable to create directory for contract ", marketId);
 			});
 
@@ -619,7 +620,7 @@ module.exports = {
 			let marketSummary = {};
 
 			try {
-				marketSummary = JSON.parse(await readFile(`${PATH}/${marketId}/marketSummary.json`));
+				marketSummary = JSON.parse(await readFile(`${NEW_PATH}/${marketId}/marketSummary.json`));
 				currentHighestBlockTimestamp = startTimestamp ? startTimestamp : marketSummary.blockstamp;
 			} catch (e) {
 				console.log("Cannot read market summary for contract ", marketId);
@@ -713,7 +714,7 @@ module.exports = {
 						if (eventsPerContract.hasOwnProperty(contractId)) {
 							let currentContractData = {};
 							try {
-								let rawContractData = await readFile(`${PATH}/${marketId}/${contractId}.json`);
+								let rawContractData = await readFile(`${NEW_PATH}/${marketId}/${contractId}.json`);
 								currentContractData = startTimestamp ? {} : JSON.parse(rawContractData);
 							} catch (e) {
 								console.log("WARNING: unable to read contract file: ", contractId, " creating new file.");
@@ -725,7 +726,7 @@ module.exports = {
 								appendEventToContractAndUpdateSummary(currentContractData, eventsPerContract[contractId][i], marketSummaryData);
 							}
 							console.log("WRITING CONTRACT FILE");
-							await writeFile(`${PATH}/${marketId}/${contractId}.json`, JSON.stringify(currentContractData));
+							await writeFile(`${NEW_PATH}/${marketId}/${contractId}.json`, JSON.stringify(currentContractData));
 						}
 					}
 
@@ -748,7 +749,7 @@ module.exports = {
 						high_sale_tokens: marketSummaryData.high_sale_tokens,
 						low_sale_tokens: marketSummaryData.low_sale_tokens,
 					};
-					await writeFile(`${PATH}/${marketId}/marketSummary.json`, JSON.stringify(marketSummary));
+					await writeFile(`${NEW_PATH}/${marketId}/marketSummary.json`, JSON.stringify(marketSummary));
 
 					if (process.env.NODE_ENV === 'prod') {
 						console.log("PUSH TO GH");
@@ -767,7 +768,9 @@ module.exports = {
 	}),
 
 	contracts: (db, networkId) => new Promise((res, rej) => {
-		const provider = new providers.JsonRpcProvider("https://rpc.testnet.near.org");
+		const provider = new providers.JsonRpcProvider(`https://rpc.${networkId}.near.org`);
+
+		const NEW_PATH = PATH + `/${networkId}/`;
 
 		db.connect(onConnect = async (err, client, release) => {
 			if (err) {
@@ -778,7 +781,7 @@ module.exports = {
 			let curData = {};
 
 			try {
-				curData = JSON.parse(await readFile(`${PATH}/contracts.json`));
+				curData = JSON.parse(await readFile(`${NEW_PATH}/contracts.json`));
 				currentHighestBlockTimestamp = startTimestamp ? startTimestamp : curData.blockstamp;
 			} catch (e) {
 				console.log("Cannot read contract summary. Creating file and defaulting blockstamp to 0 - ", e);
@@ -829,7 +832,7 @@ module.exports = {
 								console.log("data exists already for - ", result.rows[i].contract_id, " skipping.");
 							}
 						} catch (e) {
-							console.log("Skipping. Error for contract: ", result.rows[i].contract_id);
+							console.log("Skipping. Error for contract: ", result.rows[i].contract_id, e);
 						}
 						console.log("Finished ", i + 1, " of ", result.rows.length);
 						if (result.rows[i].ts > futureHighestBlockTimestamp) {
@@ -842,7 +845,7 @@ module.exports = {
 						contracts: formattedRows,
 					});
 
-					await writeFile(`${PATH}/contracts.json`, data);
+					await writeFile(`${NEW_PATH}/contracts.json`, data);
 					if (process.env.NODE_ENV === 'prod') {
 						console.log("PUSH TO GH");
 						try {
@@ -860,8 +863,9 @@ module.exports = {
 		});
 	}),
 
-	reset: () => new Promise((res, rej) => {
-		execSync(`cd ${PATH} && rm -rf ${marketId} contracts.json`);
+	reset: (networkId) => new Promise((res, rej) => {
+		const NEW_PATH = PATH + `/${networkId}/`;
+		execSync(`cd ${NEW_PATH} && rm -rf ${marketId} contracts.json`);
 		res(JSON.stringify({ reset: 'done' }));
 	}),
 };
