@@ -662,9 +662,12 @@ module.exports = {
 					let futureHighestBlockTimestamp = currentHighestBlockTimestamp;
 
 					if (result.rows.length == 0) {
-						console.log("No receipts found since timestamp: ", currentHighestBlockTimestamp);
+						console.log("No receipts found since timestamp: ", currentHighestBlockTimestamp, " for our marketplace: ", marketId, " on ", networkId);
 						return res(marketSummary);
+					} else {
+						console.log("Found ", result.rows.length, " receipts since block timestamp ", currentHighestBlockTimestamp, " for our marketplace: ", marketId, " on ", networkId);
 					}
+
 					
 					//loop through and bulk all logs together for each contract
 					for (let rowNum = 0; rowNum < result.rows.length; rowNum++) {
@@ -816,6 +819,13 @@ module.exports = {
 					let formattedRows = curData.contracts || {};
 
 					let futureHighestBlockTimestamp = currentHighestBlockTimestamp;
+
+					if (result.rows.length == 0) {
+						console.log("No receipts found since timestamp: ", currentHighestBlockTimestamp, " for contracts on ", networkId);
+						return res(curData);
+					} else {
+						console.log("Found ", result.rows.length, " receipts since block timestamp ", currentHighestBlockTimestamp, " for contracts on ", networkId);
+					}
 
 					//loop through each row of the result and gets metadata information from RPC
 					for (let i = 0; i < result.rows.length; i++) {
