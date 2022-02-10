@@ -9,19 +9,19 @@ import { SummaryGrid } from './SummaryGrid';
 export const RouteMain = ({ dispatch, batch, marketSummary, contractMap }) => {
 
 	const onMount = async () => {
-		const tokens = []
-		cats.filter(({ isToken }) => !!isToken).forEach(({ key }) => tokens.push(...marketSummary[key].map(({ contract_id, token_id }) => ({ contract_id, token_id }))))
+		const tokens = [];
+		cats.filter(({ isToken }) => !!isToken).forEach(({ key }) => tokens.push(...marketSummary[key].map(({ contract_id, token_id }) => ({ contract_id, token_id }))));
 		await dispatch(fetchBatchTokens(tokens));
-	}
-	useEffect(onMount, [])
+	};
+	useEffect(onMount, []);
 
-	const data = cats.slice(0, 5)
-	const items = []
-	data.forEach((data) => items.push(...marketSummary[data.key].slice(0, 1)))
+	const data = cats.slice(0, 5);
+	const items = [];
+	data.forEach((data) => items.push(...marketSummary[data.key].slice(0, 1)));
 
-	const gridData = cats.slice(4, 10)
-	const gridItems = []
-	gridData.forEach((data) => gridItems.push(...marketSummary[data.key].slice(0, 1)))
+	const gridData = cats.slice(4, 10);
+	const gridItems = [];
+	gridData.forEach((data) => gridItems.push(...marketSummary[data.key].slice(0, 1)));
 
 	return <>
 		<FeaturedTeaser {...{ contractMap, batch, data, items }} />

@@ -3,7 +3,7 @@ import { useState } from 'react';
 export const get = (k) => {
 	const v = localStorage.getItem(k);
 	if (v?.charAt(0) !== '{') {
-		return v
+		return v;
 	}
 	try {
 		return JSON.parse(v);

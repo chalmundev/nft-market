@@ -4,29 +4,29 @@ import {
 	Link,
 	useParams,
 } from "react-router-dom";
-import { parseData } from '../utils/media'
+import { parseData } from '../utils/media';
 import { cats } from '../utils/cats';
 import { Select } from './Select';
 import { Media } from './Media';
 import { SummaryTeaser } from './SummaryTeaser';
 
-import '../css/Select.scss'
+import '../css/Select.scss';
 
 export const RouteSummary = ({ dispatch, update, navigate, batch, marketSummary, contractMap, index }) => {
 
 	const { key } = useParams();
-	const cat = cats.find((cat) => cat.key === key)
-	const { label } = cat
+	const cat = cats.find((cat) => cat.key === key);
+	const { label } = cat;
 	
-	const [items, setItems] = useState([])
+	const [items, setItems] = useState([]);
 
 	const onMount = async () => {
-		setItems(marketSummary[key])
-		const tokens = []
-		cats.filter(({ isToken }) => !!isToken).forEach(({ key }) => tokens.push(...marketSummary[key].map(({ contract_id, token_id }) => ({ contract_id, token_id }))))
+		setItems(marketSummary[key]);
+		const tokens = [];
+		cats.filter(({ isToken }) => !!isToken).forEach(({ key }) => tokens.push(...marketSummary[key].map(({ contract_id, token_id }) => ({ contract_id, token_id }))));
 		await dispatch(fetchBatchTokens(tokens));
-	}
-	useEffect(onMount, [key])
+	};
+	useEffect(onMount, [key]);
 
 	return <>
 
@@ -39,7 +39,7 @@ export const RouteSummary = ({ dispatch, update, navigate, batch, marketSummary,
 		<div className='summary-list'>
 			{
 				items.map((item, i) => {
-					const { title, subtitle, media, link } = parseData(contractMap, batch, cat, item, true)
+					const { title, subtitle, media, link } = parseData(contractMap, batch, cat, item, true);
 
 					return <Link to={link} key={i}>
 						<div>{i+1}</div>
@@ -48,7 +48,7 @@ export const RouteSummary = ({ dispatch, update, navigate, batch, marketSummary,
 							<div>{title}</div>
 							<div>{subtitle}</div>
 						</div>
-					</Link>
+					</Link>;
 				})
 			}
 		</div>

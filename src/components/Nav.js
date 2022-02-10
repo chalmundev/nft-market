@@ -3,8 +3,8 @@ import {
 	Link,
 } from "react-router-dom";
 
-import { Logo } from './Logo'
-import MenuIcon from '../img/menu.svg'
+import { Logo } from './Logo';
+import MenuIcon from '../img/menu.svg';
 
 const Menu = ({ wallet }) => {
 

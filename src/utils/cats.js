@@ -11,4 +11,4 @@ export const cats = [
 	{ label: 'Lowest Sellers', key: 'low_sales', innerKey: 'avg', format },
 	{ isToken: true, label: 'Lowest Tokens', key: 'low_sale_tokens', innerKey: 'amount', format },
 	{ label: 'Losers', key: 'low_change', innerKey: 'change', format: percent },
-]
+];

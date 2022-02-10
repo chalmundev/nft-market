@@ -1,21 +1,21 @@
 
 export const parseData = (contractMap, batch, data, item, noLabel) => {
-	const { label, format, innerKey, isToken } = data
-	const { contract_id, token_id } = item
-	let { name: title, media } = contractMap[contract_id] || {}
-	let subtitle = noLabel ? '' : label + ' '
-	subtitle += (format ? format(item[innerKey]) : item[innerKey])
-	let link = `/contract/${contract_id}`
+	const { label, format, innerKey, isToken } = data;
+	const { contract_id, token_id } = item;
+	let { name: title, media } = contractMap[contract_id] || {};
+	let subtitle = noLabel ? '' : label + ' ';
+	subtitle += (format ? format(item[innerKey]) : item[innerKey]);
+	let link = `/contract/${contract_id}`;
 
 	if (isToken) {
-		const token = batch[contract_id]?.[token_id]
-		title = token_id
-		media = token?.metadata?.media
-		link = `/token/${contract_id}/${token_id}`
+		const token = batch[contract_id]?.[token_id];
+		title = token_id;
+		media = token?.metadata?.media;
+		link = `/token/${contract_id}/${token_id}`;
 	}
 
-	return { title, subtitle, media, link }
-}
+	return { title, subtitle, media, link };
+};
 
 export const parseMedia = (media) => {
 	if (!media) {

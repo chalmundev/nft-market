@@ -45,9 +45,9 @@ const App = ({ mobile }) => {
 		}
 	} = state;
 
-	const routeParams = { dispatch, update, navigate, mobile }
+	const routeParams = { dispatch, update, navigate, mobile };
 
-	const { href, pathname } = window.location
+	const { href, pathname } = window.location;
 	const showBack = /\/(maker|taker|summary|contract)/gi.test(pathname);
 	const showBackToken = /\/(token)/gi.test(pathname);
 	const txHashes = href.split('?transactionHashes=')[1];
@@ -112,7 +112,7 @@ const App = ({ mobile }) => {
 				}
 			</section>
 		</main>
-		</>
+	</>
 	);
 };
 

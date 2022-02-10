@@ -2,14 +2,14 @@ import React, { useEffect } from 'react';
 import {
 	Link,
 } from "react-router-dom";
-import { parseData } from '../utils/media'
+import { parseData } from '../utils/media';
 import { MediaCard } from './MediaCard';
 import '../css/Features.scss';
 
 /// items are tokens or contracts
 
 export const SummaryTeaser = ({ contractMap, batch, data, items }) => {
-	const { label, key } = data
+	const { label, key } = data;
 
 	return <div className='summary-teaser'>
 		<div>
@@ -21,7 +21,7 @@ export const SummaryTeaser = ({ contractMap, batch, data, items }) => {
 
 			{
 				items.map((item, i) => {
-					const { title, subtitle, link, media } = parseData(contractMap, batch, data, item, true)
+					const { title, subtitle, link, media } = parseData(contractMap, batch, data, item, true);
 
 					return <MediaCard key={i} {...{
 						title: subtitle,
@@ -29,10 +29,10 @@ export const SummaryTeaser = ({ contractMap, batch, data, items }) => {
 						media,
 						link,
 						classNames: ['feature-card']
-					}} />
+					}} />;
 				})
 			}
 			
 		</div>
-	</div>
+	</div>;
 };

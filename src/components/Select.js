@@ -1,13 +1,13 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import {
 	Link,
 } from "react-router-dom";
 
 export const Select = ({ active, options, onSelect }) => {
 
-	const { label } = active
+	const { label } = active;
 
-	const [open, setOpen] = useState(false)
+	const [open, setOpen] = useState(false);
 
 	return <div className='select' onClick={() => setOpen(!open)}>
 		<div>
@@ -16,13 +16,13 @@ export const Select = ({ active, options, onSelect }) => {
 				<div className={open.toString()}>
 					{
 						options
-						.filter(({ key }) => key !== active.key)
-						.map(({ label, key }) => <Link key={key} to={`/summary/${key}`} onClick={onSelect}>
-							{label}
-						</Link>)
+							.filter(({ key }) => key !== active.key)
+							.map(({ label, key }) => <Link key={key} to={`/summary/${key}`} onClick={onSelect}>
+								{label}
+							</Link>)
 					}
 				</div>
 			</div>
 		</div>
-	</div>
-}
+	</div>;
+};

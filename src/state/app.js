@@ -5,16 +5,16 @@ import { fetchBatchContracts, initNear, marketId } from './near';
 
 const DATA_HOST = process.env.REACT_APP_DATA === 'remote' ? 'https://data.secondx.app' : 'http://localhost:1234/out';
 
-let rate = 0
+let rate = 0;
 export const near2usd = () => {
 	if (!rate) {
 		fetch('https://api.coingecko.com/api/v3/simple/price?ids=near&vs_currencies=usd')
-		.then(r => r.json())
-		.then(({ near: { usd } }) => rate = usd)
+			.then(r => r.json())
+			.then(({ near: { usd } }) => rate = usd);
 	}
-	return rate
-}
-near2usd()
+	return rate;
+};
+near2usd();
 
 // example
 const initialState = {
@@ -41,16 +41,16 @@ export const { appStore, AppProvider } = State(initialState, 'app');
 
 export const parseContractMap = (contractMap) => {
 	const contracts = Object.entries(contractMap).map(([contract_id, data]) => {
-		const media = parseMedia(data.media)
-		contractMap[contract_id].media = media
+		const media = parseMedia(data.media);
+		contractMap[contract_id].media = media;
 		return {
 			contract_id,
 			...data,
 			media,
-		}
+		};
 	});
-	return { contracts, contractMap }
-}
+	return { contracts, contractMap };
+};
 
 export const fetchContracts = () => async ({ update }) => {
 	const { contracts } = await fetchJson(`${DATA_HOST}/contracts.json`);
@@ -58,17 +58,17 @@ export const fetchContracts = () => async ({ update }) => {
 };
 
 export const fetchData = (fn = 'marketSummary') => async ({ getState, dispatch, update }) => {
-	const { contractMap } = getState().data
+	const { contractMap } = getState().data;
 
 	const res = await fetchJson(`${DATA_HOST}/${marketId}/${fn}.json`);
-	const missing = []
+	const missing = [];
 	Object.values(res).forEach((arr) => {
-		if (!Array.isArray(arr)) return
+		if (!Array.isArray(arr)) return;
 		arr.forEach(({ contract_id }) => {
-			if (contract_id && !contractMap[contract_id]) missing.push(contract_id)
-		})
-	})
-	await dispatch(fetchBatchContracts(missing))
+			if (contract_id && !contractMap[contract_id]) missing.push(contract_id);
+		});
+	});
+	await dispatch(fetchBatchContracts(missing));
 
 	update('data', { [fn]: res });
 };

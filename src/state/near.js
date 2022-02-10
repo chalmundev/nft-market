@@ -96,33 +96,33 @@ export const view = ({
 };
 
 export const fetchBatchContracts = (contractIds) => async ({ getState, update }) => {
-	const { contractMap } = getState()?.data || {}
+	const { contractMap } = getState()?.data || {};
 	
 	await Promise.all(contractIds.map((contract_id) => contractAccount.viewFunction(
 		contract_id,
 		'nft_metadata',
 	).then(({ name, symbol }) => {
 		if (contractMap[contract_id]) {
-			return
+			return;
 		}
-		contractMap[contract_id] = { name, symbol }
+		contractMap[contract_id] = { name, symbol };
 	}).catch((e) => {
 		// console.warn(e)
-		contractMap[contract_id] = { name: contract_id, symbol: 'NA' }
+		contractMap[contract_id] = { name: contract_id, symbol: 'NA' };
 	})));
 
 	update('data', parseContractMap(contractMap));
 };
 
 export const fetchBatchTokens = (contractAndTokenIds = []) => async ({ update }) => {
-	const batch = {}
+	const batch = {};
 	await Promise.all(contractAndTokenIds.map(({ contract_id, token_id }) => contractAccount.viewFunction(
 		contract_id,
 		'nft_token',
 		{ token_id }
 	).then((token) => {
 		if (!batch[contract_id]) {
-			batch[contract_id] = {}
+			batch[contract_id] = {};
 		}
 		batch[contract_id][token_id] = parseToken(token);
 	}).catch((e) => console.warn(e))));

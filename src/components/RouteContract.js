@@ -9,7 +9,7 @@ import { Media } from './Media';
 import { Chart } from './Chart';
 import { MediaCard } from './MediaCard';
 
-import '../css/Routes.scss'
+import '../css/Routes.scss';
 import { contractPriceHistory } from '../utils/data';
 
 const PAGE_SIZE = 30;
@@ -60,9 +60,9 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 
 	tokens = tokens.slice().reverse();
 
-	const { title, media } = parseData(contractMap, batch, {}, { contract_id })
+	const { title, media } = parseData(contractMap, batch, {}, { contract_id });
 
-	if (!summary) return null
+	if (!summary) return null;
 
 	return (
 		<div className='route contract'>
@@ -123,7 +123,7 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 								link: `/token/${contract_id}/${token_id}`,
 								classNames: ['feature-card', 'tall']
 							}} />
-						</div>
+						</div>;
 					}
 				}} />
 			</div>

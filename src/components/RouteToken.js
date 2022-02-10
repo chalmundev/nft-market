@@ -30,7 +30,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	const [amount, setAmount] = useState();
 
 	const onMount = async () => {
-		window.scrollTo(0, 0) 
+		window.scrollTo(0, 0); 
 
 		if (!data[contract_id]) {
 			await dispatch(fetchData(contract_id));
@@ -38,9 +38,9 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 		let token = tokens.find((token) => token.token_id === token_id);
 		if (!token) {
-			dispatch(fetchBatchTokens([{ contract_id, token_id }]))
+			dispatch(fetchBatchTokens([{ contract_id, token_id }]));
 		} else {
-			setToken(token)
+			setToken(token);
 		}
 
 		try {
@@ -52,7 +52,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				}
 			}));
 			setOffer(offer);
-			setAmount(formatNearAmount(offer?.amount, 4))
+			setAmount(formatNearAmount(offer?.amount, 4));
 		} catch (e) {
 			// console.warn(e);
 		}
@@ -63,14 +63,14 @@ export const RouteToken = ({ dispatch, account, data }) => {
 			methodName: 'offer_storage_available',
 			args: { owner_id: account.account_id }
 		}));
-		console.log(storageAvailable)
+		console.log(storageAvailable);
 	};
 	useEffect(onMount, []);
 
 	const onBatch = () => {
-		if (token || !batch[contract_id]?.[token_id]) return
-		setToken(batch[contract_id][token_id])
-	}
+		if (token || !batch[contract_id]?.[token_id]) return;
+		setToken(batch[contract_id][token_id]);
+	};
 	useEffect(onBatch, [batch]);
 
 	const handleMakeOffer = () => {
@@ -145,18 +145,18 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	const displayOffers = offers.filter(({ event }) => event === 0).slice(0, offer ? -1 : undefined).reverse();
 	const displaySales = offers.filter(({ event }) => event === 1).reverse();
 
-	if (!token || !summary) return null
+	if (!token || !summary) return null;
 
 	const isOwner = token.owner_id === account?.account_id;
 	const isPrice = offer && offer?.maker_id === offer?.taker_id;
 	const ifOfferOwner = offer?.maker_id === account?.account_id;
 	const offerLabel = isOwner ? 'Set Price' : ifOfferOwner ? 'Increase Offer' : isPrice ? 'Buy Now' : 'Make Offer';
-	const displayCurrent = {...offer}
-	if (ifOfferOwner) displayCurrent.maker_id = 'Your Offer'
+	const displayCurrent = {...offer};
+	if (ifOfferOwner) displayCurrent.maker_id = 'Your Offer';
 
-	const { title, subtitle, media, link } = parseData(contractMap, batch, { isToken: true }, { contract_id, token_id })
-	const offerData = tokenPriceHistory(offers, true)
-	const saleData = tokenPriceHistory(offers)
+	const { title, subtitle, media, link } = parseData(contractMap, batch, { isToken: true }, { contract_id, token_id });
+	const offerData = tokenPriceHistory(offers, true);
+	const saleData = tokenPriceHistory(offers);
 
 	return (
 		<div className="route token">

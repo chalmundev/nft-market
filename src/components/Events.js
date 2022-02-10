@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { howLongAgo } from '../utils/date';
 import { near, usd } from '../utils/format';
 
-import '../css/Events.scss'
+import '../css/Events.scss';
 export const Events = ({ title, events }) => {
 
 	return <div className='event-list'>
@@ -20,5 +20,5 @@ export const Events = ({ title, events }) => {
 				</div>
 			</div>)
 		}
-	</div>
+	</div>;
 };

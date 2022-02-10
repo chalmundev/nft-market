@@ -15,7 +15,7 @@ export const Media = ({ media, classNames = [], useCanvas }) => {
 			style={{display: useCanvas ? 'none' : 'block'}}
 			src={media ? media : Missing}
 			onLoad={(e) => {
-				if (!useCanvas) return
+				if (!useCanvas) return;
 				const image = e.target;
 				const canvas = ref.current;
 				canvas.width = image.width;
@@ -25,7 +25,7 @@ export const Media = ({ media, classNames = [], useCanvas }) => {
 			}}
 			onError={({ currentTarget }) => {
 				if (currentTarget.src === Missing) {
-					return
+					return;
 				}
 				currentTarget.onerror = null;
 				currentTarget.src = Missing;

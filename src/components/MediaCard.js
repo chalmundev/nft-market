@@ -15,5 +15,5 @@ export const MediaCard = ({ title, subtitle, link, media, classNames = [] }) => 
 				<p>{subtitle}</p>
 			</div>
 		</div>
-	</Link>
+	</Link>;
 };
