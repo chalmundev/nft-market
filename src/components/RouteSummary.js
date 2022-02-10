@@ -41,14 +41,14 @@ export const RouteSummary = ({ dispatch, update, navigate, batch, marketSummary,
 				items.map((item, i) => {
 					const { title, subtitle, media, link } = parseData(contractMap, batch, cat, item, true)
 
-					return <div key={i}>
+					return <Link to={link} key={i}>
 						<div>{i+1}</div>
 						<Media {...{ media }} />
 						<div>
 							<div>{title}</div>
 							<div>{subtitle}</div>
 						</div>
-					</div>
+					</Link>
 				})
 			}
 		</div>

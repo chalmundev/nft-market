@@ -12,8 +12,6 @@ import '../css/Features.scss';
 export const SummaryGrid = ({ contractMap, batch, data, items }) => {
 	const { label, key } = data
 
-	console.log(data, items)
-
 	return <div className='summary-grid'>
 
 		<Rows {...{

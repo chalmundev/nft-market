@@ -54,7 +54,7 @@ input, button {
 	padding: 16px 16px 14px 16px;
 	outline: none;
 	font-family: 'evolventa';
-	margin: $m;
+	margin: $m 0;
 	border-image-source: $light-gradient;
 	border-width: 1px;
 	border-image-slice: 1;
@@ -66,8 +66,9 @@ input {
 }
 
 button {
+	width: calc(100% - $dm);
 	color: $avocado;
 	letter-spacing: 0.05rem;
 	font-family: 'evolventa-bold';
-	background: $light-gradient;
+	background: $light-gradient-alpha;
 }

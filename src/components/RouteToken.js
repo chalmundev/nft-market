@@ -3,12 +3,18 @@ import BN from 'bn.js';
 import { useParams } from 'react-router-dom';
 import { view, action, fetchBatchTokens } from '../state/near';
 import { fetchData } from '../state/app';
-import { providers, networkId, contractId, parseNearAmount, formatNearAmount } from '../../utils/near-utils';
-import { howLongAgo } from '../utils/date';
+
+import { Chart } from './Chart';
 import { parseData } from '../utils/media';
 import { near } from '../utils/format';
 import { getOfferFromHashes } from '../utils/receipts';
+import { Events } from './Events';
 import { Media } from './Media';
+import { tokenPriceHistory } from '../utils/data';
+
+import { providers, networkId, contractId, parseNearAmount, formatNearAmount } from '../../utils/near-utils';
+import { howLongAgo } from '../utils/date';
+
 
 const OUTBID_AMOUNT = '99999999999999999999999';
 const OUTBID_TIMEOUT = 86400000;
@@ -19,17 +25,22 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	const { contractMap, batch, tokens } = data;
 
 	const [offer, setOffer] = useState();
+	const [token, setToken] = useState();
 	const [lastOffer, setLastOffer] = useState();
-	const [amount, setAmount] = useState('');
+	const [amount, setAmount] = useState();
 
 	const onMount = async () => {
+		window.scrollTo(0, 0) 
+
+		if (!data[contract_id]) {
+			await dispatch(fetchData(contract_id));
+		}
+
 		let token = tokens.find((token) => token.token_id === token_id);
 		if (!token) {
 			dispatch(fetchBatchTokens([{ contract_id, token_id }]))
-		}
-
-		if (!data[contract_id]) {
-			dispatch(fetchData(contract_id));
+		} else {
+			setToken(token)
 		}
 
 		try {
@@ -41,26 +52,31 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				}
 			}));
 			setOffer(offer);
+			setAmount(formatNearAmount(offer?.amount, 4))
 		} catch (e) {
-			console.warn(e);
+			// console.warn(e);
 		}
 
 		setLastOffer(await getOfferFromHashes());
 
-		// debugging
-		// const storageAvailable = await dispatch(view({
-		// 	methodName: 'offer_storage_available',
-		// 	args: { owner_id: account.account_id }
-		// }));
+		const storageAvailable = await dispatch(view({
+			methodName: 'offer_storage_available',
+			args: { owner_id: account.account_id }
+		}));
+		console.log(storageAvailable)
 	};
 	useEffect(onMount, []);
 
+	const onBatch = () => {
+		if (token || !batch[contract_id]?.[token_id]) return
+		setToken(batch[contract_id][token_id])
+	}
+	useEffect(onBatch, [batch]);
+
 	const handleMakeOffer = () => {
-
 		if (offer && offer.maker_id !== offer.taker_id && new BN(parseNearAmount(amount)).sub(new BN(OUTBID_AMOUNT)).lt(new BN(offer.amount))) {
-			return alert('Counter offer is too small');
+			return alert('Offer increase is too small');
 		}
-
 		dispatch(action({
 			methodName: 'make_offer',
 			args: {
@@ -126,21 +142,22 @@ export const RouteToken = ({ dispatch, account, data }) => {
 		summary, offers = []
 	} = data[contract_id]?.tokens?.[token_id] || {};
 
-	const displayOffers = offers.slice(0, offer ? -1 : undefined).reverse();
+	const displayOffers = offers.filter(({ event }) => event === 0).slice(0, offer ? -1 : undefined).reverse();
+	const displaySales = offers.filter(({ event }) => event === 1).reverse();
 
-	// if (lastOffer && !displayOffers.find(({ updated_at }) => lastOffer.updated_at === updated_at)) {
-	// 	displayOffers.unshift(lastOffer);
-	// }
+	if (!token || !summary) return null
 
-	// const isOwner = token.owner_id === account?.account_id;
-	// const ifOfferOwner = offer?.maker_id === account?.account_id;
-	// const offerLabel = isOwner ? 'Set Price' : 'Make Offer';
-	// const { media } = token.metadata;
+	const isOwner = token.owner_id === account?.account_id;
+	const isPrice = offer && offer?.maker_id === offer?.taker_id;
+	const ifOfferOwner = offer?.maker_id === account?.account_id;
+	const offerLabel = isOwner ? 'Set Price' : ifOfferOwner ? 'Increase Offer' : isPrice ? 'Buy Now' : 'Make Offer';
+	const displayCurrent = {...offer}
+	if (ifOfferOwner) displayCurrent.maker_id = 'Your Offer'
 
 	const { title, subtitle, media, link } = parseData(contractMap, batch, { isToken: true }, { contract_id, token_id })
+	const offerData = tokenPriceHistory(offers, true)
+	const saleData = tokenPriceHistory(offers)
 
-
-	if (!summary) return null
 	return (
 		<div className="route token">
 
@@ -156,9 +173,25 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 			<h2>{title}</h2>
 			<p>{token_id}</p>
-{/* 
-			<p>{token.token_id}</p>
-			<p>{isOwner ? 'You own this token' : token.owner_id}</p> */}
+
+			{
+				offer && <>
+					
+					<Events {...{ title: isPrice ? 'Owner Offer' : 'Current Offer', events: [displayCurrent] }} />
+					
+					{ifOfferOwner && (isOwner || offer.updated_at < (Date.now() - OUTBID_TIMEOUT) * 1000000) && <div className="button-row">
+						<button onClick={handleRemoveOffer}>Remove Offer</button>
+					</div>}
+				</>
+			}
+
+			{!isPrice && <input
+				type="number"
+				placeholder='Amount (N)'
+				value={amount}
+				onChange={({ target: { value } }) => setAmount(value)}
+			/>}
+			<button onClick={isOwner ? handleAcceptOffer : handleMakeOffer}>{ offerLabel }</button>
 
 			<div className='stats'>
 				<div>
@@ -184,68 +217,20 @@ export const RouteToken = ({ dispatch, account, data }) => {
 					<div>{ near(summary.lowest.amount) }</div>
 				</div>
 			</div>}
+			
+			<Events {...{ title: 'Offers', events: displayOffers }} />
+			{offerData.length > 0 && <Chart {...{
+				title: 'Offer History',
+				data: offerData
+			} } />}
+			
+			<Events {...{ title: 'Sales', events: displaySales }} />
+			{saleData.length > 0 && <Chart {...{
+				title: 'Sale History',
+				data: saleData
+			} } />}
 
-			{/* {
-				offer && <>
-					<div className="offers current-offer">
-						<h3>Current Offer</h3>
-						<div className="offer">
-							<div>From: {ifOfferOwner ? 'You' : offer.maker_id}</div>
-							<div>
-								<div>Amount: {formatNearAmount(offer.amount, 4)}</div>
-								<div>{howLongAgo({ ts: offer.updated_at / (1000 * 1000), detail: 'minute' })} ago</div>
-							</div>
-						</div>
-					</div>
-					{ifOfferOwner && (isOwner || offer.updated_at < (Date.now() - OUTBID_TIMEOUT) * 1000000) && <div className="button-row">
-						<button onClick={handleRemoveOffer}>Remove Offer</button>
-					</div>}
-					{isOwner && !ifOfferOwner && <>
-						<input
-							type="number"
-							placeholder='Counter Offer Amount (N) (optional)'
-							value={amount}
-							onChange={({ target: { value } }) => setAmount(value)}
-						/>
-						<div className="button-row">
-							<button onClick={handleAcceptOffer}>{amount.length > 0 ? 'Counter' : 'Accept'} Offer</button>
-						</div>
-					</>}
-				</>
-			}
-
-			{
-				(!ifOfferOwner ||!offer) && <>
-
-					<h3>{ offerLabel }</h3>
-					<input
-						type="number"
-						placeholder='Amount (N)'
-						value={amount}
-						onChange={({ target: { value } }) => setAmount(value)}
-
-					/>
-					<button onClick={isOwner ? handleAcceptOffer : handleMakeOffer}>{ offerLabel }</button>
-
-				</>
-			}
-
-			<h3>Previous Offers</h3>
-			<div className="offers">
-				{
-					displayOffers.map(({ event, amount, maker_id, taker_id, updated_at }, i) => <div className="offer" key={i}>
-						<div>
-							<div>{event === 1 ? 'SOLD TO' : 'From'}: {maker_id}</div>
-							<div>Owner: {taker_id}</div>
-						</div>
-						<div>
-							<div>Amount: {formatNearAmount(amount, 4)}</div>
-							<div>{howLongAgo({ ts: updated_at / (1000 * 1000), detail: 'minute' })} ago</div>
-						</div>
-					</div>)
-				}
-			</div> */}
-
+			
 		</div>
 	);
 };

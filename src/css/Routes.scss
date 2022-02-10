@@ -9,10 +9,10 @@
 		font-family: 'butler-black';
 	}
 
-	.stats {
+	> .stats {
 		max-width: 600px;
 		margin: auto;
-		padding: $dm $m;
+		padding: $m;
 		text-align: center;
 		display: flex;
 		justify-content: space-evenly;
@@ -28,25 +28,33 @@
 		}
 	}
 
-	.tokens {
+	> .tokens {
 		margin: $hm;
 	}
 
-	.chart {
+	> .chart {
 		max-width: 600px;
 		margin: $m;
 		margin-bottom: $dm;
 		text-align: left;
-		.recharts-wrapper {
+		> .recharts-wrapper, > .no-data {
 			margin: $hm 0;
 			background: rgba(255, 255, 255, 0.05);
+			.yAxis {
+				margin-left: -32px;
+			}
+		}
+		> .no-data {
+			display: flex;
+			justify-content: center;
+			align-items: center;
 		}
 		> p {
 			margin: 0;
 			color: $brocolli;
 			text-transform: uppercase;
 		}
-		.pills {
+		> .pills {
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
@@ -67,4 +75,5 @@
 		}
 		
 	}
+
 }

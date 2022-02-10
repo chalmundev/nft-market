@@ -52,28 +52,30 @@
 		background-image: url('url:../img/noise.svg');
 		> div {
 			background: $light-gradient-alpha;
-			padding: $m;
+			padding: $hm;
 			text-align: center;
 
-
 			> h3, > p {
+				color: white;
 				width: 100%;
 				display: inline-block;
 				word-break: break-all;
-				margin-left: 0;
-				margin-right: 0;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				margin: 0;
+				display: block;
 			}
 
 			> h3 {
-				height: 24px;
-				overflow: hidden;
-				text-overflow: ellipsis;
+				margin-top: $m;
+				font-size: 1rem;
+				height: 22px;
 			}
 
 			> p {
-				height: 40px;
-				overflow: hidden;
-				text-overflow: ellipsis;
+				margin-top: $hm;
+				font-size: 0.8rem;
+				height: 16px;
 			}
 
 			> .media > img {
@@ -85,7 +87,7 @@
 	&.tall {
 		width: 100%;
 		> div > div {
-			padding: 0 $hm 0 $hm;
+			padding: 0 $hm $hm $hm;
 			> .media > img {
 				aspect-ratio: 3 / 4;
 				border-top-right-radius: 0;
@@ -172,7 +174,7 @@
 			}
 			> .media {
 				width: 100%;
-				opacity: 0.5;
+				opacity: 0.75;
 				> img, > canvas {
 					aspect-ratio: 3 / 2;
 				}
@@ -193,11 +195,12 @@
 
 .summary-list {
 	
-	> div {
+	> a {
 		display: flex;
 		justify-content: space-evenly;
 		align-items: center;
 		margin-bottom: 20px;
+		color: white;
 
 		> div {
 			padding-left: $m;

@@ -21,11 +21,11 @@ export const SummaryTeaser = ({ contractMap, batch, data, items }) => {
 
 			{
 				items.map((item, i) => {
-					const { title, subtitle, link, media } = parseData(contractMap, batch, data, item)
+					const { title, subtitle, link, media } = parseData(contractMap, batch, data, item, true)
 
 					return <MediaCard key={i} {...{
-						title,
-						subtitle,
+						title: subtitle,
+						subtitle: title,
 						media,
 						link,
 						classNames: ['feature-card']

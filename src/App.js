@@ -6,7 +6,7 @@ import {
 	useNavigate,
 } from "react-router-dom";
 
-import { appStore, fetchContracts, fetchData } from './state/app';
+import { appStore, onAppMount, fetchContracts, fetchData } from './state/app';
 import { initNear } from './state/near';
 import { networkId } from './../utils/near-utils';
 
@@ -29,7 +29,7 @@ const App = ({ mobile }) => {
 	const onMount = async () => {
 		await Promise.all([
 			dispatch(initNear()),
-			await dispatch(fetchContracts()),
+			dispatch(fetchContracts()),
 			dispatch(fetchData()),
 		]);
 		update('loading', false);
@@ -76,7 +76,7 @@ const App = ({ mobile }) => {
 									}
 									return navigate(-1);
 								}}>Back</Link></div> : <div></div>}
-								{account && <div><a href={`https://explorer.${networkId}.near.org/accounts/${account.accountId}`} target="_blank">{account.accountId}</a></div>}
+								{account && <div><a href={`https://wallet.${networkId}.near.org/profile/${account.accountId}`} target="_blank">{account.accountId}</a></div>}
 							</div>
 
 							<Routes>

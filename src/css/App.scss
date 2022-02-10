@@ -79,11 +79,6 @@ nav {
 	justify-content: space-between;
 	align-items: center;
 	margin: $m;
-	> div:nth-child(2) {
-		background-color: rgba(255, 255, 255, 0.5);
-		border-radius: 4px;
-		padding: 4px;
-	}
 }
 
 .grid {
@@ -106,16 +101,24 @@ nav {
 	}
 }
 
-
-.offers {
-	margin-bottom: $m;
+.near-amount {
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+	> img {
+		display: inline-block;
+		margin-top: -3px;
+		padding-left: $hm;
+	}
 }
 
-.offer {
-	padding: 8px;
-	> div {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
+.usd-amount {
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+	> img {
+		display: inline-block;
+		margin-top: -3px;
+		padding-left: $hm;
 	}
 }

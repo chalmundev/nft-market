@@ -1,79 +1,65 @@
-import * as React from "react";
-import { LineChart, Line } from "recharts";
-import { $brocolli, $lime } from '../utils/colors'
+import React, { useState } from "react";
+import { LineChart, Line, YAxis } from "recharts";
+import { $brocolli, $lime, $brocolliAlpha } from '../utils/colors'
 
 const width = Math.min(window.innerWidth - 32, 600)
 const height = Math.min(window.innerWidth / 3, 200)
 
-const data = [
-	{
-		name: "Page A",
-		uv: 4000,
-		pv: 2400,
-		amt: 2400
-	},
-	{
-		name: "Page B",
-		uv: 3000,
-		pv: 1398,
-		amt: 2210
-	},
-	{
-		name: "Page C",
-		uv: 2000,
-		pv: 9800,
-		amt: 2290
-	},
-	{
-		name: "Page D",
-		uv: 2780,
-		pv: 3908,
-		amt: 2000
-	},
-	{
-		name: "Page E",
-		uv: 1890,
-		pv: 4800,
-		amt: 2181
-	},
-	{
-		name: "Page F",
-		uv: 2390,
-		pv: 3800,
-		amt: 2500
-	},
-	{
-		name: "Page G",
-		uv: 3490,
-		pv: 4300,
-		amt: 2100
-	}
-];
+const TIMES = [
+	{ label: '1D', amount: 86400000 },
+	{ label: '1W', amount: 604800000 },
+	{ label: '1M', amount: 2592000000 },
+	{ label: '6M', amount: 15552000000 },
+	{ label: '1Y', amount: 31536000000 },
+	{ label: 'ALL', amount: 0 },
+]
 
-export const Chart = ({ data }) => {
+export const Chart = ({
+	data,
+	title = 'Average Price'
+}) => {
+
+	const [active, setActive] = useState(TIMES.length - 1)
+
+	const filteredData = data.filter((data) => {
+		if (active === TIMES.length - 1) return true
+		return Date.now() - TIMES[active].amount < data.updated_at 
+	})
 
 	return (
 		<div className="chart">
-			<p>Average Price</p>
-			<LineChart width={width} height={height} data={data}>
+			<p>{ title }</p>
+			{
+				filteredData.length === 0
+				?
+				<div className="no-data" style={{ width, height }}>
+					<p>No Data</p>
+				</div>
+				:
+				<LineChart width={width} height={height} data={filteredData}>
 
-				<defs>
-					<linearGradient id="linear" x1="0%" y1="0%" x2="100%" y2="0%">
-						<stop offset="0%" stopColor={$brocolli} />
-						<stop offset="50%" stopColor={$lime} />
-						<stop offset="100%" stopColor={$brocolli} />
-					</linearGradient>
-				</defs>
+					<defs>
+						<linearGradient id="linear" x1="0%" y1="0%" x2="100%" y2="0%">
+							<stop offset="0%" stopColor={$brocolli} />
+							<stop offset="50%" stopColor={$lime} />
+							<stop offset="100%" stopColor={$brocolli} />
+						</linearGradient>
+					</defs>
 
-				<Line type="monotone" dataKey="amount" stroke="url(#linear)" strokeWidth={2} dot={false} />
-			</LineChart>
+					<YAxis dataKey="amount" stroke={$brocolliAlpha} mirror={true} orientation="right" />
+
+					<Line type="monotone" dataKey="amount" stroke="url(#linear)" strokeWidth={2} dot={false} />
+				</LineChart>
+			}
+			
 			<div className="pills">
-				<div className="pill active">1D</div>
-				<div className="pill">1W</div>
-				<div className="pill">1M</div>
-				<div className="pill">3M</div>
-				<div className="pill">6M</div>
-				<div className="pill">1Y</div>
+				{
+					TIMES.map(({ label }, i) => <div
+						key={i}
+						className={['pill', i === active ? 'active' : ''].join(' ')}
+						onClick={() => setActive(i)}
+					>{label}</div>)
+				}
 			</div>
 		</div>
 	);

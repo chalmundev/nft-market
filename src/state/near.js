@@ -91,7 +91,7 @@ export const view = ({
 		}
 		return res;
 	} catch(e) {
-		console.warn(e);
+		// console.warn(e);
 	}
 };
 
@@ -107,7 +107,7 @@ export const fetchBatchContracts = (contractIds) => async ({ getState, update })
 		}
 		contractMap[contract_id] = { name, symbol }
 	}).catch((e) => {
-		console.warn(e)
+		// console.warn(e)
 		contractMap[contract_id] = { name: contract_id, symbol: 'NA' }
 	})));
 

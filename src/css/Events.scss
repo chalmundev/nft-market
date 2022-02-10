@@ -1,0 +1,36 @@
+
+@import 'globals.scss';
+
+
+.event-list {
+	margin: auto;
+	width: min(600px, 100%);
+	text-align: left;
+
+	> .title {
+		margin: 0;
+		padding-left: $m;
+		color: $brocolli;
+		text-transform: uppercase;
+	}
+
+	.event {
+		padding: $m;
+		> div {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			width: 100%;
+			> div {
+				height: 21.5px;
+				word-break: break-all;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+			> div:nth-child(1) {
+				min-width: 100px;
+			}
+		}
+	}
+	
+}

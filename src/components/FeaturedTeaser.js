@@ -8,6 +8,7 @@ import '../css/Features.scss';
 
 /// items are tokens or contracts
 
+const anim = {}
 
 export const FeaturedTeaser = ({ contractMap, batch, data, items }) => {
 
@@ -21,12 +22,14 @@ export const FeaturedTeaser = ({ contractMap, batch, data, items }) => {
 
 	const update = (_index) => {
 		setIndex(_index)
-		anime({
+		anim?.title?.pause()
+		anim?.slide?.pause()
+		anim.title = anime({
 			targets: '.titles',
 			opacity: 0,
 			duration: 320,
 		})
-		anime({
+		anim.slide = anime({
 			targets: '.container',
 			translateX: -_index * window.innerWidth,
 			duration: 800,
