@@ -1,13 +1,23 @@
 const { writeFile, mkdir, readFile } = require('fs/promises');
 const { execSync } = require('child_process');
-const { providers } = require('near-api-js');
+const { providers: _providers } = require('near-api-js');
 const BN = require('bn.js');
-
 
 const contracts = {
 	testnet: 'v1.nft-market.testnet',
 	mainnet: 'market.secondx.near',
 };
+
+const providers = {
+	testnet: {
+		provider: new _providers.JsonRpcProvider(`https://rpc.testnet.near.org`),
+		archivalProvider: new _providers.JsonRpcProvider(`https://archival-rpc.testnet.near.org`),
+	},
+	mainnet: {
+		provider: new _providers.JsonRpcProvider(`https://rpc.mainnet.near.org`),
+		archivalProvider: new _providers.JsonRpcProvider(`https://archival-rpc.mainnet.near.org`),
+	},
+}
 
 const MAX_LEN_MARKET_SUMMARIES = 100;
 const PATH = process.env.NODE_ENV === 'prod' ? '../../nft-market-data' : '../dist/out';
@@ -588,8 +598,7 @@ module.exports = {
 
 		console.log(`\nMARKET UPDATE: ${new Date()}\n`);
 
-		const provider = new providers.JsonRpcProvider(`https://rpc.${networkId}.near.org`);
-		const archivalProvider = new providers.JsonRpcProvider(`https://archival-rpc.${networkId}.near.org`);
+		const {provider, archivalProvider} = providers[networkId]
 
 		db.connect(onConnect = async (err, client, release) => {
 			if (err) {
@@ -768,7 +777,7 @@ module.exports = {
 	}),
 
 	contracts: (db, networkId) => new Promise((res, rej) => {
-		const provider = new providers.JsonRpcProvider(`https://rpc.${networkId}.near.org`);
+		const {provider} = providers[networkId]
 
 		const NEW_PATH = PATH + `/${networkId}/`;
 
