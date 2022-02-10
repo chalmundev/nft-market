@@ -24,21 +24,21 @@ fastify.register(fpg, {
 
 fastify.get('/contracts/:adminCode?', (req, reply) => {
 	if (req.params?.adminCode !== process.env.ADMIN_CODE) {
-		return JSON.stringify({ error: 'invalid code '})
+		return JSON.stringify({ error: 'invalid code '});
 	}
 	return contracts(fastify.pg.testnet);
 });
 
 fastify.get('/market/:adminCode?', (req, reply) => {
 	if (req.params?.adminCode !== process.env.ADMIN_CODE) {
-		return JSON.stringify({ error: 'invalid code '})
+		return JSON.stringify({ error: 'invalid code '});
 	}
 	return market(fastify.pg.testnet);
 });
 
 fastify.get('/reset/:adminCode?', (req, reply) => {
 	if (req.params?.adminCode !== process.env.ADMIN_CODE) {
-		return JSON.stringify({ error: 'invalid code '})
+		return JSON.stringify({ error: 'invalid code '});
 	}
 	return reset();
 });
@@ -52,7 +52,7 @@ let processing = {
 		market: false,
 		contracts: false,
 	},
-}
+};
 
 const start = async () => {
 
@@ -65,20 +65,20 @@ const start = async () => {
 	}
 	/// hit /market every minute
 	if (process.env.NODE_ENV === 'prod') {
-		setInterval(() => {
-			['testnet', 'mainnet'].forEach((networkId) => {
+		setInterval(async () => {
+			for(const networkId of ['testnet', 'mainnet']) {
 				if (!processing[networkId].market) {
-					processing[networkId].market = true
-					await market(fastify.pg[networkId], networkId).catch((e) => console.warn(e))
-					processing[networkId].market = false
+					processing[networkId].market = true;
+					await market(fastify.pg[networkId], networkId).catch((e) => console.warn(e));
+					processing[networkId].market = false;
 				}
 				if (!processing[networkId].contracts) {
-					processing[networkId].contracts = true
-					await contracts(fastify.pg[networkId], networkId).catch((e) => console.warn(e))
-					processing[networkId].contracts = false
+					processing[networkId].contracts = true;
+					await contracts(fastify.pg[networkId], networkId).catch((e) => console.warn(e));
+					processing[networkId].contracts = false;
 				}
-			})
-		}, 60000) // 1m
+			}
+		}, 60000); // 1m
 	} else {
 		await mkdir(`../dist/out`).catch((e) => {
 			if (!/already exists/.test(e)) {
