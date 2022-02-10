@@ -14,7 +14,7 @@ const TIMES = [
 	{ label: 'ALL', amount: 0 },
 ];
 
-import '../css/Chart.scss'
+import '../css/Chart.scss';
 
 export const Chart = ({
 	data,

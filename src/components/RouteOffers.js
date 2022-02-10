@@ -8,19 +8,19 @@ import { Page } from './Page';
 import { MediaCard } from './MediaCard';
 import { Rows } from './Rows';
 
-const DATA = { label: 'Amount', innerKey: 'amount', format: near, isToken: true }
+const DATA = { label: 'Amount', innerKey: 'amount', format: near, isToken: true };
 
 export const RouteOffers = ({ dispatch, update, navigate, account, data }) => {
 	if (!account) return null;
 
-	const { offers, supply, index, contractMap, batch } = data
+	const { offers, supply, index, contractMap, batch } = data;
 	const { account_id } = account;
 
 	const isMaker = /maker/.test(window.location.href);
 	const isTaker = !isMaker;
 	const type = isMaker ? 'maker' : 'taker';
 
-	const [loading, setLoading] = useState(true)
+	const [loading, setLoading] = useState(true);
 
 	const onMount = async () => {
 		if (offers[type].length > 0) {
@@ -43,7 +43,7 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data }) => {
 	useEffect(onMount, [type]);
 
 	const handlePage = async (_index = 0, _supply = supply) => {
-		setLoading(true)
+		setLoading(true);
 
 		if (index !== _index) {
 			update('data.index', _index);
@@ -69,7 +69,7 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data }) => {
 
 		await dispatch(fetchBatchTokens(offers.map(({ contract_id, token_id }) => ({ contract_id, token_id }))));
 
-		setLoading(false)
+		setLoading(false);
 	};
 
 	const [, offerArr = []] = offers[type];
@@ -90,8 +90,8 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data }) => {
 			loading,
 			arr: offerArr,
 			Item: (item) => {
-				const { contract_id } = item
-				const { title, subtitle, media, link } = parseData(contractMap, batch, DATA, item)
+				const { contract_id } = item;
+				const { title, subtitle, media, link } = parseData(contractMap, batch, DATA, item);
 
 				return <div key={contract_id}>
 					<MediaCard {...{
@@ -101,10 +101,10 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data }) => {
 						link,
 						classNames: ['feature-card', 'tall']
 					}} />
-				</div>
+				</div>;
 			}
 		}} />}
 
 
-	</div>
+	</div>;
 };

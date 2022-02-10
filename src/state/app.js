@@ -63,7 +63,7 @@ export const fetchContracts = () => async ({ getState, update }) => {
 };
 
 export const fetchData = (fn = 'marketSummary') => async ({ getState, dispatch, update }) => {
-	const { networkId, data: { contractMap } } = getState()
+	const { networkId, data: { contractMap } } = getState();
 
 	const res = await fetchJson(`${DATA_HOST}/${networkId}/${marketId}/${fn}.json`);
 	const missing = [];
