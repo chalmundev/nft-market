@@ -623,7 +623,7 @@ module.exports = {
 				marketSummary = JSON.parse(await readFile(`${NEW_PATH}/${marketId}/marketSummary.json`));
 				currentHighestBlockTimestamp = marketSummary.blockstamp;
 			} catch (e) {
-				console.log("Cannot read market summary for contract ", marketId);
+				console.log("Cannot read market summary for contract ", marketId, " on network ", networkId);
 			}
 
 			let marketSummaryData = {
@@ -787,7 +787,7 @@ module.exports = {
 				curData = JSON.parse(await readFile(`${NEW_PATH}/contracts.json`));
 				currentHighestBlockTimestamp = curData.blockstamp;
 			} catch (e) {
-				console.log("Cannot read contract summary. Creating file and defaulting blockstamp to 0 - ", e);
+				console.log("Cannot read contract summary for ", networkId, " Creating file and defaulting blockstamp to 0 - ", e);
 			}
 
 			client.query(
