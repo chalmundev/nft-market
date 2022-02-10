@@ -62,12 +62,9 @@ export const FeaturedTeaser = ({ contractMap, batch, data, items }) => {
 
 	const { title, subtitle } = titles;
 
-	return <div className='featured-teaser'>
+	return <div className='featured-teaser' {...{...handlers, onClick: handleSwipeClick } }>
 
-		<div {...{
-			...handlers,
-			onClick: handleSwipeClick
-		}}>
+		<div>
 			<div className="container">
 
 				{
@@ -85,12 +82,12 @@ export const FeaturedTeaser = ({ contractMap, batch, data, items }) => {
 			</div>
 		</div>
 
-		<div className="titles" onClick={handleSwipeClick}>
+		<div className="titles">
 			<h2>{ title }</h2>
 			<p>{ subtitle }</p>
 		</div>
 
-		<div className='pills' onClick={handleSwipeClick}>
+		<div className='pills'>
 			{
 				items.map((_, i) => <div key={i} className={index === i ? 'active' : ''}></div>)
 			}

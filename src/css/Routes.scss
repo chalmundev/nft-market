@@ -3,6 +3,10 @@
 
 
 .route {
+	
+	opacity: 0;
+	animation: fadeIn 0.32s cubic-bezier(0.215, 0.610, 0.355, 1);
+	animation-fill-mode: forwards;
 
 	a {
 		color: white;

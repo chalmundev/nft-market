@@ -10,6 +10,7 @@ import { appStore, onAppMount, fetchContracts, fetchData } from './state/app';
 import { initNear } from './state/near';
 import { networkId } from './../utils/near-utils';
 
+import { Modal } from './components/Modal';
 import { Nav } from './components/Nav';
 import { RouteOffers } from './components/RouteOffers';
 import { RouteContract } from './components/RouteContract';
@@ -28,6 +29,7 @@ const App = ({ mobile }) => {
 
 	const onMount = async () => {
 		await Promise.all([
+			dispatch(onAppMount()),
 			dispatch(initNear()),
 			dispatch(fetchContracts()),
 			dispatch(fetchData()),
@@ -37,7 +39,7 @@ const App = ({ mobile }) => {
 	useEffect(onMount, []);
 
 	const {
-		wallet, account, data,
+		wallet, account, data, modal,
 		data: {
 			marketSummary, contracts, contractMap,
 			index, batch,
@@ -53,6 +55,9 @@ const App = ({ mobile }) => {
 	const txHashes = href.split('?transactionHashes=')[1];
 
 	return (<>
+
+		{ modal && <Modal {...{ ...modal, update } } />}
+
 		<main className="container-fluid">
 
 			<Nav {...{ wallet, mobile }} />

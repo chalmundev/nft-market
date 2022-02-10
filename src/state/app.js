@@ -22,6 +22,7 @@ export const PAGE_SIZE = 20;
 const initialState = {
 	loading: true,
 	networkId: 'testnet',
+	modal: null,
 	data: {
 		contractId: '',
 		supply: 0,
@@ -41,6 +42,11 @@ const initialState = {
 };
 
 export const { appStore, AppProvider } = State(initialState, 'app');
+
+export const onAppMount = () => async ({ getState, update }) => {
+	window.__alert = window.alert
+	window.alert = (message) => update('modal', { message })
+}
 
 export const parseContractMap = (contractMap) => {
 	const contracts = Object.entries(contractMap).map(([contract_id, data]) => {

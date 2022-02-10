@@ -28,3 +28,12 @@ $hm: 8px;
 	font-family: 'butler-black';
 	letter-spacing: 0.05rem;
 }
+
+@keyframes fadeIn {
+	from {
+	  	opacity: 0
+	}
+	to {
+		opacity:1
+	}
+}

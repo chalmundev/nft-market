@@ -4,7 +4,7 @@ import { PAGE_SIZE, fetchData } from '../state/app';
 import { view, fetchTokens } from '../state/near';
 import { parseData } from '../utils/media';
 import { near } from '../utils/format';
-import { Rows } from './Rows';
+import { Page } from './Page';
 import { Media } from './Media';
 import { Chart } from './Chart';
 import { MediaCard } from './MediaCard';
@@ -18,11 +18,12 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 	let { contractMap, batch, contractId, index, tokens, supply } = data;
 	const summary = data?.[contract_id]?.summary;
 
+	const [loading, setLoading] = useState(true)
+
 	const onMount = async () => {
 		if (contractId === contract_id) {
 			return;
 		}
-		update('loading', true);
 		dispatch(fetchData(contract_id));
 		const supply = await dispatch(view({
 			contract_id,
@@ -37,6 +38,8 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 	useEffect(onMount, []);
 
 	const handlePage = async (_index = 0, _supply = supply) => {
+
+		setLoading(true)
 		if (index !== _index) {
 			update('data.index', _index);
 		}
@@ -53,7 +56,8 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 			from_index,
 			limit,
 		}));
-		update('loading', false);
+
+		setLoading(false)
 	};
 
 	tokens = tokens.slice().reverse();

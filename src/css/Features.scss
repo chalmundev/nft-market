@@ -100,6 +100,14 @@
 .featured-teaser {
 	text-align: center;
 
+	opacity: 0;
+	animation: fadeIn 0.32s cubic-bezier(0.215, 0.610, 0.355, 1);
+	animation-fill-mode: forwards;
+
+	.container {
+		will-change: transform;
+	}
+
 	> div:nth-child(1) {
 		overflow: hidden;
 		width: 100vw;
@@ -124,6 +132,7 @@
 
 	> .titles {
 		> h2 {
+			margin: 0;
 			@include butler-black;
 			height: 28px;
 			overflow: hidden;
@@ -131,6 +140,8 @@
 		}
 	
 		> p {
+			margin: $hm;
+			margin-bottom: 0;
 			height: 20px;
 		}
 	}
@@ -225,6 +236,7 @@
 	}
 
 	> div:nth-child(2) {
+		will-change: scroll-position;
 
 		overflow-x: scroll;
 		overflow-y: hidden;

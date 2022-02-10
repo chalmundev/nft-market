@@ -123,3 +123,31 @@ nav {
 		padding-left: $hm;
 	}
 }
+
+.modal {
+	z-index: 10000;
+	position: fixed;
+	width: 100vw;
+	height: 100vh;
+	top: 0; left: 0;
+	background: rgba(0, 0, 0, 0.5);
+	backdrop-filter: blur(8px);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	opacity: 0;
+	animation: fadeIn 0.32s cubic-bezier(0.215, 0.610, 0.355, 1);
+	animation-fill-mode: forwards;
+	> div {
+		margin: auto $m;
+		width: 100%;
+		background: $melon;
+		color: white;
+		> div {
+			padding: $m $m 0 $m;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+	}
+}
