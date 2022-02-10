@@ -16,6 +16,8 @@ export const near2usd = () => {
 };
 near2usd();
 
+export const PAGE_SIZE = 20;
+
 // example
 const initialState = {
 	loading: true,

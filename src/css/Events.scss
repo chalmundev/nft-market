@@ -14,21 +14,27 @@
 		text-transform: uppercase;
 	}
 
-	.event {
-		padding: $m;
-		> div {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			width: 100%;
+	> div {
+
+		max-height: 300px;
+		overflow-y: auto;
+
+		.event {
+			padding: $m;
 			> div {
-				height: 21.5px;
-				word-break: break-all;
-				overflow: hidden;
-				text-overflow: ellipsis;
-			}
-			> div:nth-child(1) {
-				min-width: 100px;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+				width: 100%;
+				> div {
+					height: 21.5px;
+					word-break: break-all;
+					overflow: hidden;
+					text-overflow: ellipsis;
+				}
+				> div:nth-child(1) {
+					min-width: 100px;
+				}
 			}
 		}
 	}

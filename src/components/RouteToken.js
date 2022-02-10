@@ -27,7 +27,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	const [offer, setOffer] = useState();
 	const [token, setToken] = useState();
 	const [lastOffer, setLastOffer] = useState();
-	const [amount, setAmount] = useState();
+	const [amount, setAmount] = useState('');
 
 	const onMount = async () => {
 		window.scrollTo(0, 0); 
@@ -59,11 +59,11 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 		setLastOffer(await getOfferFromHashes());
 
-		const storageAvailable = await dispatch(view({
-			methodName: 'offer_storage_available',
-			args: { owner_id: account.account_id }
-		}));
-		console.log(storageAvailable);
+		// const storageAvailable = await dispatch(view({
+		// 	methodName: 'offer_storage_available',
+		// 	args: { owner_id: account.account_id }
+		// }));
+		// console.log(storageAvailable);
 	};
 	useEffect(onMount, []);
 
@@ -74,7 +74,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	useEffect(onBatch, [batch]);
 
 	const handleMakeOffer = () => {
-		if (offer && offer.maker_id !== offer.taker_id && new BN(parseNearAmount(amount)).sub(new BN(OUTBID_AMOUNT)).lt(new BN(offer.amount))) {
+		if (offer && new BN(parseNearAmount(amount)).sub(new BN(OUTBID_AMOUNT)).lt(new BN(offer.amount))) {
 			return alert('Offer increase is too small');
 		}
 		dispatch(action({
@@ -185,12 +185,12 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				</>
 			}
 
-			{!isPrice && <input
+			<input
 				type="number"
 				placeholder='Amount (N)'
 				value={amount}
 				onChange={({ target: { value } }) => setAmount(value)}
-			/>}
+			/>
 			<button onClick={isOwner ? handleAcceptOffer : handleMakeOffer}>{ offerLabel }</button>
 
 			<div className='stats'>

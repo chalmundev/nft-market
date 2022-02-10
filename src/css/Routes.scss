@@ -3,6 +3,10 @@
 
 
 .route {
+
+	a {
+		color: white;
+	}
 	
 	text-align: center;
 	> h2 {
@@ -29,52 +33,6 @@
 	}
 
 	> .tokens {
-		display: flex;
-		justify-content: center;
-	}
-
-	> .chart {
-		max-width: 600px;
-		margin: $m auto;
-		margin-bottom: $dm;
-		text-align: left;
-		> .recharts-wrapper, > .no-data {
-			margin: $hm 0;
-			background: rgba(255, 255, 255, 0.05);
-			.yAxis {
-				margin-left: -32px;
-			}
-		}
-		> .no-data {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-		}
-		> p {
-			margin: 0;
-			color: $brocolli;
-			text-transform: uppercase;
-		}
-		> .pills {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			.pill {
-				width: 32px;
-				height: 20px;
-				background: $avocado;
-				border: 1px solid rgba(255, 255, 255, 0.1);
-				border-radius: 10px;
-				color: $rambutan;
-				font-size: 0.7rem;
-				text-align: center;
-				line-height: 20px;
-				&.active {
-					background: $lime-alpha;
-				}
-			}
-		}
-		
 	}
 
 }

@@ -8,6 +8,7 @@ export const Events = ({ title, events }) => {
 
 	return <div className='event-list'>
 		<p className="title">{title}</p>
+		<div>
 		{
 			events.map(({ event, amount, maker_id, taker_id, updated_at }, i) => <div className="event" key={i}>
 				<div>
@@ -20,5 +21,6 @@ export const Events = ({ title, events }) => {
 				</div>
 			</div>)
 		}
+		</div>
 	</div>;
 };

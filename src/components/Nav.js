@@ -15,12 +15,17 @@ const Menu = ({ wallet }) => {
 		<li>
 			<Link to="/contracts">All NFTs</Link>
 		</li>
-		<li>
-			<Link to="/offers/maker">My Offers</Link>
-		</li>
-		<li>
-			<Link to="/offers/taker">My Tokens</Link>
-		</li>
+		{
+			wallet.signedIn && <>
+				<li>
+					<Link to="/offers/maker">My Offers</Link>
+				</li>
+				<li>
+					<Link to="/offers/taker">My Tokens</Link>
+				</li>
+			</>
+		}
+
 		<li>
 			{
 				wallet.signedIn
@@ -44,19 +49,19 @@ export const Nav = ({ wallet, mobile }) => {
 	};
 
 	return <>
-		<nav className={ [mobile && 'mobile', (mobile && active).toString()].join(' ') }>
+		<nav className={[mobile && 'mobile', (mobile && active).toString()].join(' ')}>
 			<Link to="/" onClick={handleClose}><Logo /></Link>
 			{
 				mobile
 					?
 					<Link to="#" onClick={() => setActive(!active)}><img src={MenuIcon} /></Link>
 					:
-					<Menu {...{wallet}} />
+					<Menu {...{ wallet }} />
 			}
 		</nav>
 		{
-			mobile && <div className={ ['mobile-menu', active].join(' ') } onClick={handleClose} >
-				<Menu {...{ wallet }}/>
+			mobile && <div className={['mobile-menu', active].join(' ')} onClick={handleClose} >
+				<Menu {...{ wallet }} />
 			</div>
 		}
 	</>;

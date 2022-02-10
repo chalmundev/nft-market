@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { LineChart, Line, YAxis } from "recharts";
 import { $brocolli, $lime, $brocolliAlpha } from '../utils/colors';
 
-const width = Math.min(window.innerWidth - 32, 600);
-const height = Math.min(window.innerWidth / 3, 200);
+const width = Math.min(window.innerWidth - 32, 600 -32);
+const height = width / 3;
 
 const TIMES = [
 	{ label: '1D', amount: 86400000 },
@@ -13,6 +13,8 @@ const TIMES = [
 	{ label: '1Y', amount: 31536000000 },
 	{ label: 'ALL', amount: 0 },
 ];
+
+import '../css/Chart.scss'
 
 export const Chart = ({
 	data,

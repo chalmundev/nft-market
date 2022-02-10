@@ -81,11 +81,11 @@ const App = ({ mobile }) => {
 
 							<Routes>
 								<Route path="/offers/maker" element={
-									<RouteOffers {...{ ...routeParams, account, offers, index, supply, batch }} />
+									<RouteOffers {...{ ...routeParams, account, data }} />
 								} />
 
 								<Route path="/offers/taker" element={
-									<RouteOffers {...{ ...routeParams, account, offers, index, supply, batch }} />
+									<RouteOffers {...{ ...routeParams, account, data }} />
 								} />
 
 								<Route path="/contract/:contract_id" element={

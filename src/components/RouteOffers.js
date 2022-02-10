@@ -1,23 +1,31 @@
 import React, { useState, useEffect } from 'react';
+
+import { PAGE_SIZE } from '../state/app';
 import { formatNearAmount, view, fetchBatchTokens } from '../state/near';
+import { parseData } from '../utils/media';
+import { near } from '../utils/format';
+import { Page } from './Page';
+import { MediaCard } from './MediaCard';
 import { Rows } from './Rows';
 
-const PAGE_SIZE = 30;
+const DATA = { label: 'Amount', innerKey: 'amount', format: near, isToken: true }
 
-export const RouteOffers = ({ dispatch, update, navigate, account, offers, supply, index, batch }) => {
+export const RouteOffers = ({ dispatch, update, navigate, account, data }) => {
 	if (!account) return null;
 
+	const { offers, supply, index, contractMap, batch } = data
 	const { account_id } = account;
 
 	const isMaker = /maker/.test(window.location.href);
 	const isTaker = !isMaker;
 	const type = isMaker ? 'maker' : 'taker';
 
+	const [loading, setLoading] = useState(true)
+
 	const onMount = async () => {
 		if (offers[type].length > 0) {
 			return;
 		}
-		update('loading', true);
 		const [_supply] = await dispatch(view({
 			methodName: `get_offers_by_${type}_id`,
 			args: {
@@ -35,11 +43,13 @@ export const RouteOffers = ({ dispatch, update, navigate, account, offers, suppl
 	useEffect(onMount, [type]);
 
 	const handlePage = async (_index = 0, _supply = supply) => {
+		setLoading(true)
+
 		if (index !== _index) {
 			update('data.index', _index);
 		}
-		
-		let from_index = (_supply - PAGE_SIZE * (_index+1));
+
+		let from_index = (_supply - PAGE_SIZE * (_index + 1));
 		let limit = PAGE_SIZE;
 		if (from_index < 0) {
 			from_index = 0;
@@ -57,42 +67,44 @@ export const RouteOffers = ({ dispatch, update, navigate, account, offers, suppl
 			key: 'data.offers.' + type
 		}));
 
-		await dispatch(fetchBatchTokens(offers.map(({ contract_id, token_id}) => ({ contract_id, token_id}))));
+		await dispatch(fetchBatchTokens(offers.map(({ contract_id, token_id }) => ({ contract_id, token_id }))));
 
-		update('loading', false);
+		setLoading(false)
 	};
 
 	const [, offerArr = []] = offers[type];
 
-	if (offerArr.length === 0) {
-		return <p>You have not {isMaker ? 'made' : 'received'} offers yet.</p>;
-	}
+	return <div className='route offers'>
+		<h3>{isMaker ? 'My Offers' : 'My Tokens'}</h3>
 
-	return (
-		<div>
-			<h3>{isMaker ? 'My Offers' : 'My Tokens'}</h3>
+		{
+			!loading && offerArr.length === 0 && <p>You have not {isMaker ? 'made' : 'received'} offers yet.</p>
+		}
 
-			<p>Page {index + 1}</p>
+		{offerArr.length > 0 && <Page {...{
+			update,
+			index,
+			supply,
+			handlePage,
+			pageSize: PAGE_SIZE,
+			loading,
+			arr: offerArr,
+			Item: (item) => {
+				const { contract_id } = item
+				const { title, subtitle, media, link } = parseData(contractMap, batch, DATA, item)
 
-			<div className='button-row'>
-				{index !== 0 ? <button onClick={() => handlePage(index - 1)}>Prev</button> : <button style={{ visibility: 'hidden' }}></button>}
-				{(index + 1) * PAGE_SIZE < supply && <button onClick={() => handlePage(index + 1)}>Next</button>}
-			</div>
-
-			<Rows {...{
-				arr: offerArr,
-				Item: ({ contract_id, token_id, amount, maker_id }) => <div onClick={() => navigate(`/token/${contract_id}/${token_id}`)}>
-					{
-						batch[contract_id]?.[token_id] && <>
-							<img src={batch[contract_id][token_id].metadata.media} />
-						</>
-					}
-					{ isTaker && <p>From: { maker_id === account?.account_id ? 'You' : maker_id}</p>}
-					<p>{token_id}</p>
-					<p>{formatNearAmount(amount, 4)}</p>
+				return <div key={contract_id}>
+					<MediaCard {...{
+						title: title || token_id,
+						subtitle: subtitle,
+						media,
+						link,
+						classNames: ['feature-card', 'tall']
+					}} />
 				</div>
-			}} />
+			}
+		}} />}
 
-		</div>
-	);
+
+	</div>
 };

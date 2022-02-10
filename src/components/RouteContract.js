@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { fetchData } from '../state/app';
+import { PAGE_SIZE, fetchData } from '../state/app';
 import { view, fetchTokens } from '../state/near';
 import { parseData } from '../utils/media';
 import { near } from '../utils/format';
@@ -11,8 +11,6 @@ import { MediaCard } from './MediaCard';
 
 import '../css/Routes.scss';
 import { contractPriceHistory } from '../utils/data';
-
-const PAGE_SIZE = 30;
 
 export const RouteContract = ({ dispatch, update, mobile, data }) => {
 	const { contract_id } = useParams();
@@ -99,34 +97,28 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 
 			<Chart data={contractPriceHistory(data?.[contract_id])} />
 
-			{
-				Math.ceil(supply / PAGE_SIZE) > 1 && <>
-					<p>Page {index+1} / {Math.ceil(supply / PAGE_SIZE)}</p>
-
-					<div className='grid apart-2'>
-						{index !== 0 ? <button onClick={() => handlePage(index - 1)}>Prev</button> : <button style={{ visibility: 'hidden' }}></button>}
-						{(index + 1) * PAGE_SIZE < supply ? <button onClick={() => handlePage(index + 1)}>Next</button> : <button style={{ visibility: 'hidden' }}></button>}
-					</div>
-				</>
-			}
-
-			<div className='tokens'>
-				<Rows {...{
-					width: mobile ? window.innerWidth/2 : undefined,
-					arr: tokens,
-					Item: ({ token_id, metadata: { title, media } }) => {
-						return <div key={token_id}>
-							<MediaCard {...{
-								title: title || token_id,
-								subtitle: title ? token_id : null,
-								media,
-								link: `/token/${contract_id}/${token_id}`,
-								classNames: ['feature-card', 'tall']
-							}} />
-						</div>;
-					}
-				}} />
-			</div>
+			<Page {...{
+				update,
+				index,
+				supply,
+				handlePage,
+				pageSize: PAGE_SIZE,
+				loading,
+				width: mobile ? window.innerWidth/2 : undefined,
+				arr: tokens,
+				Item: ({ token_id, metadata: { title, media } }) => {
+					return <div key={token_id}>
+						<MediaCard {...{
+							title: title || token_id,
+							subtitle: title ? token_id : null,
+							media,
+							link: `/token/${contract_id}/${token_id}`,
+							classNames: ['feature-card', 'tall']
+						}} />
+					</div>;
+				}
+			}} />
+			
 		</div>
 	);
 };

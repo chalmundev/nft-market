@@ -48,13 +48,14 @@ ul {
 
 input, button {
 	width: 100%;
+	max-width: 600px;
 	background: none;
 	color: $lime;
 	height: 48px;
 	padding: 16px 16px 14px 16px;
 	outline: none;
 	font-family: 'evolventa';
-	margin: $m 0;
+	margin: 0 $hm $m $hm;
 	border-image-source: $light-gradient;
 	border-width: 1px;
 	border-image-slice: 1;
@@ -67,7 +68,7 @@ input {
 
 button {
 	width: calc(100% - $dm);
-	color: $avocado;
+	color: white;
 	letter-spacing: 0.05rem;
 	font-family: 'evolventa-bold';
 	background: $light-gradient-alpha;
