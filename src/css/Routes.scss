@@ -29,12 +29,13 @@
 	}
 
 	> .tokens {
-		margin: $hm;
+		display: flex;
+		justify-content: center;
 	}
 
 	> .chart {
 		max-width: 600px;
-		margin: $m;
+		margin: $m auto;
 		margin-bottom: $dm;
 		text-align: left;
 		> .recharts-wrapper, > .no-data {

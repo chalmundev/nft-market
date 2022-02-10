@@ -19,6 +19,7 @@ near2usd();
 // example
 const initialState = {
 	loading: true,
+	networkId: 'testnet',
 	data: {
 		contractId: '',
 		supply: 0,
@@ -52,15 +53,17 @@ export const parseContractMap = (contractMap) => {
 	return { contracts, contractMap };
 };
 
-export const fetchContracts = () => async ({ update }) => {
-	const { contracts } = await fetchJson(`${DATA_HOST}/contracts.json`);
+export const fetchContracts = () => async ({ getState, update }) => {
+	const { networkId } = getState();
+	
+	const { contracts } = await fetchJson(`${DATA_HOST}/${networkId}/contracts.json`);
 	update('data', parseContractMap(contracts));
 };
 
 export const fetchData = (fn = 'marketSummary') => async ({ getState, dispatch, update }) => {
-	const { contractMap } = getState().data;
+	const { networkId, data: { contractMap } } = getState()
 
-	const res = await fetchJson(`${DATA_HOST}/${marketId}/${fn}.json`);
+	const res = await fetchJson(`${DATA_HOST}/${networkId}/${marketId}/${fn}.json`);
 	const missing = [];
 	Object.values(res).forEach((arr) => {
 		if (!Array.isArray(arr)) return;

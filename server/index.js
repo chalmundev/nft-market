@@ -84,20 +84,23 @@ const start = async () => {
 	}
 	/// hit /market every minute
 	if (process.env.NODE_ENV === 'prod') {
-		setInterval(async () => {
-			for(const networkId of ['mainnet', 'testnet']) {
-				console.log("NETWORK ID - ", networkId);
+		setInterval(() => {
+			['mainnet', 'testnet'].forEach((networkId) => {
 				if (!processing[networkId].market) {
 					processing[networkId].market = true;
-					await market(fastify.pg[networkId], networkId).catch((e) => console.warn(e));
-					processing[networkId].market = false;
+					console.log(`MARKETS FOR - ${networkId}`);
+					market(fastify.pg[networkId], networkId)
+						.then(() => processing[networkId].market = false)
+						.catch((e) => console.warn(e));
 				}
 				if (!processing[networkId].contracts) {
 					processing[networkId].contracts = true;
-					await contracts(fastify.pg[networkId], networkId).catch((e) => console.warn(e));
-					processing[networkId].contracts = false;
+					console.log(`CONTRACTS FOR - ${networkId}`);
+					contracts(fastify.pg[networkId], networkId)
+						.then(() => processing[networkId].contracts = false)
+						.catch((e) => console.warn(e));
 				}
-			}
+			})
 		}, 60000); // 1m
 	} else {
 		await mkdir(`../dist/out`).catch((e) => {
