@@ -632,7 +632,7 @@ module.exports = {
 				marketSummary = JSON.parse(await readFile(`${NEW_PATH}/${marketId}/marketSummary.json`));
 				currentHighestBlockTimestamp = marketSummary.blockstamp;
 			} catch (e) {
-				console.log("Cannot read market summary for contract ", marketId);
+				console.log("Cannot read market summary for contract ", marketId, " on network ", networkId);
 			}
 
 			let marketSummaryData = {
@@ -671,9 +671,12 @@ module.exports = {
 					let futureHighestBlockTimestamp = currentHighestBlockTimestamp;
 
 					if (result.rows.length == 0) {
-						console.log("No receipts found since timestamp: ", currentHighestBlockTimestamp);
+						console.log("No receipts found since timestamp: ", currentHighestBlockTimestamp, " for our marketplace: ", marketId, " on ", networkId);
 						return res(marketSummary);
+					} else {
+						console.log("Found ", result.rows.length, " receipts since block timestamp ", currentHighestBlockTimestamp, " for our marketplace: ", marketId, " on ", networkId);
 					}
+
 					
 					//loop through and bulk all logs together for each contract
 					for (let rowNum = 0; rowNum < result.rows.length; rowNum++) {
@@ -793,7 +796,7 @@ module.exports = {
 				curData = JSON.parse(await readFile(`${NEW_PATH}/contracts.json`));
 				currentHighestBlockTimestamp = curData.blockstamp;
 			} catch (e) {
-				console.log("Cannot read contract summary. Creating file and defaulting blockstamp to 0 - ", e);
+				console.log("Cannot read contract summary for ", networkId, " Creating file and defaulting blockstamp to 0 - ", e);
 			}
 
 			client.query(
@@ -825,6 +828,13 @@ module.exports = {
 					let formattedRows = curData.contracts || {};
 
 					let futureHighestBlockTimestamp = currentHighestBlockTimestamp;
+
+					if (result.rows.length == 0) {
+						console.log("No receipts found since timestamp: ", currentHighestBlockTimestamp, " for contracts on ", networkId);
+						return res(curData);
+					} else {
+						console.log("Found ", result.rows.length, " receipts since block timestamp ", currentHighestBlockTimestamp, " for contracts on ", networkId);
+					}
 
 					//loop through each row of the result and gets metadata information from RPC
 					for (let i = 0; i < result.rows.length; i++) {
