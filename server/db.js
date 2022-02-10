@@ -594,7 +594,7 @@ module.exports = {
 	market: (db, networkId) => new Promise((res, rej) => {
 
 		const marketId = contracts[networkId];
-		const NEW_PATH = PATH + `/${networkId}/`;
+		const NEW_PATH = PATH + `/${networkId}`;
 
 		console.log(`\nMARKET UPDATE: ${new Date()}\n`);
 
@@ -630,7 +630,7 @@ module.exports = {
 
 			try {
 				marketSummary = JSON.parse(await readFile(`${NEW_PATH}/${marketId}/marketSummary.json`));
-				currentHighestBlockTimestamp = startTimestamp ? startTimestamp : marketSummary.blockstamp;
+				currentHighestBlockTimestamp = marketSummary.blockstamp;
 			} catch (e) {
 				console.log("Cannot read market summary for contract ", marketId);
 			}
@@ -724,7 +724,7 @@ module.exports = {
 							let currentContractData = {};
 							try {
 								let rawContractData = await readFile(`${NEW_PATH}/${marketId}/${contractId}.json`);
-								currentContractData = startTimestamp ? {} : JSON.parse(rawContractData);
+								currentContractData = JSON.parse(rawContractData);
 							} catch (e) {
 								console.log("WARNING: unable to read contract file: ", contractId, " creating new file.");
 							}
@@ -779,7 +779,7 @@ module.exports = {
 	contracts: (db, networkId) => new Promise((res, rej) => {
 		const {provider} = providers[networkId]
 
-		const NEW_PATH = PATH + `/${networkId}/`;
+		const NEW_PATH = PATH + `/${networkId}`;
 
 		db.connect(onConnect = async (err, client, release) => {
 			if (err) {
@@ -791,7 +791,7 @@ module.exports = {
 
 			try {
 				curData = JSON.parse(await readFile(`${NEW_PATH}/contracts.json`));
-				currentHighestBlockTimestamp = startTimestamp ? startTimestamp : curData.blockstamp;
+				currentHighestBlockTimestamp = curData.blockstamp;
 			} catch (e) {
 				console.log("Cannot read contract summary. Creating file and defaulting blockstamp to 0 - ", e);
 			}
