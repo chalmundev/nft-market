@@ -18,7 +18,7 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 	let { contractMap, batch, contractId, index, tokens, supply } = data;
 	const summary = data?.[contract_id]?.summary;
 
-	const [loading, setLoading] = useState(true)
+	const [loading, setLoading] = useState(true);
 
 	const onMount = async () => {
 		if (contractId === contract_id) {
@@ -39,7 +39,7 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 
 	const handlePage = async (_index = 0, _supply = supply) => {
 
-		setLoading(true)
+		setLoading(true);
 		if (index !== _index) {
 			update('data.index', _index);
 		}
@@ -57,7 +57,7 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 			limit,
 		}));
 
-		setLoading(false)
+		setLoading(false);
 	};
 
 	tokens = tokens.slice().reverse();

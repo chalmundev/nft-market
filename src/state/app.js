@@ -44,9 +44,9 @@ const initialState = {
 export const { appStore, AppProvider } = State(initialState, 'app');
 
 export const onAppMount = () => async ({ getState, update }) => {
-	window.__alert = window.alert
-	window.alert = (message) => update('modal', { message })
-}
+	window.__alert = window.alert;
+	window.alert = (message) => update('modal', { message });
+};
 
 export const parseContractMap = (contractMap) => {
 	const contracts = Object.entries(contractMap).map(([contract_id, data]) => {

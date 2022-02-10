@@ -37,7 +37,7 @@
 }
 
 .feature-card {
-	width: min(400px, 40vw);
+	width: min(300px, 40vw);
 	margin-right: $hm;
 	display: inline-block;
 	padding: 1px;
@@ -167,7 +167,8 @@
 }
 
 .summary-grid {
-	margin: $m 0;
+	max-width: 600px;
+	margin: $m auto;
 	padding-bottom: $m;
 	> .grid {
 		padding: $m;
@@ -228,8 +229,12 @@
 }
 
 .summary-teaser {
+	text-align: center;
+	margin: auto;
 
 	> div:nth-child(1) {
+		margin: auto;
+		max-width: 1564px;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -238,7 +243,7 @@
 	> div:nth-child(2) {
 		will-change: scroll-position;
 
-		overflow-x: scroll;
+		overflow-x: auto;
 		overflow-y: hidden;
 		white-space: nowrap;
 		-webkit-overflow-scrolling: touch;

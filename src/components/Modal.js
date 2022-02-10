@@ -1,7 +1,7 @@
 import React from 'react';
 
-import Warning from '../img/warning.svg'
-import Close from '../img/close.svg'
+import Warning from '../img/warning.svg';
+import Close from '../img/close.svg';
 
 export const Modal = ({ update, message }) => {
 
