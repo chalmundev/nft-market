@@ -100,7 +100,7 @@ const start = async () => {
 						.then(() => processing[networkId].contracts = false)
 						.catch((e) => console.warn(e));
 				}
-			})
+			});
 		}, 60000); // 1m
 	} else {
 		await mkdir(`../dist/out`).catch((e) => {

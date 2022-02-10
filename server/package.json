@@ -16,6 +16,7 @@
   "scripts": {
     "start": "yarn stop && pm2 start ecosystem.config.js -f --watch && pm2 logs",
     "start-prod": "yarn stop && pm2 start ecosystem.config.js --env prod -f",
+    "start-prod-logs": "yarn stop && pm2 start ecosystem.config.js --env prod -f --watch && pm2 logs",
     "stop": "(pm2 delete default) || true"
   }
 }
