@@ -18,7 +18,7 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 	let { contractMap, batch, contractId, index, tokens, supply } = data;
 	const summary = data?.[contract_id]?.summary;
 
-	const [loading, setLoading] = useState(true);
+	const [loading, setLoading] = useState(false);
 
 	const onMount = async () => {
 		if (contractId === contract_id) {

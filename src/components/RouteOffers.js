@@ -8,11 +8,12 @@ import { Page } from './Page';
 import { MediaCard } from './MediaCard';
 
 const DATA = { label: 'Amount', innerKey: 'amount', format: near, isToken: true };
+const NFT_DATA = { };
 
 /// TODO add likelyNFTs endpoint and get user's tokens if we have the contract too
 /// https://helper.testnet.near.org/account/benjiman.testnet/likelyNFTs
 
-export const RouteOffers = ({ dispatch, update, navigate, account, data }) => {
+export const RouteOffers = ({ dispatch, update, navigate, account, data, networkId }) => {
 	if (!account) return null;
 
 	const { offers, supply, index, contractMap, batch } = data;
@@ -23,11 +24,12 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data }) => {
 	const type = isMaker ? 'maker' : 'taker';
 
 	const [loading, setLoading] = useState(true);
+	const [nfts, setNFTs] = useState([]);
 
 	const onMount = async () => {
-		if (offers[type].length > 0) {
-			return;
-		}
+		console.log('offers mount')
+		setLoading(true);
+
 		const [_supply] = await dispatch(view({
 			methodName: `get_offers_by_${type}_id`,
 			args: {
@@ -38,6 +40,15 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data }) => {
 		}));
 		await handlePage(index, _supply);
 		update('data.supply', _supply);
+
+		/// finding the users tokens
+
+		if (type === 'taker') {
+			const likelyNFTs = await fetch(`https://helper.${networkId}.near.org/account/${account.accountId}/likelyNFTs`).then(r => r.json())
+			const nfts = likelyNFTs.filter((contract_id) => !!contractMap[contract_id]).map((contract_id) => ({ contract_id }))
+			setNFTs(nfts)
+		}
+
 		return () => {
 			update('data', { index: 0, offers: { [type]: [] } });
 		};
@@ -69,8 +80,6 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data }) => {
 			key: 'data.offers.' + type
 		}));
 
-		console.log(account_id, offers);
-
 		await dispatch(fetchBatchTokens(offers.map(({ contract_id, token_id }) => ({ contract_id, token_id }))));
 
 		setLoading(false);
@@ -79,7 +88,7 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data }) => {
 	const [, offerArr = []] = offers[type];
 
 	return <div className='route offers'>
-		<h3>{isMaker ? 'My Offers' : 'My Tokens'}</h3>
+		<h3>{isMaker ? 'My Offers' : 'Received Offers'}</h3>
 
 		{
 			!loading && offerArr.length === 0 && <p>You have not {isMaker ? 'made' : 'received'} offers yet.</p>
@@ -92,6 +101,7 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data }) => {
 			handlePage,
 			pageSize: PAGE_SIZE,
 			loading,
+			width: Math.min(window.innerWidth / 2, 375),
 			arr: offerArr,
 			Item: (item) => {
 				const { contract_id, token_id } = item;
@@ -108,6 +118,33 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data }) => {
 				</div>;
 			}
 		}} />}
+
+		{
+			!isMaker && nfts.length > 0 && <>
+				<h3>My Tokens</h3>
+				<Page {...{
+					update: () => {},
+					index: 0,
+					supply: nfts.length,
+					handlePage: () => {},
+					pageSize: 1000,
+					loading: false,
+					width: Math.min(window.innerWidth / 2, 375),
+					arr: nfts,
+					Item: (item, i) => {
+						const { title, media, link } = parseData(contractMap, batch, NFT_DATA, item);
+						return <div key={i}>
+							<MediaCard {...{
+								title,
+								media,
+								link,
+								classNames: ['feature-card', 'tall']
+							}} />
+						</div>;
+					}
+				}} />
+			</>
+		}
 
 
 	</div>;

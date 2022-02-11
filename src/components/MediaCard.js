@@ -12,7 +12,7 @@ export const MediaCard = ({ title, subtitle, link, media, classNames = [] }) => 
 			<div>
 				<Media {...{ media }} />
 				<h3>{title}</h3>
-				<p>{subtitle}</p>
+				{subtitle && <p>{subtitle}</p>}
 			</div>
 		</div>
 	</Link>;

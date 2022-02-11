@@ -39,6 +39,7 @@ const App = ({ mobile }) => {
 	useEffect(onMount, []);
 
 	const {
+		networkId,
 		wallet, account, data, modal,
 		data: {
 			marketSummary, contracts, contractMap,
@@ -47,7 +48,7 @@ const App = ({ mobile }) => {
 		}
 	} = state;
 
-	const routeParams = { dispatch, update, navigate, mobile };
+	const routeParams = { dispatch, update, navigate, mobile, networkId };
 
 	const { href, pathname } = window.location;
 	const showBack = /\/(maker|taker|summary|contract)/gi.test(pathname);
@@ -60,7 +61,7 @@ const App = ({ mobile }) => {
 
 		<main className="container-fluid">
 
-			<Nav {...{ wallet, mobile }} />
+			<Nav {...{ networkId, wallet, mobile }} />
 
 			<section className={['content', mobile && 'mobile'].join(' ')}>
 				{

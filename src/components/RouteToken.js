@@ -130,7 +130,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 			}));
 			console.log(storageAvailable);
 			if (storageAvailable === 0) {
-				await alert('Must pre-pay storage for offers. Redirecting now!', 2000);
+				await alert('Must pre-pay storage for offers. Redirecting now!', 5000);
 				const attachedDeposit = await dispatch(view({
 					methodName: 'offer_storage_amount',
 				}));
