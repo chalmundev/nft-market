@@ -53,7 +53,7 @@ impl Contract {
 			let previous_balance = self.market_balance;
 			self.market_balance = 0;
 			Promise::new(receiving_account)
-			.transfer(self.market_balance)
+			.transfer(previous_balance)
 			.then(ext_self::on_withdraw_balance(
 				previous_balance,
 				env::current_account_id(),
