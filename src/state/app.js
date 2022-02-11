@@ -26,7 +26,7 @@ export const PAGE_SIZE = 20;
 // example
 const initialState = {
 	loading: true,
-	networkId: 'mainnet',
+	networkId: 'testnet',
 	modal: null,
 	data: {
 		contractId: '',
