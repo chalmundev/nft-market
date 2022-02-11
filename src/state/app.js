@@ -5,12 +5,17 @@ import { fetchBatchContracts, initNear, marketId } from './near';
 
 const DATA_HOST = process.env.REACT_APP_DATA === 'remote' ? 'https://data.secondx.app' : 'http://localhost:1234/out';
 
+let lastCheck = Date.now();
 let rate = 0;
 export const near2usd = () => {
-	if (!rate) {
+	if (!rate || Date.now() - lastCheck > 300000) {
+		lastCheck = Date.now();
 		fetch('https://api.coingecko.com/api/v3/simple/price?ids=near&vs_currencies=usd')
 			.then(r => r.json())
-			.then(({ near: { usd } }) => rate = usd);
+			.then(({ near: { usd } }) => {
+				console.log('NEAR RATE:', usd);
+				rate = usd;
+			});
 	}
 	return rate;
 };

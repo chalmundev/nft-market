@@ -3,10 +3,10 @@ import { formatNearAmount } from '../state/near';
 import { near2usd } from '../state/app';
 import NearLogo from '../img/near-logo.svg';
 
-export const percent = (change) => (change * 100).toFixed(2);
-export const near = (amount, withLogo = false) => withLogo
+export const percent = (change) => (change * 100).toFixed(2) + ' %';
+export const near = (amount, withLogo = true) => withLogo
 	?
-	<div className="near-amount">{formatNearAmount(amount, 4)}<img src={NearLogo} /></div>
+	<div className="near-amount"><div><span>{formatNearAmount(amount, 4)}</span><img src={NearLogo} /></div></div>
 	:
 	formatNearAmount(amount, 4);
 

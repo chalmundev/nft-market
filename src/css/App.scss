@@ -103,13 +103,16 @@ nav {
 }
 
 .near-amount {
-	display: flex;
-	justify-content: flex-start;
-	align-items: center;
-	> img {
-		display: inline-block;
-		margin-top: -3px;
-		padding-left: $hm;
+	display: inline-block;
+	> div {
+		display: flex;
+		justify-content: flex-start;
+		align-items: center;
+		> img {
+			display: inline-block;
+			margin-top: -2.5px;
+			padding-left: 4px;
+		}
 	}
 }
 

@@ -3,8 +3,8 @@ export const parseData = (contractMap, batch, data, item, noLabel) => {
 	const { label, format, innerKey, isToken } = data;
 	const { contract_id, token_id } = item;
 	let { name: title, media } = contractMap[contract_id] || {};
-	let subtitle = noLabel ? '' : label + ' ';
-	subtitle += (format ? format(item[innerKey]) : item[innerKey]);
+	const subtitleContent = format ? format(item[innerKey]) : item[innerKey];
+	const subtitle = noLabel ? subtitleContent : <span>{label} {subtitleContent}</span>;
 	let link = `/contract/${contract_id}`;
 
 	if (isToken) {
