@@ -67,6 +67,8 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data }) => {
 			key: 'data.offers.' + type
 		}));
 
+		console.log(account_id, offers);
+
 		await dispatch(fetchBatchTokens(offers.map(({ contract_id, token_id }) => ({ contract_id, token_id }))));
 
 		setLoading(false);
@@ -90,10 +92,10 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data }) => {
 			loading,
 			arr: offerArr,
 			Item: (item) => {
-				const { contract_id } = item;
+				const { contract_id, token_id } = item;
 				const { title, subtitle, media, link } = parseData(contractMap, batch, DATA, item);
 
-				return <div key={contract_id}>
+				return <div key={contract_id + ':' + token_id}>
 					<MediaCard {...{
 						title: title || token_id,
 						subtitle: subtitle,

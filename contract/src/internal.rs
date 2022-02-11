@@ -133,7 +133,7 @@ impl Contract {
 			&mut self.offers_by_maker_id, 
 			&new_maker_id, 
 			StorageKey::OfferByMakerIdInner { maker_id: new_maker_id.clone() },
-			self.offer_id
+			offer_id
 		);
     }
 

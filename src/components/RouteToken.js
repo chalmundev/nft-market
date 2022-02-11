@@ -98,13 +98,13 @@ export const RouteToken = ({ dispatch, account, data }) => {
 		}));
 	};
 
-	const handleAcceptOffer = async () => {
-		let msg = amount.length === 0
+	const handleAcceptOffer = async (accept = false) => {
+		let msg = accept || amount.length === 0
 			? JSON.stringify({ auto_transfer: true })
 			: JSON.stringify({ amount: parseNearAmount(amount) });
 
 		if (offer) {
-			if (amount.length > 0 && new BN(parseNearAmount(amount)).sub(new BN(OUTBID_AMOUNT)).lt(new BN(offer.amount))) {
+			if (!accept && amount.length > 0 && new BN(parseNearAmount(amount)).sub(new BN(OUTBID_AMOUNT)).lt(new BN(offer.amount))) {
 				return alert('Counter offer is too small');
 			}
 		} else {
@@ -186,6 +186,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 			}
 
 			<div className='clamp-width'>
+				{ isOwner && offer && <button onClick={() => handleAcceptOffer(true)}>Accept Offer</button>}
 				<input
 					type="number"
 					placeholder='Amount (N)'
