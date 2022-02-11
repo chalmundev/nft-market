@@ -101,12 +101,10 @@ export const fetchData = (contract_id = 'marketSummary', account_id) => async ({
 
 /// helper
 export const fetchJson = async (url) => {
-	let res;
 	try {
-		res = await fetch(url).then((r) => r.json());
+		return await fetch(url).then((r) => r.json());
 	} catch(e) {
 		console.warn('ERROR: fetching data', url, e);
-		res = {};
+		return {};
 	}
-	return res;
 };

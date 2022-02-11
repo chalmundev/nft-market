@@ -102,6 +102,10 @@ nav {
 	}
 }
 
+.rows-container.true {
+	min-height: calc(100vh);
+}
+
 .resp-grid {
 	display: flex;
 	justify-content: center;

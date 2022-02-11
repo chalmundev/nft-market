@@ -33,7 +33,6 @@ export const RouteContracts = ({ update, navigate, contracts, index }) => {
 		}} />
 
 		<Page {...{
-			update,
 			index,
 			supply: filteredContracts.length,
 			handlePage,

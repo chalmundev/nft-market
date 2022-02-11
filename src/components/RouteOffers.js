@@ -123,7 +123,6 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data, network
 			!isMaker && nfts.length > 0 && <>
 				<h3>My Tokens</h3>
 				<Page {...{
-					update: () => {},
 					index: 0,
 					supply: nfts.length,
 					handlePage: () => {},

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { PAGE_SIZE, fetchData } from '../state/app';
-import { view, fetchTokens } from '../state/near';
+import { view, fetchTokens, parseNearAmount } from '../state/near';
 import { parseData } from '../utils/media';
 import { near } from '../utils/format';
 import { Page } from './Page';
@@ -16,14 +16,12 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 	const { contract_id, account_id } = useParams();
 
 	let { contractMap, batch, contractId, index, tokens, supply, tokensForOwner } = data;
-	const summary = data?.[contract_id]?.summary;
 
 	const [loading, setLoading] = useState(false);
 
 	const onMount = async () => {
-		if (contractId === contract_id) {
-			return;
-		}
+		if (contractId === contract_id) return;
+		setLoading(true);
 		dispatch(fetchData(contract_id, account_id));
 		const supply = await dispatch(view({
 			contract_id,
@@ -38,8 +36,8 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 	useEffect(onMount, []);
 
 	const handlePage = async (_index = 0, _supply = supply) => {
-
 		setLoading(true);
+
 		if (index !== _index) {
 			update('data.index', _index);
 		}
@@ -64,9 +62,14 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 
 	const { title, media } = parseData(contractMap, batch, {}, { contract_id });
 
-	if (!summary) return null;
+	const summary = data?.[contract_id]?.summary || {
+		avg_sale: '0',
+		sales: 'NA',
+		events: 'NA',
+		noChart: true
+	};
 
-	if (tokensForOwner) {
+	if (account_id && tokensForOwner) {
 		tokens = tokensForOwner
 	}
 
@@ -109,14 +112,14 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 							<div>{near(summary.lowest.amount)}</div>
 						</div>
 					</div>}
-					<Chart data={contractPriceHistory(data?.[contract_id])} />
+
+					{ !summary.noChart && <Chart data={contractPriceHistory(data?.[contract_id])} /> }
 
 				</div>
 			</div>
 
 
 			<Page {...{
-				update,
 				index,
 				supply,
 				handlePage,
@@ -125,7 +128,7 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 				width: mobile ? window.innerWidth / 2 : undefined,
 				arr: tokens,
 				Item: ({ token_id, metadata: { title, media } }) => {
-					return <div key={token_id}>
+					return <div>
 						<MediaCard {...{
 							title: title || token_id,
 							subtitle: title ? token_id : null,
