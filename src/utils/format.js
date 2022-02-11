@@ -6,7 +6,7 @@ import NearLogo from '../img/near-logo.svg';
 export const percent = (change) => (change * 100).toFixed(2) + ' %';
 export const near = (amount, withLogo = true) => withLogo
 	?
-	<div className="near-amount"><div><span>{formatNearAmount(amount, 4)}</span><img src={NearLogo} /></div></div>
+	<span className="near-amount"><span><span>{formatNearAmount(amount, 4)}</span><img src={NearLogo} /></span></span>
 	:
 	formatNearAmount(amount, 4);
 
