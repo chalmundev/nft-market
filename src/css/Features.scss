@@ -28,7 +28,7 @@
 
 .media.token {
 	width: min(600px, 100%);
-	margin: $m auto;
+	margin: auto;
 	> img, > canvas {
 		aspect-ratio: 1 / 1;
 		border-top-right-radius: 0;

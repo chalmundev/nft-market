@@ -1,7 +1,7 @@
 import * as nearAPI from 'near-api-js';
 const { WalletAccount } = nearAPI;
 import {
-	near, contractAccount, contractId
+	near, contractAccount, contractId, accounts,
 } from '../../utils/near-utils';
 import { parseToken } from '../utils/media';
 import { parseContractMap } from './app';
@@ -69,18 +69,22 @@ export const view = ({
 	args,
 	key,
 	defaultVal
-}) => async ({ update }) => {
+}) => async ({ getState, update }) => {
+	console.log('view', contract_id, methodName, JSON.stringify(args))
+
+	const { networkId } = getState();
+	const { market } = accounts[networkId]
 	if (defaultVal) {
 		update(key, defaultVal);
 	}
 	try {
-		let res = await contractAccount.viewFunction(
+		let res = await market.viewFunction(
 			contract_id,
 			methodName,
 			args
 		);
-		/// TODO move to utils/token.js
 		if (/nft_total_supply/.test(methodName)) {
+			console.log(res)
 			res = parseInt(res, 10);
 		}
 		if (/nft_tokens/.test(methodName)) {
@@ -89,7 +93,6 @@ export const view = ({
 		if (key) {
 			await update(key, res);
 		}
-
 		return res;
 	} catch(e) {
 		// console.warn(e);

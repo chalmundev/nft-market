@@ -168,8 +168,14 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 	const isOwner = token.owner_id === account?.account_id;
 	const isPrice = offer && offer?.maker_id === offer?.taker_id;
-	const ifOfferOwner = offer?.maker_id === account?.account_id;
-	const offerLabel = isOwner ? 'Set Price' : ifOfferOwner ? 'Increase Offer' : isPrice ? 'Buy Now' : 'Make Offer';
+	const ifOfferOwner = account && offer?.maker_id === account?.account_id;
+	let offerLabel = 'Make Offer';
+	if (isOwner) offerLabel = 'Set Price'
+	if (ifOfferOwner) {
+		if (isOwner) offerLabel = 'Increase Price'
+		else offerLabel = 'Increase Offer'
+	}
+	if (isPrice) offerLabel = 'Buy Now'
 	const displayCurrent = { ...offer };
 	if (ifOfferOwner) displayCurrent.maker_id = 'Your Offer';
 
@@ -181,9 +187,9 @@ export const RouteToken = ({ dispatch, account, data }) => {
 		<div className="route token">
 
 			<div className='resp-grid'>
-				
+
 				<div>
-				
+
 					<Media {...{ media, classNames: ['token'] }} />
 
 					<h2>{title}</h2>
@@ -193,13 +199,6 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				</div>
 
 				<div>
-					{
-						offer && <>
-
-							<Events {...{ title: isPrice ? 'Owner Offer' : 'Current Offer', events: [displayCurrent] }} />
-
-						</>
-					}
 					<div className='clamp-width'>
 						{
 							ifOfferOwner &&
@@ -217,6 +216,13 @@ export const RouteToken = ({ dispatch, account, data }) => {
 						<button onClick={() => isOwner ? handleAcceptOffer() : handleMakeOffer()}>{offerLabel}</button>
 					</div>
 
+					{
+						offer && <>
+
+							<Events {...{ title: isPrice ? 'Owner Offer' : 'Current Offer', events: [displayCurrent] }} />
+
+						</>
+					}
 
 					<div className='stats'>
 						<div>
@@ -243,25 +249,33 @@ export const RouteToken = ({ dispatch, account, data }) => {
 						</div>
 					</div>}
 
-					<Events {...{ title: 'Offers', events: displayOffers }} />
 
 				</div>
 
 			</div>
 
+			<div className='resp-grid'>
 
-			
-			{offerData.length > 0 && <Chart {...{
-				title: 'Offer History',
-				data: offerData
-			}} />}
+				<div>
 
-			<Events {...{ title: 'Sales', events: displaySales }} />
-			{saleData.length > 0 && <Chart {...{
-				title: 'Sale History',
-				data: saleData
-			}} />}
+					{offerData.length > 0 && <Chart {...{
+						title: 'Offer History',
+						data: offerData
+					}} />}
 
+					<Events {...{ title: 'Offers', events: displayOffers }} />
+				</div>
+				<div>
+
+					{saleData.length > 0 && <Chart {...{
+						title: 'Sale History',
+						data: saleData
+					}} />}
+
+					<Events {...{ title: 'Sales', events: displaySales }} />
+				</div>
+
+			</div>
 
 		</div>
 	);

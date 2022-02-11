@@ -4,8 +4,6 @@ import { Rows } from './Rows';
 
 export const Page = ({ index, supply, arr, width, handlePage, pageSize, loading, Item }) => {
 
-	console.log(loading)
-
 	return <>
 		{
 			Math.floor(supply / pageSize) > 0 && <>

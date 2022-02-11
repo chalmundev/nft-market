@@ -27,6 +27,9 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 			contract_id,
 			methodName: 'nft_total_supply',
 		}));
+
+		console.log(supply)
+
 		await handlePage(index, supply);
 		update('data.contractId', contract_id);
 		return () => {
@@ -72,6 +75,8 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 	if (account_id && tokensForOwner) {
 		tokens = tokensForOwner
 	}
+
+	console.log(supply, tokens)
 
 	return (
 		<div className='route contract'>

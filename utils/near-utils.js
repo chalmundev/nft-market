@@ -53,8 +53,25 @@ const near = new Near({
 const { connection } = near;
 const contractAccount = new Account(connection, contractId);
 
+const nearMainnet = new Near({
+	networkId: 'mainnet',
+	nodeUrl: nodeUrl.replace('testnet', 'mainnet'),
+	walletUrl: walletUrl.replace('testnet', 'mainnet'),
+	deps: { keyStore: new BrowserLocalStorageKeyStore() },
+});
+
+const accounts = {
+	testnet: {
+		market: contractAccount
+	},
+	mainnet: {
+		market: new Account(nearMainnet.connection, 'near')
+	}
+}
+
 module.exports = {
 	near,
+	accounts,
 	providers,
 	credentials,
 	keyStore,
