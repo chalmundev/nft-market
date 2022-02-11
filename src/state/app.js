@@ -50,7 +50,10 @@ export const { appStore, AppProvider } = State(initialState, 'app');
 
 export const onAppMount = () => async ({ getState, update }) => {
 	window.__alert = window.alert;
-	window.alert = (message) => update('modal', { message });
+	window.alert = (message) => new Promise((res, dur) => {
+		update('modal', { message })
+		setTimeout(res, dur)
+	});
 };
 
 export const parseContractMap = (contractMap) => {

@@ -30,7 +30,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	const [amount, setAmount] = useState('');
 
 	const onMount = async () => {
-		window.scrollTo(0, 0); 
+		window.scrollTo(0, 0);
 
 		if (!data[contract_id]) {
 			await dispatch(fetchData(contract_id));
@@ -59,11 +59,11 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 		setLastOffer(await getOfferFromHashes());
 
-		// const storageAvailable = await dispatch(view({
-		// 	methodName: 'offer_storage_available',
-		// 	args: { owner_id: account.account_id }
-		// }));
-		// console.log(storageAvailable);
+		const storageAvailable = await dispatch(view({
+			methodName: 'offer_storage_available',
+			args: { owner_id: account.account_id }
+		}));
+		console.log(storageAvailable);
 	};
 	useEffect(onMount, []);
 
@@ -74,8 +74,22 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	useEffect(onBatch, [batch]);
 
 	const handleMakeOffer = () => {
-		if (offer && new BN(parseNearAmount(amount)).sub(new BN(OUTBID_AMOUNT)).lt(new BN(offer.amount))) {
-			return alert('Offer increase is too small');
+		if (offer) {
+			// buy now
+			if (offer.maker_id === offer.taker_id) {
+				if (!new BN(parseNearAmount(amount)).eq(new BN(offer.amount))) {
+					return alert('Must be the exact price only!');
+				}
+			// outbid
+			} else {
+				if (new BN(parseNearAmount(amount)).sub(new BN(OUTBID_AMOUNT)).lt(new BN(offer.amount))) {
+					return alert('Counter offer is too small! (by 0.1 N)');
+				}
+			}
+		}
+		// new offer
+		if (!amount || amount.length === 0 || amount < 0.1) {
+			return alert('Please add a price! (min 0.1 N)');
 		}
 		dispatch(action({
 			methodName: 'make_offer',
@@ -83,7 +97,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				contract_id,
 				token_id,
 			},
-			attachedDeposit: parseNearAmount((parseFloat(amount) + 0.02).toString())
+			attachedDeposit: new BN(parseNearAmount(amount)).add(new BN(parseNearAmount('0.02'))).toString()
 		}));
 	};
 
@@ -99,13 +113,13 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	};
 
 	const handleAcceptOffer = async (accept = false) => {
-		let msg = accept || amount.length === 0
+		let msg = accept
 			? JSON.stringify({ auto_transfer: true })
 			: JSON.stringify({ amount: parseNearAmount(amount) });
 
 		if (offer) {
-			if (!accept && amount.length > 0 && new BN(parseNearAmount(amount)).sub(new BN(OUTBID_AMOUNT)).lt(new BN(offer.amount))) {
-				return alert('Counter offer is too small');
+			if (!accept && new BN(parseNearAmount(amount || '0')).sub(new BN(OUTBID_AMOUNT)).lt(new BN(offer.amount))) {
+				return alert('Counter offer is too small! (by 0.1 N)');
 			}
 		} else {
 			const storageAvailable = await dispatch(view({
@@ -114,7 +128,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 			}));
 			console.log(storageAvailable);
 			if (storageAvailable === 0) {
-				alert('must pre-pay offer storage');
+				await alert('Must pre-pay storage for offers. Redirecting now!', 2000);
 				const attachedDeposit = await dispatch(view({
 					methodName: 'offer_storage_amount',
 				}));
@@ -123,6 +137,9 @@ export const RouteToken = ({ dispatch, account, data }) => {
 					args: {},
 					attachedDeposit
 				}));
+			}
+			if (!amount || amount.length === 0 || amount < 0.1) {
+				return alert('Please add a price! (min 0.1 N)');
 			}
 		}
 
@@ -151,34 +168,27 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	const isPrice = offer && offer?.maker_id === offer?.taker_id;
 	const ifOfferOwner = offer?.maker_id === account?.account_id;
 	const offerLabel = isOwner ? 'Set Price' : ifOfferOwner ? 'Increase Offer' : isPrice ? 'Buy Now' : 'Make Offer';
-	const displayCurrent = {...offer};
+	const displayCurrent = { ...offer };
 	if (ifOfferOwner) displayCurrent.maker_id = 'Your Offer';
 
-	const { title, subtitle, media, link } = parseData(contractMap, batch, { isToken: true }, { contract_id, token_id });
+	const { title, subtitle, media, link, owner_id } = parseData(contractMap, batch, { isToken: true }, { contract_id, token_id });
 	const offerData = tokenPriceHistory(offers, true);
 	const saleData = tokenPriceHistory(offers);
 
 	return (
 		<div className="route token">
 
-			{/* <div className="button-row">
-				<button onClick={async () => {
-					await fetch('http://107.152.39.196:3000/market', { mode: 'no-cors' }).then(r => r.json());
-					alert('fetched. reloading page');
-					window.location.reload();
-				}}>Update Market Data</button>
-			</div> */}
-
-			<Media {...{media, classNames: ['token']}} />
+			<Media {...{ media, classNames: ['token'] }} />
 
 			<h2>{title}</h2>
 			<p>{token_id}</p>
+			<p>Owner: {owner_id}</p>
 
 			{
 				offer && <>
-					
+
 					<Events {...{ title: isPrice ? 'Owner Offer' : 'Current Offer', events: [displayCurrent] }} />
-					
+
 					{ifOfferOwner && (isOwner || offer.updated_at < (Date.now() - OUTBID_TIMEOUT) * 1000000) && <div className="button-row">
 						<button onClick={handleRemoveOffer}>Remove Offer</button>
 					</div>}
@@ -186,14 +196,14 @@ export const RouteToken = ({ dispatch, account, data }) => {
 			}
 
 			<div className='clamp-width'>
-				{ isOwner && offer && <button onClick={() => handleAcceptOffer(true)}>Accept Offer</button>}
+				{isOwner && offer && !ifOfferOwner && <button onClick={() => handleAcceptOffer(true)}>Accept Offer</button>}
 				<input
 					type="number"
 					placeholder='Amount (N)'
 					value={amount}
 					onChange={({ target: { value } }) => setAmount(value)}
 				/>
-				<button onClick={isOwner ? handleAcceptOffer : handleMakeOffer}>{ offerLabel }</button>
+				<button onClick={() => isOwner ? handleAcceptOffer() : handleMakeOffer()}>{offerLabel}</button>
 			</div>
 
 
@@ -214,27 +224,27 @@ export const RouteToken = ({ dispatch, account, data }) => {
 			{summary.highest && <div className='stats'>
 				<div>
 					<div>Highest</div>
-					<div>{ near(summary.highest.amount) }</div>
+					<div>{near(summary.highest.amount)}</div>
 				</div>
 				<div>
 					<div>Lowest</div>
-					<div>{ near(summary.lowest.amount) }</div>
+					<div>{near(summary.lowest.amount)}</div>
 				</div>
 			</div>}
-			
+
 			<Events {...{ title: 'Offers', events: displayOffers }} />
 			{offerData.length > 0 && <Chart {...{
 				title: 'Offer History',
 				data: offerData
-			} } />}
-			
+			}} />}
+
 			<Events {...{ title: 'Sales', events: displaySales }} />
 			{saleData.length > 0 && <Chart {...{
 				title: 'Sale History',
 				data: saleData
-			} } />}
+			}} />}
 
-			
+
 		</div>
 	);
 };

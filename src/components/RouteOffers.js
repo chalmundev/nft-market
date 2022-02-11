@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
 
 import { PAGE_SIZE } from '../state/app';
-import { formatNearAmount, view, fetchBatchTokens } from '../state/near';
+import { view, fetchBatchTokens } from '../state/near';
 import { parseData } from '../utils/media';
 import { near } from '../utils/format';
 import { Page } from './Page';
 import { MediaCard } from './MediaCard';
-import { Rows } from './Rows';
 
 const DATA = { label: 'Amount', innerKey: 'amount', format: near, isToken: true };
+
+/// TODO add likelyNFTs endpoint and get user's tokens if we have the contract too
+/// https://helper.testnet.near.org/account/benjiman.testnet/likelyNFTs
 
 export const RouteOffers = ({ dispatch, update, navigate, account, data }) => {
 	if (!account) return null;

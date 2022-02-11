@@ -38,6 +38,19 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 			auto_transfer
 		} = from_str(&msg).unwrap_or_else(|_| env::panic_str("invalid offer args"));
 
+		let offer_event = |offer: &Offer| {
+			env::log_str(&EventLog {
+				event: EventLogVariant::UpdateOffer(OfferLog {
+					contract_id: offer.contract_id.clone(),	
+					token_id: offer.token_id.clone(),
+					maker_id: offer.maker_id.clone(),
+					taker_id: offer.taker_id.clone(),
+					amount: offer.amount,
+					updated_at: offer.updated_at,
+				})
+			}.to_string());
+		};
+
 		let offer_id_option = self.offer_by_contract_token_id.get(&contract_token_id);
 		if offer_id_option.is_none() {
 			// add a new offer where maker_id == taker_id (special case)
@@ -45,7 +58,7 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 			if let Some(amount) = amount {
 				require!(self.offer_storage_available(&owner_id) > 0, "must add offer storage");
 
-				self.internal_add_offer(Offer{
+				let offer = Offer{
 					maker_id: owner_id.clone(),
 					taker_id: owner_id,
 					contract_id: contract_id,
@@ -53,7 +66,11 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 					amount,
 					updated_at: env::block_timestamp(),
 					approval_id: Some(approval_id),
-				});
+				};
+
+				offer_event(&offer);
+
+				self.internal_add_offer(offer);
 				return;
 			}
 			env::panic_str("no offer");
@@ -112,16 +129,6 @@ impl NonFungibleTokenApprovalReceiver for Contract {
 			return;
 		}
 
-		env::log_str(&EventLog {
-			event: EventLogVariant::UpdateOffer(OfferLog {
-				contract_id: offer.contract_id,	
-				token_id: offer.token_id,
-				maker_id: offer.maker_id,
-				taker_id: offer.taker_id,
-				amount: offer.amount,
-				updated_at: offer.updated_at,
-			})
-		}.to_string());
-
+		offer_event(&offer);
     }
 }
