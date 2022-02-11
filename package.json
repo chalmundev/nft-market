@@ -27,9 +27,10 @@
 	},
 	"alias": {
 		"process": {
-			"global": "process"
+			"global": "{}"
 		}
 	},
+	"browserslist": "> 0.5%, last 2 versions, not dead",
 	"scripts": {
 		"build-contract": "cd contract && ./build.sh && cd ..",
 		"patch-config": "node ./utils/patch-config.js",

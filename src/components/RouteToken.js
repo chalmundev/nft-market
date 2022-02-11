@@ -80,7 +80,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				if (!new BN(parseNearAmount(amount)).eq(new BN(offer.amount))) {
 					return alert('Must be the exact price only!');
 				}
-			// outbid
+				// outbid
 			} else {
 				if (new BN(parseNearAmount(amount)).sub(new BN(OUTBID_AMOUNT)).lt(new BN(offer.amount))) {
 					return alert('Counter offer is too small! (by 0.1 N)');
@@ -189,13 +189,17 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 					<Events {...{ title: isPrice ? 'Owner Offer' : 'Current Offer', events: [displayCurrent] }} />
 
-					{ifOfferOwner && (isOwner || offer.updated_at < (Date.now() - OUTBID_TIMEOUT) * 1000000) && <div className="button-row">
-						<button onClick={handleRemoveOffer}>Remove Offer</button>
-					</div>}
 				</>
 			}
 
 			<div className='clamp-width'>
+
+				{
+					ifOfferOwner &&
+					(isOwner || offer.updated_at < (Date.now() - OUTBID_TIMEOUT) * 1000000) &&
+					<button onClick={handleRemoveOffer}>Remove Offer</button>
+				}
+
 				{isOwner && offer && !ifOfferOwner && <button onClick={() => handleAcceptOffer(true)}>Accept Offer</button>}
 				<input
 					type="number"
