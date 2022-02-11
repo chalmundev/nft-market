@@ -1,7 +1,7 @@
 import { State } from '../utils/state';
 import { parseMedia } from '../utils/media';
 
-import { fetchBatchContracts, initNear, marketId } from './near';
+import { fetchBatchContracts, fetchTokensForOwner, marketId } from './near';
 
 const DATA_HOST = process.env.REACT_APP_DATA === 'remote' ? 'https://data.secondx.app' : 'http://localhost:1234/out';
 
@@ -32,6 +32,7 @@ const initialState = {
 		contractId: '',
 		supply: 0,
 		tokens: [],
+		tokensForOwner: [],
 		token: {},
 		batch: {},
 		index: 0,
@@ -76,20 +77,26 @@ export const fetchContracts = () => async ({ getState, update }) => {
 	update('data', parseContractMap(contracts));
 };
 
-export const fetchData = (fn = 'marketSummary') => async ({ getState, dispatch, update }) => {
+export const fetchData = (contract_id = 'marketSummary', account_id) => async ({ getState, dispatch, update }) => {
 	const { networkId, data: { contractMap } } = getState();
 
-	const res = await fetchJson(`${DATA_HOST}/${networkId}/${marketId}/${fn}.json`);
-	const missing = [];
-	Object.values(res).forEach((arr) => {
-		if (!Array.isArray(arr)) return;
-		arr.forEach(({ contract_id }) => {
-			if (contract_id && !contractMap[contract_id]) missing.push(contract_id);
+	const res = await fetchJson(`${DATA_HOST}/${networkId}/${marketId}/${contract_id}.json`);
+	if (contract_id === 'marketSummary') {
+		const missing = [];
+		Object.values(res).forEach((arr) => {
+			if (!Array.isArray(arr)) return;
+			arr.forEach(({ contract_id }) => {
+				if (contract_id && !contractMap[contract_id]) missing.push(contract_id);
+			});
 		});
-	});
-	await dispatch(fetchBatchContracts(missing));
+		await dispatch(fetchBatchContracts(missing));
+	} else {
+		if (account_id) {
+			await dispatch(fetchTokensForOwner(contract_id, { account_id, limit: 20 }));
+		}
+	}
 
-	update('data', { [fn]: res });
+	update('data', { [contract_id]: res });
 };
 
 /// helper

@@ -13,17 +13,16 @@
 	}
 	
 	text-align: center;
-	> h2 {
+	h2 {
 		font-family: 'butler-black';
 	}
 
-	> .clamp-width {
+	.clamp-width {
+		width: min(600px, 100%);
 		margin: auto;
-		max-width: 600px;
 	}
 
-	> .stats {
-		max-width: 600px;
+	.stats {
 		margin: auto;
 		padding: $m;
 		text-align: center;

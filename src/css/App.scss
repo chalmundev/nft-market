@@ -102,6 +102,25 @@ nav {
 	}
 }
 
+.resp-grid {
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	flex-wrap: wrap;
+	> div {
+		width: 100%;
+	}
+}
+
+@media only screen and (min-width : 1200px) {
+    .resp-grid > div {
+		width: auto;
+		max-width: 50%;
+		min-width: 600px;
+		padding: $m;
+    }
+}
+
 .near-amount {
 	display: inline-block;
 	> span {

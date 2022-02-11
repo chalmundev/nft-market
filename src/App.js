@@ -98,6 +98,10 @@ const App = ({ mobile }) => {
 									<RouteContract {...{ ...routeParams, account, data }} />
 								} />
 
+								<Route path="/contract/:contract_id/:account_id" element={
+									<RouteContract {...{ ...routeParams, account, data }} />
+								} />
+
 								<Route path="/token/:contract_id/:token_id" element={
 									<RouteToken {...{ ...routeParams, account, data }} />
 								} />

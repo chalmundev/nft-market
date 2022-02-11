@@ -180,65 +180,77 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	return (
 		<div className="route token">
 
-			<Media {...{ media, classNames: ['token'] }} />
+			<div className='resp-grid'>
+				
+				<div>
+				
+					<Media {...{ media, classNames: ['token'] }} />
 
-			<h2>{title}</h2>
-			<p>{token_id}</p>
-			<p>Owner: {owner_id}</p>
+					<h2>{title}</h2>
+					<p>{token_id}</p>
+					<p>Owner: {owner_id}</p>
 
-			{
-				offer && <>
+				</div>
 
-					<Events {...{ title: isPrice ? 'Owner Offer' : 'Current Offer', events: [displayCurrent] }} />
+				<div>
+					{
+						offer && <>
 
-				</>
-			}
+							<Events {...{ title: isPrice ? 'Owner Offer' : 'Current Offer', events: [displayCurrent] }} />
 
-			<div className='clamp-width'>
+						</>
+					}
+					<div className='clamp-width'>
+						{
+							ifOfferOwner &&
+							(isOwner || offer?.updated_at < (Date.now() - OUTBID_TIMEOUT) * 1000000) &&
+							<button onClick={handleRemoveOffer}>Remove Offer</button>
+						}
 
-				{
-					ifOfferOwner &&
-					(isOwner || offer?.updated_at < (Date.now() - OUTBID_TIMEOUT) * 1000000) &&
-					<button onClick={handleRemoveOffer}>Remove Offer</button>
-				}
+						{isOwner && offer && !ifOfferOwner && <button onClick={() => handleAcceptOffer(true)}>Accept Offer</button>}
+						<input
+							type="number"
+							placeholder='Amount (N)'
+							value={amount}
+							onChange={({ target: { value } }) => setAmount(value)}
+						/>
+						<button onClick={() => isOwner ? handleAcceptOffer() : handleMakeOffer()}>{offerLabel}</button>
+					</div>
 
-				{isOwner && offer && !ifOfferOwner && <button onClick={() => handleAcceptOffer(true)}>Accept Offer</button>}
-				<input
-					type="number"
-					placeholder='Amount (N)'
-					value={amount}
-					onChange={({ target: { value } }) => setAmount(value)}
-				/>
-				<button onClick={() => isOwner ? handleAcceptOffer() : handleMakeOffer()}>{offerLabel}</button>
+
+					<div className='stats'>
+						<div>
+							<div>Avg</div>
+							<div>{near(summary.avg_sale)}</div>
+						</div>
+						<div>
+							<div>Sales</div>
+							<div>{summary.sales}</div>
+						</div>
+						<div>
+							<div>Events</div>
+							<div>{summary.events}</div>
+						</div>
+					</div>
+					{summary.highest && <div className='stats'>
+						<div>
+							<div>Highest</div>
+							<div>{near(summary.highest.amount)}</div>
+						</div>
+						<div>
+							<div>Lowest</div>
+							<div>{near(summary.lowest.amount)}</div>
+						</div>
+					</div>}
+
+					<Events {...{ title: 'Offers', events: displayOffers }} />
+
+				</div>
+
 			</div>
 
 
-			<div className='stats'>
-				<div>
-					<div>Avg</div>
-					<div>{near(summary.avg_sale)}</div>
-				</div>
-				<div>
-					<div>Sales</div>
-					<div>{summary.sales}</div>
-				</div>
-				<div>
-					<div>Events</div>
-					<div>{summary.events}</div>
-				</div>
-			</div>
-			{summary.highest && <div className='stats'>
-				<div>
-					<div>Highest</div>
-					<div>{near(summary.highest.amount)}</div>
-				</div>
-				<div>
-					<div>Lowest</div>
-					<div>{near(summary.lowest.amount)}</div>
-				</div>
-			</div>}
-
-			<Events {...{ title: 'Offers', events: displayOffers }} />
+			
 			{offerData.length > 0 && <Chart {...{
 				title: 'Offer History',
 				data: offerData

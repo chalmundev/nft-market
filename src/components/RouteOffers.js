@@ -132,7 +132,8 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data, network
 					width: Math.min(window.innerWidth / 2, 375),
 					arr: nfts,
 					Item: (item, i) => {
-						const { title, media, link } = parseData(contractMap, batch, NFT_DATA, item);
+						let { title, media, link } = parseData(contractMap, batch, NFT_DATA, item);
+						link += `/${account.account_id}`
 						return <div key={i}>
 							<MediaCard {...{
 								title,

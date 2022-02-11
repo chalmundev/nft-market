@@ -13,9 +13,9 @@ import '../css/Routes.scss';
 import { contractPriceHistory } from '../utils/data';
 
 export const RouteContract = ({ dispatch, update, mobile, data }) => {
-	const { contract_id } = useParams();
+	const { contract_id, account_id } = useParams();
 
-	let { contractMap, batch, contractId, index, tokens, supply } = data;
+	let { contractMap, batch, contractId, index, tokens, supply, tokensForOwner } = data;
 	const summary = data?.[contract_id]?.summary;
 
 	const [loading, setLoading] = useState(false);
@@ -24,7 +24,7 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 		if (contractId === contract_id) {
 			return;
 		}
-		dispatch(fetchData(contract_id));
+		dispatch(fetchData(contract_id, account_id));
 		const supply = await dispatch(view({
 			contract_id,
 			methodName: 'nft_total_supply',
@@ -44,14 +44,14 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 			update('data.index', _index);
 		}
 
-		let from_index = (_supply - PAGE_SIZE * (_index+1));
+		let from_index = (_supply - PAGE_SIZE * (_index + 1));
 		let limit = PAGE_SIZE;
 		if (from_index < 0) {
 			from_index = 0;
 			limit = _supply % PAGE_SIZE;
 		}
 		from_index = from_index.toString();
-		
+
 		await dispatch(fetchTokens(contract_id, {
 			from_index,
 			limit,
@@ -66,40 +66,54 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 
 	if (!summary) return null;
 
+	if (tokensForOwner) {
+		tokens = tokensForOwner
+	}
+
 	return (
 		<div className='route contract'>
 
-			<Media {...{media, classNames: ['featured']}} />
+			<div className='resp-grid'>
+				<div>
+					<Media {...{ media, classNames: ['featured'] }} />
 
-			<h2>{title}</h2>
-			<p>{contract_id}</p>
 
-			<div className='stats'>
-				<div>
-					<div>Avg</div>
-					<div>{near(summary.avg_sale)}</div>
 				</div>
+
 				<div>
-					<div>Sales</div>
-					<div>{summary.sales}</div>
-				</div>
-				<div>
-					<div>Events</div>
-					<div>{summary.events}</div>
+					<h2>{title}</h2>
+					<p>{contract_id}</p>
+
+
+					<div className='stats'>
+						<div>
+							<div>Avg</div>
+							<div>{near(summary.avg_sale)}</div>
+						</div>
+						<div>
+							<div>Sales</div>
+							<div>{summary.sales}</div>
+						</div>
+						<div>
+							<div>Events</div>
+							<div>{summary.events}</div>
+						</div>
+					</div>
+					{summary.highest && <div className='stats'>
+						<div>
+							<div>Highest</div>
+							<div>{near(summary.highest.amount)}</div>
+						</div>
+						<div>
+							<div>Lowest</div>
+							<div>{near(summary.lowest.amount)}</div>
+						</div>
+					</div>}
+					<Chart data={contractPriceHistory(data?.[contract_id])} />
+
 				</div>
 			</div>
-			{summary.highest && <div className='stats'>
-				<div>
-					<div>Highest</div>
-					<div>{ near(summary.highest.amount) }</div>
-				</div>
-				<div>
-					<div>Lowest</div>
-					<div>{ near(summary.lowest.amount) }</div>
-				</div>
-			</div>}
 
-			<Chart data={contractPriceHistory(data?.[contract_id])} />
 
 			<Page {...{
 				update,
@@ -108,7 +122,7 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 				handlePage,
 				pageSize: PAGE_SIZE,
 				loading,
-				width: mobile ? window.innerWidth/2 : undefined,
+				width: mobile ? window.innerWidth / 2 : undefined,
 				arr: tokens,
 				Item: ({ token_id, metadata: { title, media } }) => {
 					return <div key={token_id}>
@@ -122,7 +136,7 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 					</div>;
 				}
 			}} />
-			
+
 		</div>
 	);
 };
