@@ -59,6 +59,8 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 		setLastOffer(await getOfferFromHashes());
 
+		if (!account) return
+
 		const storageAvailable = await dispatch(view({
 			methodName: 'offer_storage_available',
 			args: { owner_id: account.account_id }
@@ -196,7 +198,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 				{
 					ifOfferOwner &&
-					(isOwner || offer.updated_at < (Date.now() - OUTBID_TIMEOUT) * 1000000) &&
+					(isOwner || offer?.updated_at < (Date.now() - OUTBID_TIMEOUT) * 1000000) &&
 					<button onClick={handleRemoveOffer}>Remove Offer</button>
 				}
 
