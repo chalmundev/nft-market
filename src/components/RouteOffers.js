@@ -27,7 +27,7 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data, network
 	const [nfts, setNFTs] = useState([]);
 
 	const onMount = async () => {
-		console.log('offers mount')
+		console.log('offers mount');
 		setLoading(true);
 
 		const [_supply] = await dispatch(view({
@@ -44,9 +44,9 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data, network
 		/// finding the users tokens
 
 		if (type === 'taker') {
-			const likelyNFTs = await fetch(`https://helper.${networkId}.near.org/account/${account.accountId}/likelyNFTs`).then(r => r.json())
-			const nfts = likelyNFTs.filter((contract_id) => !!contractMap[contract_id]).map((contract_id) => ({ contract_id }))
-			setNFTs(nfts)
+			const likelyNFTs = await fetch(`https://helper.${networkId}.near.org/account/${account.accountId}/likelyNFTs`).then(r => r.json());
+			const nfts = likelyNFTs.filter((contract_id) => !!contractMap[contract_id]).map((contract_id) => ({ contract_id }));
+			setNFTs(nfts);
 		}
 
 		return () => {

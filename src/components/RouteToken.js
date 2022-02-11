@@ -59,7 +59,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 		setLastOffer(await getOfferFromHashes());
 
-		if (!account) return
+		if (!account) return;
 
 		const storageAvailable = await dispatch(view({
 			methodName: 'offer_storage_available',
