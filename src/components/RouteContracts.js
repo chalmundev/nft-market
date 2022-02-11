@@ -12,24 +12,24 @@ export const RouteContracts = ({ update, navigate, contracts, index }) => {
 	const [loading, setLoading] = useState(false);
 
 	const filteredContracts = filter
-	?
-	contracts.filter(({ contract_id, name }) => new RegExp(filter, 'gi').test(contract_id + name))
-	:
-	contracts
+		?
+		contracts.filter(({ contract_id, name }) => new RegExp(filter, 'gi').test(contract_id + name))
+		:
+		contracts;
 
 	const displayContracts = filteredContracts.slice(index * PAGE_SIZE, (index+1) * PAGE_SIZE);
 
 	const handlePage = async (_index = 0) => {
-		setLoading(true)
+		setLoading(true);
 		await update('data.index', _index);
-		setLoading(false)
+		setLoading(false);
 	};
 
 	return <div className="route contracts">
 
 		<input value={filter} onChange={(e) => {
-			setFilter(e.target.value)
-			handlePage(0)
+			setFilter(e.target.value);
+			handlePage(0);
 		}} />
 
 		<Page {...{
