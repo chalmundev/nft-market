@@ -9,11 +9,13 @@ import { PAGE_SIZE } from '../state/app';
 export const RouteContracts = ({ update, navigate, contracts, index }) => {
 
 	const [filter, setFilter] = useStore('__FILTER');
-	const [loading, setLoading] = useState(true);
+	const [loading, setLoading] = useState(false);
 
-	const supply = contracts.length;
-
-	const filteredContracts = contracts.filter(({ contract_id, name }) => new RegExp(filter, 'gi').test(contract_id + name))
+	const filteredContracts = filter
+	?
+	contracts.filter(({ contract_id, name }) => new RegExp(filter, 'gi').test(contract_id + name))
+	:
+	contracts
 
 	const displayContracts = filteredContracts.slice(index * PAGE_SIZE, (index+1) * PAGE_SIZE);
 
@@ -23,7 +25,7 @@ export const RouteContracts = ({ update, navigate, contracts, index }) => {
 		setLoading(false)
 	};
 
-	return <>
+	return <div className="route contracts">
 
 		<input value={filter} onChange={(e) => {
 			setFilter(e.target.value)
@@ -47,5 +49,5 @@ export const RouteContracts = ({ update, navigate, contracts, index }) => {
 			}
 		}} />
 
-	</>;
+	</div>;
 };

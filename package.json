@@ -7,7 +7,7 @@
 		"animejs": "^3.2.1",
 		"is-mobile": "^3.0.0",
 		"near-api-js": "^0.44.2",
-		"parcel": "^2.2.1",
+		"parcel": "^2.3.1",
 		"react": "^17.0.2",
 		"react-dom": "^17.0.2",
 		"react-router-dom": "^6.2.1",
@@ -20,10 +20,15 @@
 		"workbox-strategies": "^6.4.2"
 	},
 	"devDependencies": {
-		"@parcel/transformer-sass": "^2.2.1",
+		"@parcel/transformer-sass": "2.3.1",
 		"ava": "^3.15.0",
 		"eslint": "^8.6.0",
 		"rimraf": "^3.0.2"
+	},
+	"alias": {
+		"process": {
+			"global": "process"
+		}
 	},
 	"scripts": {
 		"build-contract": "cd contract && ./build.sh && cd ..",

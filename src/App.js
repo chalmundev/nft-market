@@ -28,10 +28,10 @@ const App = ({ mobile }) => {
 	const navigate = useNavigate();
 
 	const onMount = async () => {
+		await dispatch(onAppMount()),
+		await dispatch(fetchContracts()),
 		await Promise.all([
-			dispatch(onAppMount()),
 			dispatch(initNear()),
-			dispatch(fetchContracts()),
 			dispatch(fetchData()),
 		]);
 		update('loading', false);
