@@ -17,6 +17,11 @@
 		font-family: 'butler-black';
 	}
 
+	> .clamp-width {
+		margin: auto;
+		max-width: 600px;
+	}
+
 	> .stats {
 		max-width: 600px;
 		margin: auto;
@@ -34,9 +39,6 @@
 				font-family: 'evolventa-bold'
 			}
 		}
-	}
-
-	> .tokens {
 	}
 
 }

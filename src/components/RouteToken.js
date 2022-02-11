@@ -185,13 +185,16 @@ export const RouteToken = ({ dispatch, account, data }) => {
 				</>
 			}
 
-			<input
-				type="number"
-				placeholder='Amount (N)'
-				value={amount}
-				onChange={({ target: { value } }) => setAmount(value)}
-			/>
-			<button onClick={isOwner ? handleAcceptOffer : handleMakeOffer}>{ offerLabel }</button>
+			<div className='clamp-width'>
+				<input
+					type="number"
+					placeholder='Amount (N)'
+					value={amount}
+					onChange={({ target: { value } }) => setAmount(value)}
+				/>
+				<button onClick={isOwner ? handleAcceptOffer : handleMakeOffer}>{ offerLabel }</button>
+			</div>
+
 
 			<div className='stats'>
 				<div>

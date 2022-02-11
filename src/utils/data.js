@@ -5,7 +5,7 @@ const fillPrices = (prices, name, all = false) => ({ event, amount, updated_at }
 	prices.push({
 		name,
 		updated_at: Math.floor(updated_at / 1000000),
-		amount: parseFloat(near(amount))
+		amount: parseFloat(near(amount, false))
 	});
 };
 
