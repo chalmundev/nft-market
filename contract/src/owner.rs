@@ -50,11 +50,12 @@ impl Contract {
 	pub fn withdraw_market_balance(&mut self, receiving_account: AccountId) {
         self.assert_owner();
 		if self.market_balance > 0 {
+			let previous_balance = self.market_balance;
 			self.market_balance = 0;
 			Promise::new(receiving_account)
 			.transfer(self.market_balance)
 			.then(ext_self::on_withdraw_balance(
-				self.market_balance,
+				previous_balance,
 				env::current_account_id(),
 				NO_DEPOSIT,
 				CALLBACK_GAS,
