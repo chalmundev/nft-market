@@ -200,6 +200,31 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 				<div>
 
+					<button onClick={async () => {
+
+						const HELPER_URL = 'https://nearapi.secondx.app/';
+						const SHARE_URL = HELPER_URL + 'v1/share/';
+
+						const getShareUrl = async ({
+							nft,
+							title = 'NFT',
+							description = 'Check out this NFT on SecondX'
+						}) => {
+							return (await fetch(SHARE_URL + JSON.stringify({
+								title,
+								description,
+								nft,
+								redirect: encodeURIComponent(window.origin + link)
+							})).then((res) => res.json())).encodedUrl;
+						};
+
+						const nft = { contract_id, token_id }
+						const res = await getShareUrl({ nft })
+						console.log(res)
+
+
+					}}>Share</button>
+
 					<div className='stats'>
 						<div>
 							<div>Avg</div>
