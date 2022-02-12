@@ -5,6 +5,7 @@ import { view, action, fetchBatchTokens } from '../state/near';
 import { fetchData } from '../state/app';
 
 import { Chart } from './Chart';
+import { shareToken } from '../utils/share';
 import { parseData } from '../utils/media';
 import { near } from '../utils/format';
 import { getOfferFromHashes } from '../utils/receipts';
@@ -14,7 +15,6 @@ import { tokenPriceHistory } from '../utils/data';
 
 import { providers, networkId, contractId, parseNearAmount, formatNearAmount } from '../../utils/near-utils';
 import { howLongAgo } from '../utils/date';
-
 
 const OUTBID_AMOUNT = '99999999999999999999999';
 const OUTBID_TIMEOUT = 86400000;
@@ -200,30 +200,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 				<div>
 
-					<button onClick={async () => {
-
-						const HELPER_URL = 'https://nearapi.secondx.app/';
-						const SHARE_URL = HELPER_URL + 'v1/share/';
-
-						const getShareUrl = async ({
-							nft,
-							title = 'NFT',
-							description = 'Check out this NFT on SecondX'
-						}) => {
-							return (await fetch(SHARE_URL + JSON.stringify({
-								title,
-								description,
-								nft,
-								redirect: encodeURIComponent(window.origin + link)
-							})).then((res) => res.json())).encodedUrl;
-						};
-
-						const nft = { contract_id, token_id }
-						const res = await getShareUrl({ nft })
-						console.log(res)
-
-
-					}}>Share</button>
+					<button onClick={() => shareToken(contract_id, token_id, link)}>Share</button>
 
 					<div className='stats'>
 						<div>
