@@ -27,7 +27,6 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data, network
 	const [nfts, setNFTs] = useState([]);
 
 	const onMount = async () => {
-		console.log('offers mount');
 		setLoading(true);
 
 		const [_supply] = await dispatch(view({
@@ -62,12 +61,16 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data, network
 			update('data.index', _index);
 		}
 
-		let from_index = (_supply - PAGE_SIZE * (_index + 1));
+		let from_index = _index * PAGE_SIZE;
 		let limit = PAGE_SIZE;
-		if (from_index < 0) {
-			from_index = 0;
-			limit = _supply % PAGE_SIZE;
-		}
+
+		// let from_index = (_supply - PAGE_SIZE * (_index + 1));
+		// let limit = PAGE_SIZE;
+		// if (from_index < 0) {
+		// 	from_index = 0;
+		// 	limit = _supply % PAGE_SIZE;
+		// }
+		
 		from_index = from_index.toString();
 
 		const [, offers] = await dispatch(view({

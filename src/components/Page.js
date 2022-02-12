@@ -8,7 +8,7 @@ export const Page = ({ index, supply, arr, width, handlePage, pageSize, loading,
 		{
 			Math.floor(supply / pageSize) > 0 && <>
 				<p>Page {index + 1} / {Math.ceil(supply / pageSize)}</p>
-				<div id="page-buttons" className='grid apart-2'>
+				<div className='grid apart-2'>
 					{index !== 0 ? <button onClick={() => handlePage(index - 1)}>Prev</button> : <button style={{ visibility: 'hidden' }}></button>}
 					{(index + 1) * pageSize < supply ? <button onClick={() => handlePage(index + 1)}>Next</button> : <button style={{ visibility: 'hidden' }}></button>}
 				</div>

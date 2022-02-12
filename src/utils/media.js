@@ -17,14 +17,20 @@ export const parseData = (contractMap, batch, data, item, noLabel) => {
 	return { title, subtitle, media, link, owner_id };
 };
 
+const CLOUDFLARE = 'https://cloudflare-ipfs.com/ipfs/'
+const IPFS = 'https://ipfs.io/ipfs/'
+
 export const parseMedia = (media) => {
 	if (!media) {
 		return;
 	}
+
+	// console.log(media)
+
 	const file = '/' + media.match(/[^/\\&\?]+\.\w{3,4}(?=([\?&].*$|$))/i)?.[0];
 	const ipfsHash = media.match(/\bbafybei[a-zA-Z0-9]*\b/i)?.[0];
 	if (ipfsHash) {
-		return 'https://cloudflare-ipfs.com/ipfs/' + ipfsHash + file;
+		return IPFS + ipfsHash + file;
 	}
 	return media;
 };

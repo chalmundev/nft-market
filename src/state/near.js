@@ -70,7 +70,7 @@ export const view = ({
 	key,
 	defaultVal
 }) => async ({ getState, update }) => {
-	console.log('view', contract_id, methodName, JSON.stringify(args))
+	// console.log('view', contract_id, methodName, JSON.stringify(args))
 
 	const { networkId } = getState();
 	const { market } = accounts[networkId]
@@ -95,7 +95,7 @@ export const view = ({
 		}
 		return res;
 	} catch(e) {
-		// console.warn(e);
+		console.warn(e);
 	}
 };
 

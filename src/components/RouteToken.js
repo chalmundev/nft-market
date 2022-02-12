@@ -193,36 +193,12 @@ export const RouteToken = ({ dispatch, account, data }) => {
 					<Media {...{ media, classNames: ['token'] }} />
 
 					<h2>{title}</h2>
-					<p>{token_id}</p>
+					<p>{contract_id}</p>
 					<p>Owner: {owner_id}</p>
 
 				</div>
 
 				<div>
-					<div className='clamp-width'>
-						{
-							ifOfferOwner &&
-							(isOwner || offer?.updated_at < (Date.now() - OUTBID_TIMEOUT) * 1000000) &&
-							<button onClick={handleRemoveOffer}>Remove Offer</button>
-						}
-
-						{isOwner && offer && !ifOfferOwner && <button onClick={() => handleAcceptOffer(true)}>Accept Offer</button>}
-						<input
-							type="number"
-							placeholder='Amount (N)'
-							value={amount}
-							onChange={({ target: { value } }) => setAmount(value)}
-						/>
-						<button onClick={() => isOwner ? handleAcceptOffer() : handleMakeOffer()}>{offerLabel}</button>
-					</div>
-
-					{
-						offer && <>
-
-							<Events {...{ title: isPrice ? 'Owner Offer' : 'Current Offer', events: [displayCurrent] }} />
-
-						</>
-					}
 
 					<div className='stats'>
 						<div>
@@ -248,6 +224,36 @@ export const RouteToken = ({ dispatch, account, data }) => {
 							<div>{near(summary.lowest.amount)}</div>
 						</div>
 					</div>}
+
+					{
+						offer ? <>
+
+							<Events {...{ title: isPrice ? 'Owner Offer' : 'Current Offer', events: [displayCurrent] }} />
+
+						</>
+							:
+							<p>No Current Offer</p>
+					}
+
+
+					<div className='clamp-width'>
+						{
+							ifOfferOwner &&
+							(isOwner || offer?.updated_at < (Date.now() - OUTBID_TIMEOUT) * 1000000) &&
+							<button onClick={handleRemoveOffer}>Remove Offer</button>
+						}
+
+						{isOwner && offer && !ifOfferOwner && <button onClick={() => handleAcceptOffer(true)}>Accept Offer</button>}
+						<input
+							type="number"
+							placeholder='Amount (N)'
+							value={amount}
+							onChange={({ target: { value } }) => setAmount(value)}
+						/>
+						<button onClick={() => isOwner ? handleAcceptOffer() : handleMakeOffer()}>{offerLabel}</button>
+					</div>
+
+
 
 
 				</div>

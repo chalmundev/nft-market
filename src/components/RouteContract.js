@@ -12,7 +12,7 @@ import { MediaCard } from './MediaCard';
 import '../css/Routes.scss';
 import { contractPriceHistory } from '../utils/data';
 
-export const RouteContract = ({ dispatch, update, mobile, data }) => {
+export const RouteContract = ({ networkId, dispatch, update, mobile, data }) => {
 	const { contract_id, account_id } = useParams();
 
 	let { contractMap, batch, contractId, index, tokens, supply, tokensForOwner } = data;
@@ -45,23 +45,27 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 			update('data.index', _index);
 		}
 
-		let from_index = (_supply - PAGE_SIZE * (_index + 1));
+		let from_index = _index * PAGE_SIZE;
 		let limit = PAGE_SIZE;
-		if (from_index < 0) {
-			from_index = 0;
-			limit = _supply % PAGE_SIZE;
-		}
-		from_index = from_index.toString();
+		
+		// let from_index = (_supply - PAGE_SIZE * (_index + 1));
+		// let limit = PAGE_SIZE;
+		// if (from_index < 0) {
+		// 	from_index = 0;
+		// 	limit = _supply % PAGE_SIZE;
+		// }
 
+		from_index = from_index.toString();
+		
 		await dispatch(fetchTokens(contract_id, {
 			from_index,
 			limit,
 		}));
 
+		console.log(from_index, limit)
+
 		setLoading(false);
 	};
-
-	tokens = tokens.slice().reverse();
 
 	const { title, media } = parseData(contractMap, batch, {}, { contract_id });
 
@@ -75,8 +79,6 @@ export const RouteContract = ({ dispatch, update, mobile, data }) => {
 	if (account_id && tokensForOwner) {
 		tokens = tokensForOwner
 	}
-
-	console.log(supply, tokens)
 
 	return (
 		<div className='route contract'>
