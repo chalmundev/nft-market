@@ -209,7 +209,7 @@
 
 .summary-list {
 	
-	> a {
+	> a, > a:hover, > a:visited, > a:focus {
 		display: flex;
 		justify-content: space-evenly;
 		align-items: center;

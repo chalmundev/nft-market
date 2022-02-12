@@ -30,8 +30,6 @@ export const RouteContract = ({ networkId, dispatch, update, mobile, data, pageS
 			methodName: 'nft_total_supply',
 		}));
 
-		console.log(supply)
-
 		await handlePage(index, supply);
 		update('data.contractId', contract_id);
 		return () => {

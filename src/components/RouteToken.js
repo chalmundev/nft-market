@@ -159,12 +159,19 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 	let {
 		summary, offers = []
-	} = data[contract_id]?.tokens?.[token_id] || {};
+	} = data[contract_id]?.tokens?.[token_id] || {
+		summary: {
+			avg_sale: '0',
+			sales: 'NA',
+			events: 'NA',
+			noChart: true
+		}
+	};
 
 	const displayOffers = offers.filter(({ event }) => event === 0).slice(0, offer ? -1 : undefined).reverse();
 	const displaySales = offers.filter(({ event }) => event === 1).reverse();
 
-	if (!token || !summary) return null;
+	if (!token) return null;
 
 	const isOwner = token.owner_id === account?.account_id;
 	const isPrice = offer && offer?.maker_id === offer?.taker_id;
@@ -266,21 +273,27 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 				<div>
 
-					{offerData.length > 0 && <Chart {...{
-						title: 'Offer History',
-						data: offerData
-					}} />}
+					{offerData.length > 0 && <>
+						<Chart {...{
+							title: 'Offer History',
+							data: offerData
+						}} />
+						
+						<Events {...{ title: 'Offers', events: displayOffers }} />
+					</>}
 
-					<Events {...{ title: 'Offers', events: displayOffers }} />
 				</div>
 				<div>
 
-					{saleData.length > 0 && <Chart {...{
-						title: 'Sale History',
-						data: saleData
-					}} />}
+					{saleData.length > 0 && <>
+						<Chart {...{
+							title: 'Sale History',
+							data: saleData
+						}} />
 
-					<Events {...{ title: 'Sales', events: displaySales }} />
+						<Events {...{ title: 'Sales', events: displaySales }} />
+					</>
+					}
 				</div>
 
 			</div>
