@@ -21,13 +21,12 @@ export const near2usd = () => {
 };
 near2usd();
 
-export const PAGE_SIZE = 20;
-
 // example
 const initialState = {
 	loading: true,
 	networkId: 'testnet',
 	modal: null,
+	pageSize: 20,
 	data: {
 		contractId: '',
 		supply: 0,
@@ -49,12 +48,13 @@ const initialState = {
 
 export const { appStore, AppProvider } = State(initialState, 'app');
 
-export const onAppMount = () => async ({ getState, update }) => {
+export const onAppMount = ({mobile}) => async ({ getState, update }) => {
 	window.__alert = window.alert;
 	window.alert = (message) => new Promise((res, dur) => {
 		update('modal', { message });
 		setTimeout(res, dur);
 	});
+	update('pageSize', mobile ? 10 : 20)
 };
 
 export const parseContractMap = (contractMap) => {

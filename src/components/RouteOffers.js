@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 
-import { PAGE_SIZE } from '../state/app';
 import { view, fetchBatchTokens } from '../state/near';
 import { parseData } from '../utils/media';
 import { near } from '../utils/format';
@@ -13,7 +12,7 @@ const NFT_DATA = { };
 /// TODO add likelyNFTs endpoint and get user's tokens if we have the contract too
 /// https://helper.testnet.near.org/account/benjiman.testnet/likelyNFTs
 
-export const RouteOffers = ({ dispatch, update, navigate, account, data, networkId }) => {
+export const RouteOffers = ({ dispatch, update, navigate, account, data, networkId, pageSize }) => {
 	if (!account) return null;
 
 	const { offers, supply, index, contractMap, batch } = data;
@@ -61,14 +60,14 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data, network
 			update('data.index', _index);
 		}
 
-		let from_index = _index * PAGE_SIZE;
-		let limit = PAGE_SIZE;
+		let from_index = _index * pageSize;
+		let limit = pageSize;
 
-		// let from_index = (_supply - PAGE_SIZE * (_index + 1));
-		// let limit = PAGE_SIZE;
+		// let from_index = (_supply - pageSize * (_index + 1));
+		// let limit = pageSize;
 		// if (from_index < 0) {
 		// 	from_index = 0;
-		// 	limit = _supply % PAGE_SIZE;
+		// 	limit = _supply % pageSize;
 		// }
 		
 		from_index = from_index.toString();
@@ -102,7 +101,7 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data, network
 			index,
 			supply,
 			handlePage,
-			pageSize: PAGE_SIZE,
+			pageSize: pageSize,
 			loading,
 			width: Math.min(window.innerWidth / 2, 375),
 			arr: offerArr,

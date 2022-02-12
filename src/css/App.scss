@@ -102,9 +102,13 @@ nav {
 	}
 }
 
-.rows-container.true {
-	min-height: calc(100vh);
+.rows-container {
+	will-change: scroll-position;
+	&.true {
+		min-height: calc(100vh);
+	}
 }
+	
 
 .resp-grid {
 	display: flex;

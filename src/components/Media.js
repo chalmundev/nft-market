@@ -3,7 +3,7 @@ import React, { useRef } from 'react';
 import Missing from './../img/missing.jpg';
 import '../css/Features.scss';
 
-export const Media = ({ media, classNames = [], useCanvas }) => {
+export const Media = ({ media, classNames = [], useCanvas = false }) => {
 
 	const ref = useCanvas ? useRef() : null;
 

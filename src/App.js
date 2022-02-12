@@ -28,7 +28,7 @@ const App = ({ mobile }) => {
 	const navigate = useNavigate();
 
 	const onMount = async () => {
-		await dispatch(onAppMount()),
+		await dispatch(onAppMount({ mobile })),
 		await dispatch(fetchContracts()),
 		await Promise.all([
 			dispatch(initNear()),
@@ -41,6 +41,7 @@ const App = ({ mobile }) => {
 	const {
 		networkId,
 		wallet, account, data, modal,
+		pageSize,
 		data: {
 			marketSummary, contracts, contractMap,
 			index, batch,
@@ -48,7 +49,7 @@ const App = ({ mobile }) => {
 		}
 	} = state;
 
-	const routeParams = { dispatch, update, navigate, mobile, networkId };
+	const routeParams = { dispatch, update, navigate, mobile, networkId, pageSize };
 
 	const { href, pathname } = window.location;
 	const showBack = /\/(maker|taker|summary|contract)/gi.test(pathname);

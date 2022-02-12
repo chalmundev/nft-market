@@ -4,9 +4,7 @@ import { useStore } from '../utils/store';
 import { Page } from './Page';
 import { Media } from './Media';
 
-import { PAGE_SIZE } from '../state/app';
-
-export const RouteContracts = ({ update, navigate, contracts, index }) => {
+export const RouteContracts = ({ update, navigate, contracts, index, pageSize }) => {
 
 	const [filter, setFilter] = useStore('__FILTER');
 	const [loading, setLoading] = useState(false);
@@ -17,7 +15,7 @@ export const RouteContracts = ({ update, navigate, contracts, index }) => {
 		:
 		contracts;
 
-	const displayContracts = filteredContracts.slice(index * PAGE_SIZE, (index+1) * PAGE_SIZE);
+	const displayContracts = filteredContracts.slice(index * pageSize, (index+1) * pageSize);
 
 	const handlePage = async (_index = 0) => {
 		setLoading(true);
@@ -36,7 +34,7 @@ export const RouteContracts = ({ update, navigate, contracts, index }) => {
 			index,
 			supply: filteredContracts.length,
 			handlePage,
-			pageSize: PAGE_SIZE,
+			pageSize: pageSize,
 			loading,
 			arr: displayContracts,
 			Item: ({ contract_id, ts, name, media }) => {

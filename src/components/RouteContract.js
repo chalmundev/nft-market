@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { PAGE_SIZE, fetchData } from '../state/app';
+import { fetchData } from '../state/app';
 import { view, fetchTokens, parseNearAmount } from '../state/near';
 import { parseData } from '../utils/media';
 import { near } from '../utils/format';
@@ -13,7 +13,7 @@ import { share } from '../utils/share';
 import '../css/Routes.scss';
 import { contractPriceHistory } from '../utils/data';
 
-export const RouteContract = ({ networkId, dispatch, update, mobile, data }) => {
+export const RouteContract = ({ networkId, dispatch, update, mobile, data, pageSize}) => {
 	const { contract_id, account_id } = useParams();
 
 	let { contractMap, batch, contractId, index, tokens, supply, tokensForOwner } = data;
@@ -47,14 +47,14 @@ export const RouteContract = ({ networkId, dispatch, update, mobile, data }) => 
 			update('data.index', _index);
 		}
 
-		let from_index = _index * PAGE_SIZE;
-		let limit = PAGE_SIZE;
+		let from_index = _index * pageSize;
+		let limit = pageSize;
 		
-		// let from_index = (_supply - PAGE_SIZE * (_index + 1));
-		// let limit = PAGE_SIZE;
+		// let from_index = (_supply - pageSize * (_index + 1));
+		// let limit = pageSize;
 		// if (from_index < 0) {
 		// 	from_index = 0;
-		// 	limit = _supply % PAGE_SIZE;
+		// 	limit = _supply % pageSize;
 		// }
 
 		from_index = from_index.toString();
@@ -63,8 +63,6 @@ export const RouteContract = ({ networkId, dispatch, update, mobile, data }) => 
 			from_index,
 			limit,
 		}));
-
-		console.log(from_index, limit)
 
 		setLoading(false);
 	};
@@ -139,7 +137,7 @@ export const RouteContract = ({ networkId, dispatch, update, mobile, data }) => 
 				index,
 				supply,
 				handlePage,
-				pageSize: PAGE_SIZE,
+				pageSize: pageSize,
 				loading,
 				width: mobile ? window.innerWidth / 2 : undefined,
 				arr: tokens,

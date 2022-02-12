@@ -84,7 +84,6 @@ export const view = ({
 			args
 		);
 		if (/nft_total_supply/.test(methodName)) {
-			console.log(res)
 			res = parseInt(res, 10);
 		}
 		if (/nft_tokens/.test(methodName)) {
