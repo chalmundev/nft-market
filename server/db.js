@@ -17,7 +17,7 @@ const providers = {
 		provider: new _providers.JsonRpcProvider(`https://rpc.mainnet.near.org`),
 		archivalProvider: new _providers.JsonRpcProvider(`https://archival-rpc.mainnet.near.org`),
 	},
-}
+};
 
 const MAX_LEN_MARKET_SUMMARIES = 100;
 const PATH = process.env.NODE_ENV === 'prod' ? '../../nft-market-data' : '../dist/out';
@@ -38,19 +38,20 @@ async function getContractMedia(provider, accountId) {
 	// format result
 	const res = JSON.parse(Buffer.from(rawResult.result).toString());
 	let exampleMedia = null;
+	let exampleToken = null;
 
 	for (var i = 0; i < res.length; i++) {
 		let metadata = res[i].metadata;
-		if (metadata.media && metadata.media.length != 0) {
-			if (metadata.media.length < 2048) {
+		if (metadata.media && metadata.media.length != 0 && metadata.media.length < 2048) {
+			if (res[i].token_id) {
 				exampleMedia = metadata.media;
-				console.log('exampleMedia: ', exampleMedia);
+				exampleToken = res[i].token_id;
 				break;
 			}
 		}
 	}
 
-	return exampleMedia;
+	return {exampleMedia, exampleToken};
 }
 
 async function getContractMetadata(provider, accountId) {
@@ -598,7 +599,7 @@ module.exports = {
 
 		console.log(`\nMARKET UPDATE: ${new Date()}\n`);
 
-		const {provider, archivalProvider} = providers[networkId]
+		const {provider, archivalProvider} = providers[networkId];
 
 		db.connect(onConnect = async (err, client, release) => {
 			if (err) {
@@ -780,7 +781,7 @@ module.exports = {
 	}),
 
 	contracts: (db, networkId) => new Promise((res, rej) => {
-		const {provider} = providers[networkId]
+		const {provider} = providers[networkId];
 
 		const NEW_PATH = PATH + `/${networkId}`;
 
@@ -842,10 +843,12 @@ module.exports = {
 							if (!formattedRows[result.rows[i].contract_id]) {
 								//get the symbol and name for the contract. If the provider can't call the nft_metadata function, skips contract.
 								const data = await getContractMetadata(provider, result.rows[i].contract_id);
-								const media = await getContractMedia(provider, result.rows[i].contract_id);
+								const mediaData = await getContractMedia(provider, result.rows[i].contract_id);
 
 								data.ts = result.rows[i].ts;
-								data.media = media;
+								data.media = mediaData.exampleMedia;
+								data.token = mediaData.exampleToken;
+
 								formattedRows[result.rows[i].contract_id] = data;
 							} else {
 								console.log("data exists already for - ", result.rows[i].contract_id, " skipping.");
