@@ -8,6 +8,7 @@ import { Page } from './Page';
 import { Media } from './Media';
 import { Chart } from './Chart';
 import { MediaCard } from './MediaCard';
+import { share } from '../utils/share';
 
 import '../css/Routes.scss';
 import { contractPriceHistory } from '../utils/data';
@@ -20,6 +21,7 @@ export const RouteContract = ({ networkId, dispatch, update, mobile, data }) => 
 	const [loading, setLoading] = useState(false);
 
 	const onMount = async () => {
+		window.scrollTo(0, 0)
 		if (contractId === contract_id) return;
 		setLoading(true);
 		dispatch(fetchData(contract_id, account_id));
@@ -67,7 +69,7 @@ export const RouteContract = ({ networkId, dispatch, update, mobile, data }) => 
 		setLoading(false);
 	};
 
-	const { title, media } = parseData(contractMap, batch, {}, { contract_id });
+	const { title, media, link } = parseData(contractMap, batch, {}, { contract_id });
 
 	const summary = data?.[contract_id]?.summary || {
 		avg_sale: '0',
@@ -86,14 +88,19 @@ export const RouteContract = ({ networkId, dispatch, update, mobile, data }) => 
 			<div className='resp-grid'>
 				<div>
 					<Media {...{ media, classNames: ['featured'] }} />
-
-
+					{ tokens.length > 0 && <button onClick={() => share({
+						contract_id,
+						token_id: tokens[0].token_id,
+						link,
+						title,
+						description: 'Click to bid on these NFTs!'
+					})}>🤗 Share 🥰</button> }
 				</div>
 
 				<div>
 					<h2>{title}</h2>
 					<p>{contract_id}</p>
-
+					
 
 					<div className='stats'>
 						<div>
@@ -124,6 +131,8 @@ export const RouteContract = ({ networkId, dispatch, update, mobile, data }) => 
 
 				</div>
 			</div>
+
+
 
 
 			<Page {...{

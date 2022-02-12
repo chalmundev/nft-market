@@ -1,5 +1,3 @@
-
-
 import copy from 'copy-to-clipboard';
 
 const HELPER_URL = 'https://nearapi.secondx.app/';
@@ -7,18 +5,26 @@ const SHARE_URL = HELPER_URL + 'v1/share/';
 
 const defaultTitle = 'NFTs on SecondX.app'
 const defaultDescription = 'Click to bid on this NFT!'
-export const shareToken = async (contract_id, token_id, link, title) => {
+
+export const share = async ({
+	contract_id,
+	token_id,
+	link,
+	title = defaultTitle,
+	description = defaultDescription,
+}) => {
 	const url = await getShareUrl({
 		contract_id,
 		token_id,
 		link,
 		title,
+		description
 	})
 
 	if (window.navigator.share) {
 		await window.navigator.share({
-			title: defaultTitle,
-			text: defaultDescription,
+			title,
+			text: description,
 			url,
 		});
 	} else {

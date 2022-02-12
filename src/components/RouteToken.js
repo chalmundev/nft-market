@@ -3,9 +3,9 @@ import BN from 'bn.js';
 import { useParams } from 'react-router-dom';
 import { view, action, fetchBatchTokens } from '../state/near';
 import { fetchData } from '../state/app';
+import { share } from '../utils/share';
 
 import { Chart } from './Chart';
-import { shareToken } from '../utils/share';
 import { parseData } from '../utils/media';
 import { near } from '../utils/format';
 import { getOfferFromHashes } from '../utils/receipts';
@@ -200,7 +200,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 
 				<div>
 
-					<button onClick={() => shareToken(contract_id, token_id, link)}>Share</button>
+					<button onClick={() => share({ contract_id, token_id, link })}>🤗 Share 🥰</button>
 
 					<div className='stats'>
 						<div>
