@@ -146,7 +146,8 @@ export const RouteContract = ({ networkId, dispatch, update, mobile, data, pageS
 							subtitle: title ? token_id : null,
 							media,
 							link: `/token/${contract_id}/${token_id}`,
-							classNames: ['feature-card', 'tall']
+							classNames: ['feature-card', 'tall'],
+							useCanvas: true,
 						}} />
 					</div>;
 				}

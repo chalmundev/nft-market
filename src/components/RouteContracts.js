@@ -3,6 +3,7 @@ import { useStore } from '../utils/store';
 
 import { Page } from './Page';
 import { Media } from './Media';
+import { MediaCard } from './MediaCard';
 
 export const RouteContracts = ({ update, navigate, contracts, index, pageSize }) => {
 
@@ -38,10 +39,18 @@ export const RouteContracts = ({ update, navigate, contracts, index, pageSize })
 			loading,
 			arr: displayContracts,
 			Item: ({ contract_id, ts, name, media }) => {
-				return <div key={contract_id} onClick={() => navigate('/contract/' + contract_id)}>
-					<Media {...{media}} />
+				return <div>
+						<MediaCard {...{
+							subtitle: name || contract_id,
+							media,
+							link: `/contract/${contract_id}`,
+							classNames: ['feature-card', 'full-width'],
+							useCanvas: true,
+						}} />
+{/* 					
+					<Media {...{media, useCanvas: true}} />
 					<p>{name || contract_id}</p>
-					<p>{contract_id}</p>
+					<p>{contract_id}</p> */}
 				</div>;
 			}
 		}} />

@@ -54,19 +54,19 @@ export const onAppMount = ({mobile}) => async ({ getState, update }) => {
 		update('modal', { message });
 		setTimeout(res, dur);
 	});
-	update('pageSize', mobile ? 10 : 20)
 };
 
 export const parseContractMap = (contractMap) => {
 	const contracts = Object.entries(contractMap).map(([contract_id, data]) => {
 		const media = parseMedia(data.media);
+		if (!media) return null 
 		contractMap[contract_id].media = media;
 		return {
 			contract_id,
 			...data,
 			media,
 		};
-	});
+	}).filter((contract) => !!contract);;
 	return { contracts, contractMap };
 };
 

@@ -37,6 +37,9 @@ export const RouteToken = ({ dispatch, account, data }) => {
 		}
 
 		let token = tokens.find((token) => token.token_id === token_id);
+
+		console.log(token)
+
 		if (!token) {
 			dispatch(fetchBatchTokens([{ contract_id, token_id }]));
 		} else {
@@ -186,7 +189,9 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	const displayCurrent = { ...offer };
 	if (ifOfferOwner) displayCurrent.maker_id = 'Your Offer';
 
-	const { title, subtitle, media, link, owner_id } = parseData(contractMap, batch, { isToken: true }, { contract_id, token_id });
+	let { title, subtitle, media, link, owner_id } = parseData(contractMap, batch, { isToken: true }, { contract_id, token_id });
+	if (!media && token) media = token?.metadata?.media
+
 	const offerData = tokenPriceHistory(offers, true);
 	const saleData = tokenPriceHistory(offers);
 

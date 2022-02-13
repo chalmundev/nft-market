@@ -23,7 +23,7 @@ export const SummaryGrid = ({ contractMap, batch, data, items }) => {
 				const { title, subtitle, media } = parseData(contractMap, batch, data[i], item);
 
 				return <Link key={i} to={`/summary/${key}`}>
-					<Media {...{ media }} />
+					<Media {...{ media, useCanvas: true }} />
 					<div className="label">
 						<h3>{data[i].label}</h3>
 					</div>

@@ -28,7 +28,8 @@ export const SummaryTeaser = ({ contractMap, batch, data, items }) => {
 						subtitle: title,
 						media,
 						link,
-						classNames: ['feature-card']
+						classNames: ['feature-card'],
+						useCanvas: true,
 					}} />;
 				})
 			}

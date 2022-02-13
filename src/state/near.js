@@ -87,13 +87,14 @@ export const view = ({
 			res = parseInt(res, 10);
 		}
 		if (/nft_tokens/.test(methodName)) {
-			res = res.map(parseToken);
+			res = res.map(parseToken).filter(({ metadata: { media } }) => !!media);
 		}
 		if (key) {
 			await update(key, res);
 		}
 		return res;
 	} catch(e) {
+		if (/No offer/.test(e)) return
 		console.warn(e);
 	}
 };

@@ -24,6 +24,9 @@ export const Media = ({ media, classNames = [], useCanvas = false }) => {
 				ctx.drawImage(image, 0, 0);
 			}}
 			onError={({ currentTarget }) => {
+
+				console.log('MEDIA ERROR', currentTarget.src)
+
 				if (currentTarget.src === Missing) {
 					return;
 				}

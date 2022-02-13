@@ -115,7 +115,8 @@ export const RouteOffers = ({ dispatch, update, navigate, account, data, network
 						subtitle: subtitle,
 						media,
 						link,
-						classNames: ['feature-card', 'tall']
+						classNames: ['feature-card', 'tall'],
+						useCanvas: true,
 					}} />
 				</div>;
 			}

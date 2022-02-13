@@ -90,12 +90,18 @@
 		width: 100%;
 		> div > div {
 			padding: 0 $hm $hm $hm;
-			> .media > img {
-				aspect-ratio: 3 / 4;
-				border-top-right-radius: 0;
-				border-bottom-left-radius: 10%;	
+			> .media {
+				> img, > canvas {
+					aspect-ratio: 3 / 4;
+					border-top-right-radius: 0;
+					border-bottom-left-radius: 10%;
+				}	
 			}
 		}
+	}
+
+	&.full-width {
+		width: 100%;
 	}
 }
 

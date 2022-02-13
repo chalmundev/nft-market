@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const Rows = ({ arr, Item, width = 375 }) => {
+export const Rows = ({ arr, Item, width = window.innerWidth / 2 }) => {
 	const rows = [], numCols = Math.ceil(window.innerWidth / width);
 	for (let i = 0; i < arr.length; i += numCols) {
 		const slice = arr.slice(i, i + numCols);
