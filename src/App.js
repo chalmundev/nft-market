@@ -21,6 +21,8 @@ import { RouteMain } from './components/RouteMain';
 
 import './css/App.scss';
 
+let resizeTimeout
+
 const App = ({ mobile }) => {
 
 	const { state, dispatch, update } = useContext(appStore);
@@ -35,6 +37,12 @@ const App = ({ mobile }) => {
 			dispatch(fetchData()),
 		]);
 		update('loading', false);
+
+		window.onresize = () => {
+			update('loading', true)
+			if (resizeTimeout) clearTimeout(resizeTimeout)
+			resizeTimeout = setTimeout(() => update('loading', false), 500)
+		}
 	};
 	useEffect(onMount, []);
 

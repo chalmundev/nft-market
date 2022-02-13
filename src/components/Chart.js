@@ -2,9 +2,6 @@ import React, { useState } from "react";
 import { LineChart, Line, YAxis } from "recharts";
 import { $brocolli, $lime, $brocolliAlpha } from '../utils/colors';
 
-const width = Math.min(window.innerWidth - 32, 600 -32);
-const height = width / 3;
-
 const TIMES = [
 	{ label: '1D', amount: 86400000 },
 	{ label: '1W', amount: 604800000 },
@@ -20,6 +17,9 @@ export const Chart = ({
 	data,
 	title = 'Average Price'
 }) => {
+
+	const width = Math.min(window.innerWidth - 32, 600 -32);
+	const height = width / 3;
 
 	const [active, setActive] = useState(TIMES.length - 1);
 
