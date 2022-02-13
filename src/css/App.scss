@@ -103,10 +103,8 @@ nav {
 	}
 }
 
-.rows-container {
-	&.true {
-		min-height: calc(100vh);
-	}
+.rows-container.true {
+	min-height: calc(100vh);
 }
 	
 
