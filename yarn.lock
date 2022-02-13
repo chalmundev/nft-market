@@ -2843,7 +2843,7 @@ package-json@^6.3.0:
     registry-url "^5.0.0"
     semver "^6.2.0"
 
-parcel@^2.3.1:
+parcel@^2.2.1:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/parcel/-/parcel-2.3.1.tgz#0366556933e92f345d455f0f2fe6429c1d197b63"
   integrity sha512-YDzKpWcO1tEqk7ENPTitE8zbDfYDjo7nsoT7Oun+7eZadwsiNds1+mbhCO0exGq4SJekto+dkMdrLMcbOWJznQ==

@@ -41,7 +41,7 @@
 		"test": "ava test/contract.test.js -vs --timeout=5m",
 		"fix": "eslint test/ './src/**/*.js' --fix",
 		"prebuild": "yarn clean",
-		"build": "REACT_APP_DATA=remote parcel build src/index.html --no-source-maps",
+		"build": "REACT_APP_DATA=remote parcel build src/index.html --no-source-maps --no-optimize",
 		"clean": "rimraf ./dist",
 		"start-local": "parcel src/index.html --open",
 		"start": "REACT_APP_DATA=remote parcel src/index.html --open",
