@@ -38,6 +38,10 @@ const App = ({ mobile }) => {
 		]);
 		update('loading', false);
 
+		if (mobile) return
+
+		/// resets components after debounce onresize (desktop only)
+
 		window.onresize = () => {
 			update('loading', true)
 			if (resizeTimeout) clearTimeout(resizeTimeout)
