@@ -28,14 +28,15 @@ export const Chart = ({
 		return Date.now() - TIMES[active].amount < data.updated_at; 
 	});
 
-	if (filteredData.length === 1) {
-		filteredData.unshift({
-			...filteredData[0]
-		})
-	}
-
-	if (filteredData.length < 3) {
-		filteredData[0].amount -= 0.01
+	if (filteredData.length > 0) {
+		if (filteredData.length === 1) {
+			filteredData.unshift({
+				...filteredData[0]
+			})
+		}
+		if (filteredData.length < 3) {
+			filteredData[0].amount -= 0.01
+		}
 	}
 
 	return (

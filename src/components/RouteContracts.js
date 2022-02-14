@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../utils/store';
 
 import { Page } from './Page';
-import { Media } from './Media';
 import { MediaCard } from './MediaCard';
 
 export const RouteContracts = ({ update, navigate, contracts, index, pageSize }) => {
 
 	const [filter, setFilter] = useStore('__FILTER');
 	const [loading, setLoading] = useState(false);
+
+	useEffect(() => {
+		window.scrollTo(0, 0)
+	}, [])
 
 	const filteredContracts = filter
 		?

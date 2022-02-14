@@ -37,3 +37,12 @@ $hm: 8px;
 		opacity:1
 	}
 }
+
+@keyframes spin {
+	from {
+        transform:rotateY(0deg);
+    }
+    to {
+        transform:rotateY(360deg);
+    }
+}

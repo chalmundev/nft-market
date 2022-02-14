@@ -189,8 +189,10 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	const displayCurrent = { ...offer };
 	if (ifOfferOwner) displayCurrent.maker_id = 'Your Offer';
 
-	let { title, subtitle, media, link, owner_id } = parseData(contractMap, batch, { isToken: true }, { contract_id, token_id });
+	let { title, subtitle, media, link, owner_id } = parseData(contractMap, batch, { isToken: true }, { ...token, contract_id });
 	if (!media && token) media = token?.metadata?.media
+
+	console.log(owner_id)
 
 	const offerData = tokenPriceHistory(offers, true);
 	const saleData = tokenPriceHistory(offers);

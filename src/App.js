@@ -11,6 +11,7 @@ import { initNear } from './state/near';
 import { networkId } from './../utils/near-utils';
 
 import { Modal } from './components/Modal';
+import { Loading } from './components/Loading';
 import { Nav } from './components/Nav';
 import { RouteOffers } from './components/RouteOffers';
 import { RouteContract } from './components/RouteContract';
@@ -80,9 +81,7 @@ const App = ({ mobile }) => {
 				{
 					state.loading
 						?
-						<>
-							<div className='crumbs'><p aria-busy="true">Loading</p></div>
-						</>
+						<Loading />
 						:
 						<>
 							<div className='crumbs'>

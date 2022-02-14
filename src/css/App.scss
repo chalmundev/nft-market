@@ -2,6 +2,24 @@
 @import 'globals.scss';
 @import 'base.scss';
 
+.loading {
+	width: 100vw;
+	height: 100vh;
+	display: flex;
+	justify-content: center;
+	align-items: flex-start;
+	perspective: 300px;
+	perspective-origin: 50vw 256px;
+	> img {
+		will-change: transform;
+		margin: 128px auto;
+		animation-name: spin;
+		animation-duration: 2500ms;
+		animation-iteration-count: infinite;
+		animation-timing-function: linear;
+		box-shadow: $soft-glow;
+	}
+}
 
 .content {
 	min-height: 100vh;
