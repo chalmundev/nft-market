@@ -1,6 +1,7 @@
 @import 'globals.scss';
 
 .media {
+	position: relative;
 	> img, > canvas {
 		width: 100%;
 		object-fit: cover;
@@ -11,6 +12,21 @@
 		border-bottom-left-radius: 20%;
 		box-shadow: $soft-glow;
 	}
+	> img.canvas {
+		display: none;
+		position: absolute;
+		left: 0;
+		top: 0;
+	}
+	&:hover {
+		> canvas {
+			visibility: hidden;
+		}
+		> img.canvas {
+			display: block;
+		}
+	}
+	
 }
 
 .media.featured {
@@ -38,6 +54,7 @@
 
 .feature-card {
 	width: min(300px, 40vw);
+	height: auto;
 	margin-right: $hm;
 	display: inline-block;
 	padding: 1px;
@@ -80,7 +97,7 @@
 
 			> .media {
 				> img, > canvas {
-					box-shadow: none;
+					box-shadow: $soft-glow;
 				}
 			}
 		}

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect } from 'react';
 import {
 	Routes,
 	Route,
@@ -8,7 +8,6 @@ import {
 
 import { appStore, onAppMount, fetchContracts, fetchData } from './state/app';
 import { initNear } from './state/near';
-import { networkId } from './../utils/near-utils';
 
 import { Modal } from './components/Modal';
 import { Loading } from './components/Loading';

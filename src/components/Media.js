@@ -5,6 +5,10 @@ import '../css/Features.scss';
 
 export const Media = ({ media, classNames = [], useCanvas = false }) => {
 
+	if (!/\.gif/.test(media)) {
+		useCanvas = false
+	}
+
 	const ref = useCanvas ? useRef() : null;
 
 	return <div className={[ 'media', ...classNames ].join(' ')}>
@@ -12,7 +16,7 @@ export const Media = ({ media, classNames = [], useCanvas = false }) => {
 		{ useCanvas && <canvas ref={ref}></canvas> }
 		
 		<img
-			style={{display: useCanvas ? 'none' : 'block'}}
+			className={useCanvas ? 'canvas' : ''}
 			src={media ? media : Missing}
 			onLoad={(e) => {
 				if (!useCanvas) return;
