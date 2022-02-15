@@ -71,4 +71,10 @@ button {
 	letter-spacing: 0.05rem;
 	font-family: 'evolventa-bold';
 	background: $light-gradient-alpha;
+	&.alert {
+		margin: $m auto;
+		background: $plum;
+		border: 1px solid $avocado;
+		color: $avocado;
+	}
 }

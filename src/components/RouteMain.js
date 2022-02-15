@@ -26,6 +26,11 @@ export const RouteMain = ({ dispatch, batch, marketSummary, contractMap }) => {
 	return <>
 		<FeaturedTeaser {...{ contractMap, batch, data, items }} />
 
+		<div className='byline'>
+			<p>Place offers on any NEAR NFT, any time!</p>
+			<p>NFT owners can set prices and share links to find buyers.</p>
+		</div>
+
 		{
 			cats.slice(0, 4).map((data) => <div key={data.key}>
 				<SummaryTeaser {...{ contractMap, batch, data, items: marketSummary[data.key].slice(0, 5) }} />

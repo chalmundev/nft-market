@@ -187,8 +187,10 @@ nav {
 	> div {
 		margin: auto $m;
 		width: 100%;
+		max-width: 600px;
 		background: $melon;
 		color: white;
+		text-align: center;
 		> div {
 			padding: $m $m 0 $m;
 			display: flex;

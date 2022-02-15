@@ -9,10 +9,6 @@ export const RouteContracts = ({ update, navigate, contracts, index, pageSize })
 	const [filter, setFilter] = useStore('__FILTER');
 	const [loading, setLoading] = useState(false);
 
-	useEffect(() => {
-		window.scrollTo(0, 0)
-	}, [])
-
 	const filteredContracts = filter
 		?
 		contracts.filter(({ contract_id, name }) => new RegExp(filter, 'gi').test(contract_id + name))

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { fetchData } from '../state/app';
-import { view, fetchTokens, parseNearAmount } from '../state/near';
+import { view, fetchTokens } from '../state/near';
 import { parseData } from '../utils/media';
 import { near } from '../utils/format';
 import { Page } from './Page';
@@ -21,7 +21,6 @@ export const RouteContract = ({ networkId, dispatch, update, mobile, data, pageS
 	const [loading, setLoading] = useState(false);
 
 	const onMount = async () => {
-		window.scrollTo(0, 0)
 		if (contractId === contract_id) return;
 		setLoading(true);
 		dispatch(fetchData(contract_id, account_id));
@@ -32,6 +31,7 @@ export const RouteContract = ({ networkId, dispatch, update, mobile, data, pageS
 
 		await handlePage(index, supply);
 		update('data.contractId', contract_id);
+
 		return () => {
 			update('data.index', 0);
 		};

@@ -1,13 +1,4 @@
 import { registerRoute } from 'workbox-routing';
-import {
-	NetworkFirst,
-	StaleWhileRevalidate,
-	CacheFirst,
-} from 'workbox-strategies';
-// Used for filtering matches based on status code, header, or both
-import { CacheableResponsePlugin } from 'workbox-cacheable-response';
-// Used to limit entries in cache, remove entries after a certain period of time
-import { ExpirationPlugin } from 'workbox-expiration';
 
 if (process.env.REACT_APP_ENV === 'prod') {
 
@@ -44,7 +35,6 @@ if (process.env.REACT_APP_ENV === 'prod') {
 					body: JSON.stringify(json)
 				}).then((res) => {
 					return caches.open('near-rpc').then((cache) => {
-						console.log('putting cache');
 						cache.put(new Request(key, {
 							headers: CACHE_HEADERS
 						}), res.clone());
@@ -61,62 +51,6 @@ if (process.env.REACT_APP_ENV === 'prod') {
 			});
 		},
 		'POST'
-	);
-
-	/// Normal cache stuff from workbox
-
-	// Cache page navigations (html) with a Network First strategy
-	registerRoute(
-		// Check to see if the request is a navigation to a new page
-		({ request }) => request.mode === 'navigate',
-		// Use a Network First caching strategy
-		new NetworkFirst({
-			// Put all cached files in a cache named 'pages'
-			cacheName: 'pages',
-			plugins: [
-				// Ensure that only requests that result in a 200 status are cached
-				new CacheableResponsePlugin({
-					statuses: [200],
-				}),
-			],
-		}),
-	);
-
-	// Cache CSS, JS, and Web Worker requests with a Stale While Revalidate strategy
-	registerRoute(
-		// Check to see if the request's destination is style for stylesheets, script for JavaScript, or worker for web worker
-		({ request }) =>
-			request.destination === 'style' ||
-			request.destination === 'script' ||
-			request.destination === 'worker',
-		// Use a Stale While Revalidate caching strategy
-		new StaleWhileRevalidate({
-			// Put all cached files in a cache named 'assets'
-			cacheName: 'assets',
-			plugins: [
-				// Ensure that only requests that result in a 200 status are cached
-				new CacheableResponsePlugin({
-					statuses: [200],
-				}),
-			],
-		}),
-	);
-
-	// Images
-	registerRoute(
-		({ request }) => request.destination === 'image',
-		new CacheFirst({
-			cacheName: 'images',
-			plugins: [
-				new CacheableResponsePlugin({
-					statuses: [200],
-				}),
-				new ExpirationPlugin({
-					maxEntries: 500,
-					maxAgeSeconds: MAX_AGE_30, // 30 Days
-				}),
-			],
-		}),
 	);
 
 }

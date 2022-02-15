@@ -11,7 +11,11 @@ export const Modal = ({ update, message }) => {
 				<img src={Warning} />
 				<img src={Close} />
 			</div>
-			<p>{ message }</p>
+			{
+				typeof message === 'string'
+				? <p>{message}</p>
+				: <>{ message }</>
+			}
 		</div>
 	</div>;
 };

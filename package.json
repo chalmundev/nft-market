@@ -14,11 +14,7 @@
 		"react-router-dom": "^6.2.1",
 		"react-swipeable": "^6.2.0",
 		"recharts": "^2.1.8",
-		"workbox": "^0.0.0",
-		"workbox-cacheable-response": "^6.4.2",
-		"workbox-expiration": "^6.4.2",
-		"workbox-routing": "^6.4.2",
-		"workbox-strategies": "^6.4.2"
+		"workbox-routing": "^6.4.2"
 	},
 	"devDependencies": {
 		"@parcel/transformer-sass": "2.3.1",
@@ -41,7 +37,7 @@
 		"test": "ava test/contract.test.js -vs --timeout=5m",
 		"fix": "eslint test/ './src/**/*.js' --fix",
 		"prebuild": "yarn clean",
-		"build": "REACT_APP_DATA=remote parcel build src/index.html --no-source-maps --no-cache",
+		"build": "REACT_APP_DATA=remote REACT_APP_ENV=prod parcel build src/index.html --no-source-maps --no-cache",
 		"clean": "rimraf ./dist",
 		"start-local": "parcel src/index.html --open",
 		"start": "REACT_APP_DATA=remote parcel src/index.html --open",

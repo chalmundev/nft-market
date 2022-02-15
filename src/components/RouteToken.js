@@ -30,15 +30,11 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	const [amount, setAmount] = useState('');
 
 	const onMount = async () => {
-		window.scrollTo(0, 0);
-
 		if (!data[contract_id]) {
 			await dispatch(fetchData(contract_id));
 		}
 
 		let token = tokens.find((token) => token.token_id === token_id);
-
-		console.log(token)
 
 		if (!token) {
 			dispatch(fetchBatchTokens([{ contract_id, token_id }]));
@@ -72,9 +68,9 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	};
 	useEffect(onMount, []);
 
-	const onBatch = () => {
+	const onBatch = async () => {
 		if (token || !batch[contract_id]?.[token_id]) return;
-		setToken(batch[contract_id][token_id]);
+		await setToken(batch[contract_id][token_id]);
 	};
 	useEffect(onBatch, [batch]);
 
@@ -192,8 +188,6 @@ export const RouteToken = ({ dispatch, account, data }) => {
 	let { title, subtitle, media, link, owner_id } = parseData(contractMap, batch, { isToken: true }, { ...token, contract_id });
 	if (!media && token) media = token?.metadata?.media
 
-	console.log(owner_id)
-
 	const offerData = tokenPriceHistory(offers, true);
 	const saleData = tokenPriceHistory(offers);
 
@@ -268,9 +262,6 @@ export const RouteToken = ({ dispatch, account, data }) => {
 						/>
 						<button onClick={() => isOwner ? handleAcceptOffer() : handleMakeOffer()}>{offerLabel}</button>
 					</div>
-
-
-
 
 				</div>
 

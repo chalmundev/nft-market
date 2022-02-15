@@ -8,6 +8,7 @@ import {
 
 import { appStore, onAppMount, fetchContracts, fetchData } from './state/app';
 import { initNear } from './state/near';
+import { useStore } from './utils/store';
 
 import { Modal } from './components/Modal';
 import { Loading } from './components/Loading';
@@ -26,8 +27,16 @@ let resizeTimeout
 const App = ({ mobile }) => {
 
 	const { state, dispatch, update } = useContext(appStore);
-
+	const [about, setAbout] = useStore('__ABOUT_MODAL')
 	const navigate = useNavigate();
+
+	const { href, pathname } = window.location;
+	const showAbout = /\/(token|contract)/gi.test(pathname);
+	const showBack = /\/(maker|taker|summary|contract)/gi.test(pathname);
+	const showBackToken = /\/(token)/gi.test(pathname);
+	const txHashes = href.split('?transactionHashes=')[1];
+
+	window.scrollTo(0, 0)
 
 	const onMount = async () => {
 		await dispatch(onAppMount({ mobile })),
@@ -37,6 +46,21 @@ const App = ({ mobile }) => {
 			dispatch(fetchData()),
 		]);
 		update('loading', false);
+
+		if (showAbout) {
+			if (!about) {
+				setAbout(2)
+			} else {
+				setAbout(about - 1)
+			}
+			if (!about || about > 0) {
+				alert(<>
+					<p>Place offers on any NEAR NFT, any time!</p>
+					<p>NFT owners can set prices and share links to find buyers.</p>
+					<button className="alert" onClick={() => setAbout(0)}>Don't Show Again</button>
+				</>)
+			}
+		}
 
 		if (mobile) return
 
@@ -62,11 +86,6 @@ const App = ({ mobile }) => {
 	} = state;
 
 	const routeParams = { dispatch, update, navigate, mobile, networkId, pageSize };
-
-	const { href, pathname } = window.location;
-	const showBack = /\/(maker|taker|summary|contract)/gi.test(pathname);
-	const showBackToken = /\/(token)/gi.test(pathname);
-	const txHashes = href.split('?transactionHashes=')[1];
 
 	return (<>
 
