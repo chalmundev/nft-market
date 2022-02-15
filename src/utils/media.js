@@ -12,7 +12,7 @@ export const parseData = (contractMap, batch, data, item, noLabel) => {
 		title = token_id;
 		media = token?.metadata?.media;
 		link = `/token/${contract_id}/${token_id}`;
-		if (!owner_id) owner_id = token?.owner_id;
+		owner_id = token?.owner_id || owner_id;
 	}
 	return { title, subtitle, media, link, owner_id };
 };
