@@ -276,17 +276,30 @@ const mintAndAcceptTokens = async (provider) => {
 
 	let tokenList = [];
 	//mint 15 random NFTs on the contract
-	for(var i = 0; i < 15; i++) {
-		console.log("Minting ", i , " of 15");
-		const res = await fetch("https://api.giphy.com/v1/gifs/random?api_key=tZABeKQjaI8sVMmlm1RRWBLmb4YiBRR8&tag=&rating=pg");
-		const json = await res.json();
 
+	const res1 = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=tZABeKQjaI8sVMmlm1RRWBLmb4YiBRR8&q=renders`);
+	const json1 = await res1.json();
+	const totalCount = json1. pagination.total_count;
+
+	const offset = Math.floor(Math.random() * Number(totalCount));
+	const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=tZABeKQjaI8sVMmlm1RRWBLmb4YiBRR8&q=renders&limit=15&offset=${offset}`);
+	const json = await res.json();
+	
+	console.log('json: ', json);
+	console.log('json.data.length: ', json.data.length);
+	console.log('offset: ', offset);
+	console.log('totalCount: ', totalCount);
+	for(var i = 0; i < json.data.length; i++) {
+		console.log("Minting ", i , " of 15");
+		
 		const title = json.data.title;
-		const media = json.data.images.downsized.url;
-		//royalty object to pass into mint f	unction
+		const media = json.data[i].images.downsized.url;
+		console.log('media: ', media);
+		
+		//royalty object to pass into mint function
 		const token_id = v4();
 
-		minter.functionCall({
+		await minter.functionCall({
 			contractId: nftContractId,
 			methodName: 'nft_mint',
 			args: {
@@ -333,41 +346,42 @@ async function zombie() {
 	await initializeAccounts(initialBalance);
 	const provider = new providers.JsonRpcProvider(`https://rpc.${networkId}.near.org`);
 
-	const rawContractSummary = "https://raw.githubusercontent.com/chalmundev/nft-market-data/main/contracts.json";
+	const rawContractSummary = "https://raw.githubusercontent.com/chalmundev/nft-market-data/main/testnet/contracts.json";
 	const res = await fetch(rawContractSummary);
 	const contractSummary = await res.json();
 
 	const contracts = Object.keys(contractSummary.contracts);
 
 	let listOfTokens = [];
-	for(var i = 0; i < 15; i++) {
-		let mediaFound = false;
-		while(mediaFound == false) {
-			const randomContract = contracts[Math.floor(Math.random() * contracts.length)];
-			//console.log("Check valid token for - ", randomContract, " on iter ", i, " of 15");
+	// for(var i = 0; i < 15; i++) {
+	// 	let mediaFound = false;
+	// 	while(mediaFound == false) {
+	// 		const randomContract = contracts[Math.floor(Math.random() * contracts.length)];
+	// 		//console.log("Check valid token for - ", randomContract, " on iter ", i, " of 15");
 
-			//make sure its not a dev contract
-			if(randomContract.endsWith("." + networkId)) {
-				try {
-					const validToken = await getValidTokensToOffer(provider, randomContract);
-					if(validToken != null && 'token_id' in validToken) {
-						listOfTokens.push({token_id: validToken.token_id, contract_id: randomContract, media: validToken.metadata.media});
-						console.log("Found Token.");
-						mediaFound = true;
-					} else {
-						console.log("No Token Found.");
-					}
-				} catch(e) {
-					console.log("No Token Found.");
-				}
-			}
+	// 		//make sure its not a dev contract
+	// 		if(randomContract.endsWith("." + networkId)) {
+	// 			try {
+	// 				const validToken = await getValidTokensToOffer(provider, randomContract);
+	// 				if(validToken != null && 'token_id' in validToken) {
+	// 					listOfTokens.push({token_id: validToken.token_id, contract_id: randomContract, media: validToken.metadata.media});
+	// 					console.log("Found Token.");
+	// 					mediaFound = true;
+	// 				} else {
+	// 					console.log("No Token Found.");
+	// 				}
+	// 			} catch(e) {
+	// 				console.log("No Token Found.");
+	// 			}
+	// 		}
 
-			console.log("Iter ", i , " of 15");	
-		}
-	}
+	// 		console.log("Iter ", i , " of 15");	
+	// 	}
+	// }
 
-	await startBids(provider, listOfTokens);
+	//await startBids(provider, listOfTokens);
 	await mintAndAcceptTokens(provider);
 }
 
 zombie();
+//mintAndAcceptTokens();
