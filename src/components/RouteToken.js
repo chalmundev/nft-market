@@ -13,8 +13,7 @@ import { Events } from './Events';
 import { Media } from './Media';
 import { tokenPriceHistory } from '../utils/data';
 
-import { providers, networkId, contractId, parseNearAmount, formatNearAmount } from '../../utils/near-utils';
-import { howLongAgo } from '../utils/date';
+import { contractId, parseNearAmount, formatNearAmount } from '../../utils/near-utils';
 
 const OUTBID_AMOUNT = '99999999999999999999999';
 const OUTBID_TIMEOUT = 86400000;
@@ -246,22 +245,24 @@ export const RouteToken = ({ dispatch, account, data }) => {
 					}
 
 
-					<div className='clamp-width'>
-						{
-							ifOfferOwner &&
-							(isOwner || offer?.updated_at < (Date.now() - OUTBID_TIMEOUT) * 1000000) &&
-							<button onClick={handleRemoveOffer}>Remove Offer</button>
-						}
+					{
+						account && <div className='clamp-width'>
+							{
+								ifOfferOwner &&
+								(isOwner || offer?.updated_at < (Date.now() - OUTBID_TIMEOUT) * 1000000) &&
+								<button onClick={handleRemoveOffer}>Remove Offer</button>
+							}
 
-						{isOwner && offer && !ifOfferOwner && <button onClick={() => handleAcceptOffer(true)}>Accept Offer</button>}
-						<input
-							type="number"
-							placeholder='Amount (N)'
-							value={amount}
-							onChange={({ target: { value } }) => setAmount(value)}
-						/>
-						<button onClick={() => isOwner ? handleAcceptOffer() : handleMakeOffer()}>{offerLabel}</button>
-					</div>
+							{isOwner && offer && !ifOfferOwner && <button onClick={() => handleAcceptOffer(true)}>Accept Offer</button>}
+							<input
+								type="number"
+								placeholder='Amount (N)'
+								value={amount}
+								onChange={({ target: { value } }) => setAmount(value)}
+							/>
+							<button onClick={() => isOwner ? handleAcceptOffer() : handleMakeOffer()}>{offerLabel}</button>
+						</div>
+					}
 
 				</div>
 
@@ -276,7 +277,7 @@ export const RouteToken = ({ dispatch, account, data }) => {
 							title: 'Offer History',
 							data: offerData
 						}} />
-						
+
 						<Events {...{ title: 'Offers', events: displayOffers }} />
 					</>}
 
