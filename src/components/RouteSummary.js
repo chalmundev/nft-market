@@ -43,7 +43,7 @@ export const RouteSummary = ({ dispatch, update, navigate, batch, marketSummary,
 
 					return <Link to={link} key={i}>
 						<div>{i+1}</div>
-						<Media {...{ media }} />
+						<Media {...{ media, useCanvas: true }} />
 						<div>
 							<div>{title}</div>
 							<div>{subtitle}</div>
