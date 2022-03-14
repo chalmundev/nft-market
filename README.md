@@ -1,3 +1,8 @@
+
+[![Second X NFT Marketplace on NEAR Protocol](https://img.youtube.com/vi/Pr93Y6CIvQQ/0.jpg)](https://www.youtube.com/watch?v=Pr93Y6CIvQQ)
+
+https://www.youtube.com/watch?v=Pr93Y6CIvQQ
+
 # NEAR NFT Secondary Marketplace
 
 Goal: secondary marketplace for any NEAR NFT following standards.
